@@ -53,6 +53,36 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | OAuth Configuration
+    |--------------------------------------------------------------------------
+    |
+    | OAuth 2.0 settings for AT Protocol authentication. The private key is
+    | used for signing client assertions. Generate a key with:
+    | php artisan atp-client:generate-key
+    |
+    | The metadata endpoints are automatically available at:
+    | - GET /atp/oauth/client-metadata.json
+    | - GET /atp/oauth/jwks.json
+    | - GET /.well-known/oauth-client-metadata
+    |
+    */
+    'oauth' => [
+        'disabled' => env('ATP_OAUTH_DISABLED', false),
+        'prefix' => env('ATP_OAUTH_PREFIX', '/atp/oauth/'),
+        'private_key' => env('ATP_OAUTH_PRIVATE_KEY'),
+        'scope' => env('ATP_OAUTH_SCOPE', 'atproto transition:generic'),
+
+        'client_metadata' => [
+            'client_name' => env('ATP_CLIENT_NAME', config('app.name')),
+            'client_uri' => env('ATP_CLIENT_URL', config('app.url')),
+            'logo_uri' => env('ATP_CLIENT_LOGO_URI'),
+            'tos_uri' => env('ATP_CLIENT_TOS_URI'),
+            'policy_uri' => env('ATP_CLIENT_POLICY_URI'),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | HTTP Settings
     |--------------------------------------------------------------------------
     |

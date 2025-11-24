@@ -2,6 +2,7 @@
 
 namespace SocialDept\AtpClient;
 
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use SocialDept\AtpClient\Auth\ClientMetadataManager;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
@@ -105,7 +106,37 @@ class AtpClientServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../config/atp-client.php' => config_path('atp-client.php'),
             ], 'atp-client-config');
+
+            $this->commands([
+                \SocialDept\AtpClient\Console\GenerateOAuthKeyCommand::class,
+            ]);
         }
+
+        $this->registerRoutes();
+    }
+
+    /**
+     * Register OAuth metadata routes
+     */
+    protected function registerRoutes(): void
+    {
+        if (config('atp-client.oauth.disabled')) {
+            return;
+        }
+
+        $prefix = config('atp-client.oauth.prefix', '/atp/oauth/');
+
+        Route::prefix($prefix)->group(function () {
+            Route::get('client-metadata.json', \SocialDept\AtpClient\Http\Controllers\ClientMetadataController::class)
+                ->name('atp.oauth.client-metadata');
+
+            Route::get('jwks.json', \SocialDept\AtpClient\Http\Controllers\JwksController::class)
+                ->name('atp.oauth.jwks');
+        });
+
+        // Register standard .well-known endpoint
+        Route::get('.well-known/oauth-client-metadata', \SocialDept\AtpClient\Http\Controllers\ClientMetadataController::class)
+            ->name('atp.oauth.well-known');
     }
 
     /**
