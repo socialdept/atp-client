@@ -4,6 +4,8 @@ namespace SocialDept\AtpClient\Http;
 
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Response as LaravelResponse;
+use InvalidArgumentException;
+use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\DPoPNonceManager;
 use SocialDept\AtpClient\Exceptions\ValidationException;
 use SocialDept\AtpClient\Session\SessionManager;
@@ -38,7 +40,7 @@ trait HasHttp
         $nonce = $this->nonceManager->getNonce($session->pdsEndpoint());
 
         // Create DPoP proof using DPoPKeyManager
-        $dpopProof = app(\SocialDept\AtpClient\Auth\DPoPKeyManager::class)->createProof(
+        $dpopProof = app(DPoPKeyManager::class)->createProof(
             key: $session->dpopKey(),
             method: $method,
             url: $url,
@@ -61,7 +63,7 @@ trait HasHttp
             'GET' => $request->get($url, $params),
             'POST' => $request->post($url, $body ?? $params),
             'DELETE' => $request->delete($url, $params),
-            default => throw new \InvalidArgumentException("Unsupported method: {$method}"),
+            default => throw new InvalidArgumentException("Unsupported method: {$method}"),
         };
 
         // Store nonce from response if present
