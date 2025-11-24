@@ -9,7 +9,6 @@ use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\DPoPNonceManager;
 use SocialDept\AtpClient\Auth\OAuthEngine;
 use SocialDept\AtpClient\Auth\TokenRefresher;
-use SocialDept\AtpClient\Client\AtpClient;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Providers\ArrayCredentialProvider;
