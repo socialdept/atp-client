@@ -2,23 +2,47 @@
 
 namespace SocialDept\AtpClient\Data;
 
-use Jose\Component\Core\JWK;
+use phpseclib3\Crypt\Common\PrivateKey;
+use phpseclib3\Crypt\Common\PublicKey;
 
 class DPoPKey
 {
     public function __construct(
-        public readonly JWK $privateKey,
-        public readonly JWK $publicKey,
+        public readonly PrivateKey $privateKey,
+        public readonly PublicKey $publicKey,
         public readonly string $keyId,
     ) {}
 
     public function getPublicJwk(): array
     {
-        return $this->publicKey->jsonSerialize();
+        $jwk = $this->publicKey->toString('JWK');
+
+        return array_merge(
+            json_decode($jwk, true),
+            [
+                'alg' => 'ES256',
+                'use' => 'sig',
+                'kid' => $this->keyId,
+            ]
+        );
     }
 
     public function getPrivateJwk(): array
     {
-        return $this->privateKey->jsonSerialize();
+        $jwk = $this->privateKey->toString('JWK');
+
+        return array_merge(
+            json_decode($jwk, true),
+            [
+                'alg' => 'ES256',
+                'use' => 'sig',
+                'kid' => $this->keyId,
+            ]
+        );
+    }
+
+    public function toPEM(): string
+    {
+        return $this->privateKey->toString('PKCS8');
     }
 }

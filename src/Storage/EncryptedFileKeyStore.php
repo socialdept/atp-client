@@ -3,7 +3,7 @@
 namespace SocialDept\AtpClient\Storage;
 
 use Illuminate\Contracts\Encryption\Encrypter;
-use Jose\Component\Core\JWK;
+use phpseclib3\Crypt\PublicKeyLoader;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Data\DPoPKey;
 
@@ -23,8 +23,8 @@ class EncryptedFileKeyStore implements KeyStore
     public function store(string $sessionId, DPoPKey $key): void
     {
         $data = [
-            'privateKey' => $key->getPrivateJwk(),
-            'publicKey' => $key->getPublicJwk(),
+            'privateKey' => $key->privateKey->toString('PKCS8'),
+            'publicKey' => $key->publicKey->toString('PKCS8'),
             'keyId' => $key->keyId,
         ];
 
@@ -47,9 +47,12 @@ class EncryptedFileKeyStore implements KeyStore
         $encrypted = file_get_contents($path);
         $data = $this->encrypter->decrypt($encrypted);
 
+        $privateKey = PublicKeyLoader::load($data['privateKey']);
+        $publicKey = PublicKeyLoader::load($data['publicKey']);
+
         return new DPoPKey(
-            privateKey: JWK::createFromJson(json_encode($data['privateKey'])),
-            publicKey: JWK::createFromJson(json_encode($data['publicKey'])),
+            privateKey: $privateKey,
+            publicKey: $publicKey,
             keyId: $data['keyId'],
         );
     }
