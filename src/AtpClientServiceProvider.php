@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use SocialDept\AtpClient\Auth\ClientMetadataManager;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
+use SocialDept\AtpClient\Auth\DPoPNonceManager;
 use SocialDept\AtpClient\Auth\OAuthEngine;
 use SocialDept\AtpClient\Auth\TokenRefresher;
 use SocialDept\AtpClient\Client\AtpClient;
@@ -40,6 +41,7 @@ class AtpClientServiceProvider extends ServiceProvider
         // Register core services
         $this->app->singleton(ClientMetadataManager::class);
         $this->app->singleton(DPoPKeyManager::class);
+        $this->app->singleton(DPoPNonceManager::class);
         $this->app->singleton(TokenRefresher::class);
         $this->app->singleton(SessionManager::class, function ($app) {
             return new SessionManager(
