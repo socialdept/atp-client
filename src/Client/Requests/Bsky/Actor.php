@@ -12,6 +12,9 @@ class Actor extends Request
      */
     public function getProfile(string $actor): Response
     {
-        return $this->atp->client->get('app.bsky.actor.getProfile', compact('actor'));
+        return $this->atp->client->get(
+            endpoint: 'app.bsky.actor.getProfile',
+            params: compact('actor')
+        );
     }
 }

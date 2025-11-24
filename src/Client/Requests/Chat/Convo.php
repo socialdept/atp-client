@@ -12,7 +12,10 @@ class Convo extends Request
      */
     public function getConvo(string $convoId): Response
     {
-        return $this->atp->client->get('chat.bsky.convo.getConvo', compact('convoId'));
+        return $this->atp->client->get(
+            endpoint: 'chat.bsky.convo.getConvo',
+            params: compact('convoId')
+        );
     }
 
     /**
@@ -20,7 +23,10 @@ class Convo extends Request
      */
     public function getConvoForMembers(array $members): Response
     {
-        return $this->atp->client->get('chat.bsky.convo.getConvoForMembers', compact('members'));
+        return $this->atp->client->get(
+            endpoint: 'chat.bsky.convo.getConvoForMembers',
+            params: compact('members')
+        );
     }
 
     /**
@@ -28,15 +34,24 @@ class Convo extends Request
      */
     public function listConvos(int $limit = 50, ?string $cursor = null): Response
     {
-        return $this->atp->client->get('chat.bsky.convo.listConvos', compact('limit', 'cursor'));
+        return $this->atp->client->get(
+            endpoint: 'chat.bsky.convo.listConvos',
+            params: compact('limit', 'cursor')
+        );
     }
 
     /**
      * Get messages
      */
-    public function getMessages(string $convoId, int $limit = 50, ?string $cursor = null): Response
-    {
-        return $this->atp->client->get('chat.bsky.convo.getMessages', compact('convoId', 'limit', 'cursor'));
+    public function getMessages(
+        string $convoId,
+        int $limit = 50,
+        ?string $cursor = null
+    ): Response {
+        return $this->atp->client->get(
+            endpoint: 'chat.bsky.convo.getMessages',
+            params: compact('convoId', 'limit', 'cursor')
+        );
     }
 
     /**
@@ -44,7 +59,10 @@ class Convo extends Request
      */
     public function sendMessage(string $convoId, array $message): Response
     {
-        return $this->atp->client->post('chat.bsky.convo.sendMessage', compact('convoId', 'message'));
+        return $this->atp->client->post(
+            endpoint: 'chat.bsky.convo.sendMessage',
+            body: compact('convoId', 'message')
+        );
     }
 
     /**
@@ -52,7 +70,10 @@ class Convo extends Request
      */
     public function sendMessageBatch(array $items): Response
     {
-        return $this->atp->client->post('chat.bsky.convo.sendMessageBatch', compact('items'));
+        return $this->atp->client->post(
+            endpoint: 'chat.bsky.convo.sendMessageBatch',
+            body: compact('items')
+        );
     }
 
     /**
@@ -60,7 +81,10 @@ class Convo extends Request
      */
     public function deleteMessageForSelf(string $convoId, string $messageId): Response
     {
-        return $this->atp->client->post('chat.bsky.convo.deleteMessageForSelf', compact('convoId', 'messageId'));
+        return $this->atp->client->post(
+            endpoint: 'chat.bsky.convo.deleteMessageForSelf',
+            body: compact('convoId', 'messageId')
+        );
     }
 
     /**
@@ -68,7 +92,10 @@ class Convo extends Request
      */
     public function updateRead(string $convoId, ?string $messageId = null): Response
     {
-        return $this->atp->client->post('chat.bsky.convo.updateRead', compact('convoId', 'messageId'));
+        return $this->atp->client->post(
+            endpoint: 'chat.bsky.convo.updateRead',
+            body: compact('convoId', 'messageId')
+        );
     }
 
     /**
@@ -76,7 +103,10 @@ class Convo extends Request
      */
     public function muteConvo(string $convoId): Response
     {
-        return $this->atp->client->post('chat.bsky.convo.muteConvo', compact('convoId'));
+        return $this->atp->client->post(
+            endpoint: 'chat.bsky.convo.muteConvo',
+            body: compact('convoId')
+        );
     }
 
     /**
@@ -84,7 +114,10 @@ class Convo extends Request
      */
     public function unmuteConvo(string $convoId): Response
     {
-        return $this->atp->client->post('chat.bsky.convo.unmuteConvo', compact('convoId'));
+        return $this->atp->client->post(
+            endpoint: 'chat.bsky.convo.unmuteConvo',
+            body: compact('convoId')
+        );
     }
 
     /**
@@ -92,7 +125,10 @@ class Convo extends Request
      */
     public function leaveConvo(string $convoId): Response
     {
-        return $this->atp->client->post('chat.bsky.convo.leaveConvo', compact('convoId'));
+        return $this->atp->client->post(
+            endpoint: 'chat.bsky.convo.leaveConvo',
+            body: compact('convoId')
+        );
     }
 
     /**
@@ -100,6 +136,9 @@ class Convo extends Request
      */
     public function getLog(?string $cursor = null): Response
     {
-        return $this->atp->client->get('chat.bsky.convo.getLog', compact('cursor'));
+        return $this->atp->client->get(
+            endpoint: 'chat.bsky.convo.getLog',
+            params: compact('cursor')
+        );
     }
 }

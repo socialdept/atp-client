@@ -12,7 +12,10 @@ class Sync extends Request
      */
     public function getBlob(string $did, string $cid): Response
     {
-        return $this->atp->client->get('com.atproto.sync.getBlob', compact('did', 'cid'));
+        return $this->atp->client->get(
+            endpoint: 'com.atproto.sync.getBlob',
+            params: compact('did', 'cid')
+        );
     }
 
     /**
@@ -20,15 +23,24 @@ class Sync extends Request
      */
     public function getCheckout(string $did): Response
     {
-        return $this->atp->client->get('com.atproto.sync.getCheckout', compact('did'));
+        return $this->atp->client->get(
+            endpoint: 'com.atproto.sync.getCheckout',
+            params: compact('did')
+        );
     }
 
     /**
      * Get commit path from sync
      */
-    public function getCommitPath(string $did, ?string $latest = null, ?string $earliest = null): Response
-    {
-        return $this->atp->client->get('com.atproto.sync.getCommitPath', compact('did', 'latest', 'earliest'));
+    public function getCommitPath(
+        string $did,
+        ?string $latest = null,
+        ?string $earliest = null
+    ): Response {
+        return $this->atp->client->get(
+            endpoint: 'com.atproto.sync.getCommitPath',
+            params: compact('did', 'latest', 'earliest')
+        );
     }
 
     /**
@@ -36,7 +48,10 @@ class Sync extends Request
      */
     public function getRepo(string $did, ?string $since = null): Response
     {
-        return $this->atp->client->get('com.atproto.sync.getRepo', compact('did', 'since'));
+        return $this->atp->client->get(
+            endpoint: 'com.atproto.sync.getRepo',
+            params: compact('did', 'since')
+        );
     }
 
     /**
@@ -44,6 +59,9 @@ class Sync extends Request
      */
     public function listRepos(int $limit = 500, ?string $cursor = null): Response
     {
-        return $this->atp->client->get('com.atproto.sync.listRepos', compact('limit', 'cursor'));
+        return $this->atp->client->get(
+            endpoint: 'com.atproto.sync.listRepos',
+            params: compact('limit', 'cursor')
+        );
     }
 }

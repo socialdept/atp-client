@@ -23,7 +23,7 @@ trait HasHttp
      * Make XRPC call
      */
     protected function call(
-        string $nsid,
+        string $endpoint,
         string $method,
         ?array $params = null,
         ?array $body = null
@@ -32,7 +32,7 @@ trait HasHttp
         $session = $this->sessions->ensureValid($this->identifier);
 
         // Build URL
-        $url = rtrim($session->pdsEndpoint(), '/').'/xrpc/'.$nsid;
+        $url = rtrim($session->pdsEndpoint(), '/').'/xrpc/'.$endpoint;
 
         // Get DPoP nonce
         $nonce = $this->nonceManager->getNonce($session->pdsEndpoint());
@@ -70,8 +70,8 @@ trait HasHttp
         }
 
         // Validate response if schema exists
-        if (Schema::exists($nsid)) {
-            $this->validateResponse($nsid, $response);
+        if (Schema::exists($endpoint)) {
+            $this->validateResponse($endpoint, $response);
         }
 
         return new Response($response);
@@ -80,7 +80,7 @@ trait HasHttp
     /**
      * Validate response against schema
      */
-    protected function validateResponse(string $nsid, LaravelResponse $response): void
+    protected function validateResponse(string $endpoint, LaravelResponse $response): void
     {
         if (! $response->successful()) {
             return; // Don't validate error responses
@@ -88,8 +88,8 @@ trait HasHttp
 
         $data = $response->json();
 
-        if (! Schema::validate($nsid, $data)) {
-            $errors = Schema::getErrors($nsid, $data);
+        if (! Schema::validate($endpoint, $data)) {
+            $errors = Schema::getErrors($endpoint, $data);
             throw new ValidationException($errors);
         }
     }
@@ -97,24 +97,24 @@ trait HasHttp
     /**
      * Make GET request
      */
-    protected function get(string $nsid, array $params = []): Response
+    protected function get(string $endpoint, array $params = []): Response
     {
-        return $this->call($nsid, 'GET', $params);
+        return $this->call($endpoint, 'GET', $params);
     }
 
     /**
      * Make POST request
      */
-    protected function post(string $nsid, array $body = []): Response
+    protected function post(string $endpoint, array $body = []): Response
     {
-        return $this->call($nsid, 'POST', null, $body);
+        return $this->call($endpoint, 'POST', null, $body);
     }
 
     /**
      * Make DELETE request
      */
-    protected function delete(string $nsid, array $params = []): Response
+    protected function delete(string $endpoint, array $params = []): Response
     {
-        return $this->call($nsid, 'DELETE', $params);
+        return $this->call($endpoint, 'DELETE', $params);
     }
 }

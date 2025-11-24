@@ -12,7 +12,9 @@ class Server extends Request
      */
     public function getSession(): Response
     {
-        return $this->atp->client->get('com.atproto.server.getSession');
+        return $this->atp->client->get(
+            endpoint: 'com.atproto.server.getSession'
+        );
     }
 
     /**
@@ -20,6 +22,8 @@ class Server extends Request
      */
     public function describeServer(): Response
     {
-        return $this->atp->client->get('com.atproto.server.describeServer');
+        return $this->atp->client->get(
+            endpoint: 'com.atproto.server.describeServer'
+        );
     }
 }

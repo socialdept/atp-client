@@ -12,7 +12,9 @@ class Actor extends Request
      */
     public function getActorMetadata(): Response
     {
-        return $this->atp->client->get('chat.bsky.actor.getActorMetadata');
+        return $this->atp->client->get(
+            endpoint: 'chat.bsky.actor.getActorMetadata'
+        );
     }
 
     /**
@@ -20,7 +22,9 @@ class Actor extends Request
      */
     public function exportAccountData(): Response
     {
-        return $this->atp->client->get('chat.bsky.actor.exportAccountData');
+        return $this->atp->client->get(
+            endpoint: 'chat.bsky.actor.exportAccountData'
+        );
     }
 
     /**
@@ -28,6 +32,8 @@ class Actor extends Request
      */
     public function deleteAccount(): Response
     {
-        return $this->atp->client->post('chat.bsky.actor.deleteAccount');
+        return $this->atp->client->post(
+            endpoint: 'chat.bsky.actor.deleteAccount'
+        );
     }
 }

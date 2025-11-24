@@ -12,7 +12,10 @@ class Server extends Request
      */
     public function getBlob(string $did, string $cid): Response
     {
-        return $this->atp->client->get('tools.ozone.server.getBlob', compact('did', 'cid'));
+        return $this->atp->client->get(
+            endpoint: 'tools.ozone.server.getBlob',
+            params: compact('did', 'cid')
+        );
     }
 
     /**
@@ -20,6 +23,8 @@ class Server extends Request
      */
     public function getConfig(): Response
     {
-        return $this->atp->client->get('tools.ozone.server.getConfig');
+        return $this->atp->client->get(
+            endpoint: 'tools.ozone.server.getConfig'
+        );
     }
 }

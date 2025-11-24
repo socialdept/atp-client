@@ -12,7 +12,10 @@ class Identity extends Request
      */
     public function resolveHandle(string $handle): Response
     {
-        return $this->atp->client->get('com.atproto.identity.resolveHandle', compact('handle'));
+        return $this->atp->client->get(
+            endpoint: 'com.atproto.identity.resolveHandle',
+            params: compact('handle')
+        );
     }
 
     /**
@@ -20,6 +23,9 @@ class Identity extends Request
      */
     public function updateHandle(string $handle): Response
     {
-        return $this->atp->client->post('com.atproto.identity.updateHandle', compact('handle'));
+        return $this->atp->client->post(
+            endpoint: 'com.atproto.identity.updateHandle',
+            body: compact('handle')
+        );
     }
 }
