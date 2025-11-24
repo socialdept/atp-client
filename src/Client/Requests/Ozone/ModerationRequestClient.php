@@ -5,7 +5,7 @@ namespace SocialDept\AtpClient\Client\Requests\Ozone;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Http\Response;
 
-class Moderation extends Request
+class ModerationRequestClient extends Request
 {
     /**
      * Get moderation event

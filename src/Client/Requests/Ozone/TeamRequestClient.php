@@ -5,7 +5,7 @@ namespace SocialDept\AtpClient\Client\Requests\Ozone;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Http\Response;
 
-class Team extends Request
+class TeamRequestClient extends Request
 {
     /**
      * Get team member

@@ -5,7 +5,7 @@ namespace SocialDept\AtpClient\Client\Requests\Chat;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Http\Response;
 
-class Convo extends Request
+class ConvoRequestClient extends Request
 {
     /**
      * Get conversation

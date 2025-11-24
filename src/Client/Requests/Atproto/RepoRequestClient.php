@@ -5,7 +5,7 @@ namespace SocialDept\AtpClient\Client\Requests\Atproto;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Http\Response;
 
-class Repo extends Request
+class RepoRequestClient extends Request
 {
     /**
      * Create a record

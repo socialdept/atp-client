@@ -5,7 +5,7 @@ namespace SocialDept\AtpClient\Client\Requests\Bsky;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Http\Response;
 
-class Feed extends Request
+class FeedRequestClient extends Request
 {
     /**
      * Get timeline feed

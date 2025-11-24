@@ -5,7 +5,7 @@ namespace SocialDept\AtpClient\Client\Requests\Atproto;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Http\Response;
 
-class Identity extends Request
+class IdentityRequestClient extends Request
 {
     /**
      * Resolve handle to DID

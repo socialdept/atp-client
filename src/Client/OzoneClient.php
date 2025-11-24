@@ -15,23 +15,23 @@ class OzoneClient
     /**
      * Moderation operations (tools.ozone.moderation.*)
      */
-    public Ozone\Moderation $moderation;
+    public Ozone\ModerationRequestClient $moderation;
 
     /**
      * Server operations (tools.ozone.server.*)
      */
-    public Ozone\Server $server;
+    public Ozone\ServerRequestClient $server;
 
     /**
      * Team operations (tools.ozone.team.*)
      */
-    public Ozone\Team $team;
+    public Ozone\TeamRequestClient $team;
 
     public function __construct(AtpClient $parent)
     {
         $this->atp = $parent;
-        $this->moderation = new Ozone\Moderation($this);
-        $this->server = new Ozone\Server($this);
-        $this->team = new Ozone\Team($this);
+        $this->moderation = new Ozone\ModerationRequestClient($this);
+        $this->server = new Ozone\ServerRequestClient($this);
+        $this->team = new Ozone\TeamRequestClient($this);
     }
 }

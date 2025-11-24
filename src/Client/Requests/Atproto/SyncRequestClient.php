@@ -5,7 +5,7 @@ namespace SocialDept\AtpClient\Client\Requests\Atproto;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Http\Response;
 
-class Sync extends Request
+class SyncRequestClient extends Request
 {
     /**
      * Get blob from sync

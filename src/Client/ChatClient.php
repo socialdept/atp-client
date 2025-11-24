@@ -15,17 +15,17 @@ class ChatClient
     /**
      * Conversation operations (chat.bsky.convo.*)
      */
-    public Chat\Convo $convo;
+    public Chat\ConvoRequestClient $convo;
 
     /**
      * Actor operations (chat.bsky.actor.*)
      */
-    public Chat\Actor $actor;
+    public Chat\ActorRequestClient $actor;
 
     public function __construct(AtpClient $parent)
     {
         $this->atp = $parent;
-        $this->convo = new Chat\Convo($this);
-        $this->actor = new Chat\Actor($this);
+        $this->convo = new Chat\ConvoRequestClient($this);
+        $this->actor = new Chat\ActorRequestClient($this);
     }
 }

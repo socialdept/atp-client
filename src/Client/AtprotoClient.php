@@ -15,29 +15,29 @@ class AtprotoClient
     /**
      * Repository operations (com.atproto.repo.*)
      */
-    public Atproto\Repo $repo;
+    public Atproto\RepoRequestClient $repo;
 
     /**
      * Server operations (com.atproto.server.*)
      */
-    public Atproto\Server $server;
+    public Atproto\ServerRequestClient $server;
 
     /**
      * Identity operations (com.atproto.identity.*)
      */
-    public Atproto\Identity $identity;
+    public Atproto\IdentityRequestClient $identity;
 
     /**
      * Sync operations (com.atproto.sync.*)
      */
-    public Atproto\Sync $sync;
+    public Atproto\SyncRequestClient $sync;
 
     public function __construct(AtpClient $parent)
     {
         $this->atp = $parent;
-        $this->repo = new Atproto\Repo($this);
-        $this->server = new Atproto\Server($this);
-        $this->identity = new Atproto\Identity($this);
-        $this->sync = new Atproto\Sync($this);
+        $this->repo = new Atproto\RepoRequestClient($this);
+        $this->server = new Atproto\ServerRequestClient($this);
+        $this->identity = new Atproto\IdentityRequestClient($this);
+        $this->sync = new Atproto\SyncRequestClient($this);
     }
 }
