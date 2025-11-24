@@ -3,6 +3,7 @@
 namespace SocialDept\AtpClient;
 
 use Illuminate\Support\ServiceProvider;
+use SocialDept\AtpClient\Auth\ClientMetadataManager;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\OAuthEngine;
 use SocialDept\AtpClient\Auth\TokenRefresher;
@@ -36,9 +37,19 @@ class AtpClientServiceProvider extends ServiceProvider
         });
 
         // Register core services
+        $this->app->singleton(ClientMetadataManager::class);
         $this->app->singleton(DPoPKeyManager::class);
         $this->app->singleton(TokenRefresher::class);
-        $this->app->singleton(SessionManager::class);
+        $this->app->singleton(SessionManager::class, function ($app) {
+            return new SessionManager(
+                credentials: $app->make(CredentialProvider::class),
+                refresher: $app->make(TokenRefresher::class),
+                dpopManager: $app->make(DPoPKeyManager::class),
+                keyStore: $app->make(KeyStore::class),
+                http: $app->make('http'),
+                refreshThreshold: config('atp-client.session.refresh_threshold', 300),
+            );
+        });
         $this->app->singleton(OAuthEngine::class);
 
         // Register main client facade accessor
