@@ -41,7 +41,7 @@ class ClientMetadataManager
      */
     public function isLocalhost(): bool
     {
-        return $this->getClientId() === 'http://localhost';
+        return str_starts_with($this->getClientId(), 'http://localhost');
     }
 
     /**
@@ -111,6 +111,11 @@ class ClientMetadataManager
      *
      * In production, points to the package's client-metadata.json endpoint.
      * For localhost detection, checks if app URL contains localhost or .test.
+     *
+     * For localhost clients, the client_id includes query parameters for
+     * redirect_uri and scope since there's no metadata document to fetch.
+     *
+     * @see https://atproto.com/specs/oauth#clients
      */
     protected function generateClientId(): string
     {
@@ -119,13 +124,39 @@ class ClientMetadataManager
 
         // Detect local development environments
         if ($this->isLocalDevelopment($host)) {
-            return 'http://localhost';
+            return $this->buildLocalhostClientId();
         }
 
         // Production: point to client metadata endpoint
         $prefix = config('client.oauth.prefix', '/atp/oauth/');
 
         return rtrim($appUrl, '/').rtrim($prefix, '/').'/client-metadata.json';
+    }
+
+    /**
+     * Build localhost client_id with query parameters.
+     *
+     * For localhost clients, metadata is passed via query parameters:
+     * - redirect_uri: The callback URL (using 127.0.0.1)
+     * - scope: Space-separated list of requested scopes
+     */
+    protected function buildLocalhostClientId(): string
+    {
+        $params = [];
+
+        // Add redirect URI
+        $redirectUris = config('client.client.redirect_uris', []);
+        if (! empty($redirectUris)) {
+            $params['redirect_uri'] = $redirectUris[0];
+        } else {
+            $params['redirect_uri'] = 'http://127.0.0.1';
+        }
+
+        // Add scopes
+        $scopes = config('client.client.scopes', ['atproto']);
+        $params['scope'] = implode(' ', $scopes);
+
+        return 'http://localhost?'.http_build_query($params);
     }
 
     /**

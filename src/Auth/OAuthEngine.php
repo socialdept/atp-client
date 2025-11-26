@@ -8,7 +8,7 @@ use SocialDept\AtpClient\Data\AuthorizationRequest;
 use SocialDept\AtpClient\Data\DPoPKey;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Http\DPoPClient;
-use SocialDept\AtpResolver\Facades\Resolver;
+use SocialDept\Resolver\Facades\Resolver;
 
 class OAuthEngine
 {
@@ -23,9 +23,12 @@ class OAuthEngine
      */
     public function authorize(
         string $identifier,
-        array $scopes = ['atproto', 'transition:generic'],
+        ?array $scopes = null,
         ?string $pdsEndpoint = null
     ): AuthorizationRequest {
+        // Use configured scopes if none provided
+        $scopes = $scopes ?? $this->metadata->getScopes();
+
         // Resolve PDS endpoint
         if (! $pdsEndpoint) {
             $pdsEndpoint = Resolver::resolvePds($identifier);
