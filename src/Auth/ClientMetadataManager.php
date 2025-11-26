@@ -2,36 +2,76 @@
 
 namespace SocialDept\AtpClient\Auth;
 
+/**
+ * Manages OAuth client metadata for AT Protocol authentication.
+ *
+ * The client_id in atproto OAuth is a URL that serves as both the unique
+ * identifier and the location of the client metadata document.
+ *
+ * For production: Use an HTTPS URL pointing to your client metadata.
+ * For localhost: Use exactly 'http://localhost' (no port).
+ *
+ * @see https://atproto.com/specs/oauth#clients
+ */
 class ClientMetadataManager
 {
     /**
-     * Get the client ID (typically the client URL)
+     * Get the client ID (URL to client metadata document).
+     *
+     * For production clients, this is an HTTPS URL like:
+     * 'https://example.com/oauth/client-metadata.json'
+     *
+     * For localhost development, this must be exactly 'http://localhost'
+     * (no port number allowed per atproto spec).
      */
     public function getClientId(): string
     {
-        return config('client.client.url');
+        $clientId = config('client.client.client_id');
+
+        if ($clientId) {
+            return $clientId;
+        }
+
+        // Fall back to auto-generated client_id based on app URL
+        return $this->generateClientId();
     }
 
     /**
-     * Get the client metadata URL
+     * Check if this is a localhost development client.
      */
-    public function getMetadataUrl(): ?string
+    public function isLocalhost(): bool
     {
-        return config('client.client.metadata_url');
+        return $this->getClientId() === 'http://localhost';
     }
 
     /**
-     * Get the redirect URIs
+     * Get the redirect URIs.
+     *
+     * For localhost development, redirect URIs must use 127.0.0.1
+     * (not localhost) and can include a port number.
      *
      * @return array<string>
      */
     public function getRedirectUris(): array
     {
-        return config('client.client.redirect_uris', []);
+        $uris = config('client.client.redirect_uris', []);
+
+        if (! empty($uris)) {
+            return $uris;
+        }
+
+        // Default redirect URI based on environment
+        if ($this->isLocalhost()) {
+            // For localhost, use 127.0.0.1
+            return ['http://127.0.0.1'];
+        }
+
+        // For production, use app URL
+        return [config('client.client.url').'/auth/atp/callback'];
     }
 
     /**
-     * Get the OAuth scopes
+     * Get the OAuth scopes.
      *
      * @return array<string>
      */
@@ -41,7 +81,9 @@ class ClientMetadataManager
     }
 
     /**
-     * Get the client metadata as an array
+     * Get the client metadata as an array.
+     *
+     * This is the structure served at the client_id URL.
      *
      * @return array<string, mixed>
      */
@@ -62,5 +104,43 @@ class ClientMetadataManager
             'application_type' => 'web',
             'dpop_bound_access_tokens' => true,
         ];
+    }
+
+    /**
+     * Generate client_id from app configuration.
+     *
+     * In production, points to the package's client-metadata.json endpoint.
+     * For localhost detection, checks if app URL contains localhost or .test.
+     */
+    protected function generateClientId(): string
+    {
+        $appUrl = config('client.client.url') ?? config('app.url');
+        $host = parse_url($appUrl, PHP_URL_HOST);
+
+        // Detect local development environments
+        if ($this->isLocalDevelopment($host)) {
+            return 'http://localhost';
+        }
+
+        // Production: point to client metadata endpoint
+        $prefix = config('client.oauth.prefix', '/atp/oauth/');
+
+        return rtrim($appUrl, '/').rtrim($prefix, '/').'/client-metadata.json';
+    }
+
+    /**
+     * Check if the host indicates a local development environment.
+     */
+    protected function isLocalDevelopment(?string $host): bool
+    {
+        if (! $host) {
+            return false;
+        }
+
+        return $host === 'localhost'
+            || $host === '127.0.0.1'
+            || str_ends_with($host, '.localhost')
+            || str_ends_with($host, '.test')
+            || str_ends_with($host, '.local');
     }
 }

@@ -3,20 +3,34 @@
 return [
     /*
     |--------------------------------------------------------------------------
-    | Client Metadata
+    | Client Configuration
     |--------------------------------------------------------------------------
     |
-    | OAuth client configuration. The metadata URL must be publicly accessible
-    | and serve the client-metadata.json file.
+    | OAuth client configuration. The client_id is a URL that serves as the
+    | unique identifier for your OAuth client. In production, this must be
+    | an HTTPS URL pointing to your publicly accessible client metadata.
+    |
+    | For local development, use 'http://localhost' (no port) as the client_id.
+    | The redirect_uri for localhost must use 127.0.0.1 with a port.
+    |
+    | @see https://atproto.com/specs/oauth#clients
     |
     */
     'client' => [
         'name' => env('ATP_CLIENT_NAME', config('app.name')),
         'url' => env('ATP_CLIENT_URL', config('app.url')),
-        'metadata_url' => env('ATP_CLIENT_METADATA_URL'),
-        'redirect_uris' => [
-            env('ATP_CLIENT_REDIRECT_URI', config('app.url').'/auth/atp/callback'),
-        ],
+
+        // The client_id is the URL to your client metadata document.
+        // For production: 'https://example.com/oauth/client-metadata.json'
+        // For localhost:  'http://localhost' (exactly, no port)
+        'client_id' => env('ATP_CLIENT_ID'),
+
+        // Redirect URIs for OAuth callback.
+        // For localhost development, use 'http://127.0.0.1:<port>/callback'
+        'redirect_uris' => array_filter([
+            env('ATP_CLIENT_REDIRECT_URI'),
+        ]),
+
         'scopes' => ['atproto', 'transition:generic'],
     ],
 
