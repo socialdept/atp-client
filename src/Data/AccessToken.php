@@ -10,6 +10,7 @@ class AccessToken
         public readonly string $did,
         public readonly \DateTimeInterface $expiresAt,
         public readonly ?string $handle = null,
+        public readonly ?string $issuer = null,
     ) {}
 
     /**
@@ -18,7 +19,7 @@ class AccessToken
      * Handles both legacy createSession format (accessJwt, refreshJwt, did)
      * and OAuth token format (access_token, refresh_token, sub).
      */
-    public static function fromResponse(array $data, ?string $handle = null): self
+    public static function fromResponse(array $data, ?string $handle = null, ?string $issuer = null): self
     {
         // OAuth token endpoint format
         if (isset($data['access_token'])) {
@@ -28,6 +29,7 @@ class AccessToken
                 did: $data['sub'] ?? '',
                 expiresAt: now()->addSeconds($data['expires_in'] ?? 300),
                 handle: $handle,
+                issuer: $issuer,
             );
         }
 
@@ -38,6 +40,7 @@ class AccessToken
             did: $data['did'],
             expiresAt: now()->addSeconds($data['expiresIn'] ?? 300),
             handle: $data['handle'] ?? $handle,
+            issuer: $issuer,
         );
     }
 }
