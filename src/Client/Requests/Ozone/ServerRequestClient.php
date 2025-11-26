@@ -9,6 +9,8 @@ class ServerRequestClient extends Request
 {
     /**
      * Get blob
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-server-get-config
      */
     public function getBlob(string $did, string $cid): Response
     {
@@ -20,6 +22,8 @@ class ServerRequestClient extends Request
 
     /**
      * Get config
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-server-get-config
      */
     public function getConfig(): Response
     {

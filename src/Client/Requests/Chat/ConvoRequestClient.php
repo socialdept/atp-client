@@ -9,6 +9,8 @@ class ConvoRequestClient extends Request
 {
     /**
      * Get conversation
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-convo-get-convo
      */
     public function getConvo(string $convoId): Response
     {
@@ -20,6 +22,8 @@ class ConvoRequestClient extends Request
 
     /**
      * Get conversation for members
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-convo-get-convo-for-members
      */
     public function getConvoForMembers(array $members): Response
     {
@@ -31,6 +35,8 @@ class ConvoRequestClient extends Request
 
     /**
      * List conversations
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-convo-list-convos
      */
     public function listConvos(int $limit = 50, ?string $cursor = null): Response
     {
@@ -42,6 +48,8 @@ class ConvoRequestClient extends Request
 
     /**
      * Get messages
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-convo-get-messages
      */
     public function getMessages(
         string $convoId,
@@ -56,6 +64,8 @@ class ConvoRequestClient extends Request
 
     /**
      * Send message
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-convo-send-message
      */
     public function sendMessage(string $convoId, array $message): Response
     {
@@ -67,6 +77,8 @@ class ConvoRequestClient extends Request
 
     /**
      * Send message batch
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-convo-send-message-batch
      */
     public function sendMessageBatch(array $items): Response
     {
@@ -77,7 +89,9 @@ class ConvoRequestClient extends Request
     }
 
     /**
-     * Delete message
+     * Delete message for self
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-convo-delete-message-for-self
      */
     public function deleteMessageForSelf(string $convoId, string $messageId): Response
     {
@@ -89,6 +103,8 @@ class ConvoRequestClient extends Request
 
     /**
      * Update read status
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-convo-update-read
      */
     public function updateRead(string $convoId, ?string $messageId = null): Response
     {
@@ -100,6 +116,8 @@ class ConvoRequestClient extends Request
 
     /**
      * Mute conversation
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-convo-mute-convo
      */
     public function muteConvo(string $convoId): Response
     {
@@ -111,6 +129,8 @@ class ConvoRequestClient extends Request
 
     /**
      * Unmute conversation
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-convo-unmute-convo
      */
     public function unmuteConvo(string $convoId): Response
     {
@@ -122,6 +142,8 @@ class ConvoRequestClient extends Request
 
     /**
      * Leave conversation
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-convo-leave-convo
      */
     public function leaveConvo(string $convoId): Response
     {
@@ -133,6 +155,8 @@ class ConvoRequestClient extends Request
 
     /**
      * Get log
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-convo-get-log
      */
     public function getLog(?string $cursor = null): Response
     {

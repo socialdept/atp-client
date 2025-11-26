@@ -9,6 +9,8 @@ class FeedRequestClient extends Request
 {
     /**
      * Get timeline feed
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-timeline
      */
     public function getTimeline(int $limit = 50, ?string $cursor = null): Response
     {
@@ -20,6 +22,8 @@ class FeedRequestClient extends Request
 
     /**
      * Get author feed
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-author-feed
      */
     public function getAuthorFeed(
         string $actor,
@@ -34,6 +38,8 @@ class FeedRequestClient extends Request
 
     /**
      * Get post thread
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-post-thread
      */
     public function getPostThread(string $uri, int $depth = 6): Response
     {
@@ -45,6 +51,8 @@ class FeedRequestClient extends Request
 
     /**
      * Search posts
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-feed-search-posts
      */
     public function searchPosts(
         string $q,
@@ -59,6 +67,8 @@ class FeedRequestClient extends Request
 
     /**
      * Get likes for a post
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-likes
      */
     public function getLikes(
         string $uri,
@@ -73,6 +83,8 @@ class FeedRequestClient extends Request
 
     /**
      * Get reposts for a post
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-reposted-by
      */
     public function getRepostedBy(
         string $uri,

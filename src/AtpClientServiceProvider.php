@@ -24,11 +24,11 @@ class AtpClientServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/atp-client.php', 'atp-client');
+        $this->mergeConfigFrom(__DIR__.'/../config/client.php', 'atp-client');
 
         // Register contracts
         $this->app->singleton(CredentialProvider::class, function ($app) {
-            $provider = config('atp-client.credential_provider');
+            $provider = config('client.credential_provider');
 
             return new $provider();
         });
@@ -51,7 +51,7 @@ class AtpClientServiceProvider extends ServiceProvider
                 dpopManager: $app->make(DPoPKeyManager::class),
                 keyStore: $app->make(KeyStore::class),
                 http: $app->make('http'),
-                refreshThreshold: config('atp-client.session.refresh_threshold', 300),
+                refreshThreshold: config('client.session.refresh_threshold', 300),
             );
         });
         $this->app->singleton(OAuthEngine::class);
@@ -107,7 +107,7 @@ class AtpClientServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../config/atp-client.php' => config_path('atp-client.php'),
+                __DIR__.'/../config/client.php' => config_path('client.php'),
             ], 'atp-client-config');
 
             $this->commands([
@@ -123,11 +123,11 @@ class AtpClientServiceProvider extends ServiceProvider
      */
     protected function registerRoutes(): void
     {
-        if (config('atp-client.oauth.disabled')) {
+        if (config('client.oauth.disabled')) {
             return;
         }
 
-        $prefix = config('atp-client.oauth.prefix', '/atp/oauth/');
+        $prefix = config('client.oauth.prefix', '/atp/oauth/');
 
         Route::prefix($prefix)->group(function () {
             Route::get('client-metadata.json', ClientMetadataController::class)

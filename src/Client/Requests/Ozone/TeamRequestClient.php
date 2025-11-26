@@ -9,6 +9,8 @@ class TeamRequestClient extends Request
 {
     /**
      * Get team member
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-team-list-members
      */
     public function getTeamMember(string $did): Response
     {
@@ -20,6 +22,8 @@ class TeamRequestClient extends Request
 
     /**
      * List team members
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-team-list-members
      */
     public function listTeamMembers(int $limit = 50, ?string $cursor = null): Response
     {
@@ -31,6 +35,8 @@ class TeamRequestClient extends Request
 
     /**
      * Add team member
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-team-add-member
      */
     public function addTeamMember(string $did, string $role): Response
     {
@@ -42,6 +48,8 @@ class TeamRequestClient extends Request
 
     /**
      * Update team member
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-team-update-member
      */
     public function updateTeamMember(
         string $did,
@@ -59,6 +67,8 @@ class TeamRequestClient extends Request
 
     /**
      * Delete team member
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-team-delete-member
      */
     public function deleteTeamMember(string $did): Response
     {

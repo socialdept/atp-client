@@ -119,4 +119,44 @@ trait HasHttp
     {
         return $this->call($endpoint, 'DELETE', $params);
     }
+
+    /**
+     * Make POST request with raw binary body (for blob uploads)
+     */
+    protected function postBlob(string $endpoint, string $data, string $mimeType): Response
+    {
+        // Ensure session is valid (auto-refresh)
+        $session = $this->sessions->ensureValid($this->identifier);
+
+        // Build URL
+        $url = rtrim($session->pdsEndpoint(), '/').'/xrpc/'.$endpoint;
+
+        // Get DPoP nonce
+        $nonce = $this->nonceManager->getNonce($session->pdsEndpoint());
+
+        // Create DPoP proof using DPoPKeyManager
+        $dpopProof = app(DPoPKeyManager::class)->createProof(
+            key: $session->dpopKey(),
+            method: 'POST',
+            url: $url,
+            nonce: $nonce,
+            accessToken: $session->accessToken(),
+        );
+
+        // Build and send request with raw binary body
+        $response = $this->http
+            ->withHeaders([
+                'Authorization' => 'Bearer '.$session->accessToken(),
+                'DPoP' => $dpopProof,
+            ])
+            ->withBody($data, $mimeType)
+            ->post($url);
+
+        // Store nonce from response if present
+        if ($newNonce = $response->header('DPoP-Nonce')) {
+            $this->nonceManager->storeNonce($session->pdsEndpoint(), $newNonce);
+        }
+
+        return new Response($response);
+    }
 }

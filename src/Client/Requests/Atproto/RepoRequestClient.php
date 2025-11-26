@@ -2,13 +2,19 @@
 
 namespace SocialDept\AtpClient\Client\Requests\Atproto;
 
+use Illuminate\Http\UploadedFile;
+use InvalidArgumentException;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Http\Response;
+use SplFileInfo;
+use Throwable;
 
 class RepoRequestClient extends Request
 {
     /**
      * Create a record
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-repo-create-record
      */
     public function createRecord(
         string $repo,
@@ -29,6 +35,8 @@ class RepoRequestClient extends Request
 
     /**
      * Delete a record
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-repo-delete-record
      */
     public function deleteRecord(
         string $repo,
@@ -48,6 +56,8 @@ class RepoRequestClient extends Request
 
     /**
      * Put (upsert) a record
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-repo-put-record
      */
     public function putRecord(
         string $repo,
@@ -69,6 +79,8 @@ class RepoRequestClient extends Request
 
     /**
      * Get a record
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-repo-get-record
      */
     public function getRecord(
         string $repo,
@@ -84,6 +96,8 @@ class RepoRequestClient extends Request
 
     /**
      * List records in a collection
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-repo-list-records
      */
     public function listRecords(
         string $repo,
@@ -99,18 +113,42 @@ class RepoRequestClient extends Request
     }
 
     /**
-     * Upload a blob
+     * Upload a new blob, to be referenced from a repository record
+     *
+     * The blob will be deleted if it is not referenced within a time window.
+     *
+     * @param  UploadedFile|SplFileInfo|string  $file  The file to upload
+     * @param  string|null  $mimeType  MIME type (required for string input, auto-detected for file objects)
+     *
+     * @throws InvalidArgumentException|Throwable  When $file is a string and $mimeType is not provided
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-repo-upload-blob
      */
-    public function uploadBlob(string $data, string $mimeType): Response
+    public function uploadBlob(UploadedFile|SplFileInfo|string $file, ?string $mimeType = null): Response
     {
-        return $this->atp->client->post(
+        // Handle different input types
+        if ($file instanceof UploadedFile) {
+            $data = $file->getContent();
+            $mimeType ??= $file->getMimeType();
+        } elseif ($file instanceof SplFileInfo) {
+            $data = file_get_contents($file->getRealPath());
+            $mimeType ??= mime_content_type($file->getRealPath()) ?: 'application/octet-stream';
+        } else {
+            throw_if($mimeType === null, new InvalidArgumentException('The $mimeType parameter is required when $file is a string.'));
+            $data = $file;
+        }
+
+        return $this->atp->client->postBlob(
             endpoint: 'com.atproto.repo.uploadBlob',
-            body: ['blob' => $data, 'mimeType' => $mimeType]
+            data: $data,
+            mimeType: $mimeType
         );
     }
 
     /**
      * Describe the repository
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-repo-describe-repo
      */
     public function describeRepo(string $repo): Response
     {

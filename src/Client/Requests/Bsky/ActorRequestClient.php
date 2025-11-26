@@ -9,6 +9,8 @@ class ActorRequestClient extends Request
 {
     /**
      * Get actor profile
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-actor-get-profile
      */
     public function getProfile(string $actor): Response
     {
