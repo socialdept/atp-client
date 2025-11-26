@@ -166,7 +166,7 @@ Sessions automatically refresh when tokens are about to expire (default: 5 minut
 use SocialDept\AtpClient\Events\TokenRefreshed;
 
 Event::listen(TokenRefreshed::class, function ($event) {
-    // $event->identifier - the user identifier
+    // $event->did - the user's DID (e.g., did:plc:abc123...)
     // $event->token - the new AccessToken
     // Update your credential storage here
 });
@@ -489,22 +489,28 @@ AT Protocol OAuth uses **single-use refresh tokens**. When a token is refreshed:
 
 If you lose the refresh token, the user must re-authenticate. The `CredentialProvider` ensures tokens are safely persisted.
 
+### How Handle Resolution Works
+
+When you call `Atp::as('user.bsky.social')` or `Atp::login('user.bsky.social', $password)`, the package automatically resolves the handle to a DID (Decentralized Identifier). The DID is then used as the storage key for credentials. This ensures consistency even if a user changes their handle.
+
+If resolution fails (invalid handle, network error, etc.), a `HandleResolutionException` is thrown.
+
 ### The CredentialProvider Interface
 
 ```php
 interface CredentialProvider
 {
-    // Get stored credentials for a user
-    public function getCredentials(string $identifier): ?Credentials;
+    // Get stored credentials by DID
+    public function getCredentials(string $did): ?Credentials;
 
     // Store credentials after initial OAuth or app password login
-    public function storeCredentials(string $identifier, AccessToken $token): void;
+    public function storeCredentials(string $did, AccessToken $token): void;
 
     // Update credentials after token refresh (CRITICAL: refresh tokens are single-use!)
-    public function updateCredentials(string $identifier, AccessToken $token): void;
+    public function updateCredentials(string $did, AccessToken $token): void;
 
     // Remove credentials (logout)
-    public function removeCredentials(string $identifier): void;
+    public function removeCredentials(string $did): void;
 }
 ```
 
@@ -519,16 +525,13 @@ php artisan make:migration create_atp_credentials_table
 ```php
 Schema::create('atp_credentials', function (Blueprint $table) {
     $table->id();
-    $table->string('identifier')->unique();  // User handle or DID
-    $table->string('did');                   // Decentralized identifier
+    $table->string('did')->unique();         // Decentralized identifier (primary key)
     $table->string('handle')->nullable();    // User's handle (e.g., user.bsky.social)
     $table->string('issuer')->nullable();    // PDS endpoint URL
     $table->text('access_token');            // JWT access token
     $table->text('refresh_token');           // Single-use refresh token
     $table->timestamp('expires_at');         // Token expiration time
     $table->timestamps();
-
-    $table->index('did');
 });
 ```
 
@@ -546,16 +549,15 @@ use SocialDept\AtpClient\Data\Credentials;
 
 class DatabaseCredentialProvider implements CredentialProvider
 {
-    public function getCredentials(string $identifier): ?Credentials
+    public function getCredentials(string $did): ?Credentials
     {
-        $record = AtpCredential::where('identifier', $identifier)->first();
+        $record = AtpCredential::where('did', $did)->first();
 
         if (! $record) {
             return null;
         }
 
         return new Credentials(
-            identifier: $record->identifier,
             did: $record->did,
             accessToken: $record->access_token,
             refreshToken: $record->refresh_token,
@@ -565,12 +567,11 @@ class DatabaseCredentialProvider implements CredentialProvider
         );
     }
 
-    public function storeCredentials(string $identifier, AccessToken $token): void
+    public function storeCredentials(string $did, AccessToken $token): void
     {
         AtpCredential::updateOrCreate(
-            ['identifier' => $identifier],
+            ['did' => $did],
             [
-                'did' => $token->did,
                 'handle' => $token->handle,
                 'issuer' => $token->issuer,
                 'access_token' => $token->accessJwt,
@@ -580,9 +581,9 @@ class DatabaseCredentialProvider implements CredentialProvider
         );
     }
 
-    public function updateCredentials(string $identifier, AccessToken $token): void
+    public function updateCredentials(string $did, AccessToken $token): void
     {
-        AtpCredential::where('identifier', $identifier)->update([
+        AtpCredential::where('did', $did)->update([
             'access_token' => $token->accessJwt,
             'refresh_token' => $token->refreshJwt,
             'expires_at' => $token->expiresAt,
@@ -592,9 +593,9 @@ class DatabaseCredentialProvider implements CredentialProvider
         ]);
     }
 
-    public function removeCredentials(string $identifier): void
+    public function removeCredentials(string $did): void
     {
-        AtpCredential::where('identifier', $identifier)->delete();
+        AtpCredential::where('did', $did)->delete();
     }
 }
 ```
@@ -611,7 +612,6 @@ use Illuminate\Database\Eloquent\Model;
 class AtpCredential extends Model
 {
     protected $fillable = [
-        'identifier',
         'did',
         'handle',
         'issuer',
@@ -681,13 +681,12 @@ public function atpCredential()
 Then update your provider to work with the authenticated user:
 
 ```php
-public function storeCredentials(string $identifier, AccessToken $token): void
+public function storeCredentials(string $did, AccessToken $token): void
 {
     AtpCredential::updateOrCreate(
-        ['identifier' => $identifier],
+        ['did' => $did],
         [
             'user_id' => auth()->id(),  // Link to current user
-            'did' => $token->did,
             'handle' => $token->handle,
             'issuer' => $token->issuer,
             'access_token' => $token->accessJwt,
@@ -702,9 +701,8 @@ public function storeCredentials(string $identifier, AccessToken $token): void
 
 | Field | Description |
 |-------|-------------|
-| `identifier` | The key used to look up credentials (usually the handle) |
-| `did` | Decentralized Identifier (e.g., `did:plc:abc123...`) |
-| `handle` | User's handle (e.g., `user.bsky.social`) |
+| `did` | Decentralized Identifier - the stable, permanent user ID (e.g., `did:plc:abc123...`) |
+| `handle` | User's handle (e.g., `user.bsky.social`) - can change |
 | `issuer` | The user's PDS endpoint URL (avoids repeated lookups) |
 | `accessToken` | JWT for API authentication (short-lived) |
 | `refreshToken` | Token to get new access tokens (single-use!) |
@@ -721,7 +719,7 @@ use SocialDept\AtpClient\Events\TokenRefreshed;
 Event::listen(TokenRefreshed::class, function (TokenRefreshed $event) {
     // The CredentialProvider.updateCredentials() is already called,
     // but you can do additional logging or notifications here
-    Log::info("Token refreshed for: {$event->identifier}");
+    Log::info("Token refreshed for: {$event->did}");
 });
 ```
 
@@ -735,14 +733,14 @@ use SocialDept\AtpClient\Events\TokenRefreshed;
 
 // Before token refresh
 Event::listen(TokenRefreshing::class, function ($event) {
-    Log::info('Refreshing token for: ' . $event->identifier);
+    Log::info('Refreshing token for: ' . $event->did);
 });
 
 // After token refresh
 Event::listen(TokenRefreshed::class, function ($event) {
     // Update your stored credentials
     $this->credentialProvider->updateCredentials(
-        $event->identifier,
+        $event->did,
         $event->token
     );
 });
