@@ -23,6 +23,11 @@ class Session
         return $this->credentials->did;
     }
 
+    public function handle(): ?string
+    {
+        return $this->credentials->handle;
+    }
+
     public function accessToken(): string
     {
         return $this->credentials->accessToken;
