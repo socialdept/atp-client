@@ -11,6 +11,7 @@ class AccessToken
         public readonly \DateTimeInterface $expiresAt,
         public readonly ?string $handle = null,
         public readonly ?string $issuer = null,
+        public readonly array $scope = [],
     ) {}
 
     /**
@@ -30,10 +31,11 @@ class AccessToken
                 expiresAt: now()->addSeconds($data['expires_in'] ?? 300),
                 handle: $handle,
                 issuer: $issuer,
+                scope: isset($data['scope']) ? explode(' ', $data['scope']) : [],
             );
         }
 
-        // Legacy createSession format
+        // Legacy createSession format (app passwords have full access)
         return new self(
             accessJwt: $data['accessJwt'],
             refreshJwt: $data['refreshJwt'],
@@ -41,6 +43,7 @@ class AccessToken
             expiresAt: now()->addSeconds($data['expiresIn'] ?? 300),
             handle: $data['handle'] ?? $handle,
             issuer: $issuer,
+            scope: ['atproto', 'transition:generic', 'transition:email'],
         );
     }
 }
