@@ -2,14 +2,20 @@
 
 namespace SocialDept\AtpClient\Client\Records;
 
+use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\StrongRef;
+use SocialDept\AtpClient\Enums\Scope;
 
 class ProfileRecordClient extends Request
 {
     /**
      * Update profile
+     *
+     * @requires transition:generic OR (rpc:com.atproto.repo.putRecord AND repo:app.bsky.actor.profile?action=update)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
     public function update(array $profile): StrongRef
     {
         // Ensure $type is set
@@ -17,14 +23,11 @@ class ProfileRecordClient extends Request
             $profile['$type'] = 'app.bsky.actor.profile';
         }
 
-        $response = $this->atp->client->post(
-            endpoint: 'com.atproto.repo.putRecord',
-            body: [
-                'repo' => $this->atp->client->sessions->session($this->atp->client->identifier)->did(),
-                'collection' => 'app.bsky.actor.profile',
-                'rkey' => 'self', // Profile records always use 'self' as rkey
-                'record' => $profile,
-            ]
+        $response = $this->atp->atproto->repo->putRecord(
+            repo: $this->atp->client->session()->did(),
+            collection: 'app.bsky.actor.profile',
+            rkey: 'self', // Profile records always use 'self' as rkey
+            record: $profile
         );
 
         return StrongRef::fromResponse($response->json());
@@ -32,16 +35,16 @@ class ProfileRecordClient extends Request
 
     /**
      * Get current profile
+     *
+     * @requires transition:generic (rpc:com.atproto.repo.getRecord)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
     public function get(): array
     {
-        $response = $this->atp->client->get(
-            endpoint: 'com.atproto.repo.getRecord',
-            params: [
-                'repo' => $this->atp->client->sessions->session($this->atp->client->identifier)->did(),
-                'collection' => 'app.bsky.actor.profile',
-                'rkey' => 'self',
-            ]
+        $response = $this->atp->atproto->repo->getRecord(
+            repo: $this->atp->client->session()->did(),
+            collection: 'app.bsky.actor.profile',
+            rkey: 'self'
         );
 
         return $response->json('value');
@@ -49,7 +52,11 @@ class ProfileRecordClient extends Request
 
     /**
      * Update display name
+     *
+     * @requires transition:generic OR (rpc:com.atproto.repo.putRecord AND repo:app.bsky.actor.profile?action=update)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
     public function updateDisplayName(string $displayName): StrongRef
     {
         $profile = $this->getOrCreateProfile();
@@ -60,7 +67,11 @@ class ProfileRecordClient extends Request
 
     /**
      * Update description/bio
+     *
+     * @requires transition:generic OR (rpc:com.atproto.repo.putRecord AND repo:app.bsky.actor.profile?action=update)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
     public function updateDescription(string $description): StrongRef
     {
         $profile = $this->getOrCreateProfile();
@@ -71,7 +82,11 @@ class ProfileRecordClient extends Request
 
     /**
      * Update avatar
+     *
+     * @requires transition:generic OR (rpc:com.atproto.repo.putRecord AND repo:app.bsky.actor.profile?action=update)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
     public function updateAvatar(array $avatarBlob): StrongRef
     {
         $profile = $this->getOrCreateProfile();
@@ -82,7 +97,11 @@ class ProfileRecordClient extends Request
 
     /**
      * Update banner
+     *
+     * @requires transition:generic OR (rpc:com.atproto.repo.putRecord AND repo:app.bsky.actor.profile?action=update)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
     public function updateBanner(array $bannerBlob): StrongRef
     {
         $profile = $this->getOrCreateProfile();
