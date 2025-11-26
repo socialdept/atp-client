@@ -1,0 +1,608 @@
+[![Resolver Header](./header.png)](https://github.com/socialdept/atp-signals)
+
+<h3 align="center">
+    Type-safe AT Protocol HTTP client with OAuth 2.0 support for Laravel.
+</h3>
+
+<p align="center">
+    <br>
+    <a href="https://packagist.org/packages/socialdept/atp-client" title="Latest Version on Packagist"><img src="https://img.shields.io/packagist/v/socialdept/atp-client.svg?style=flat-square"></a>
+    <a href="https://packagist.org/packages/socialdept/atp-client" title="Total Downloads"><img src="https://img.shields.io/packagist/dt/socialdept/atp-client.svg?style=flat-square"></a>
+    <a href="https://github.com/socialdept/atp-client/actions/workflows/tests.yml" title="GitHub Tests Action Status"><img src="https://img.shields.io/github/actions/workflow/status/socialdept/atp-client/tests.yml?branch=main&label=tests&style=flat-square"></a>
+    <a href="LICENSE" title="Software License"><img src="https://img.shields.io/github/license/socialdept/atp-client?style=flat-square"></a>
+</p>
+
+---
+
+## What is AtpClient?
+
+**AtpClient** is a Laravel package for interacting with Bluesky and the AT Protocol. It provides a fluent, type-safe API for authentication, posting, profiles, follows, likes, and feeds. Supports both OAuth 2.0 (with PKCE, PAR, and DPoP) and app passwords.
+
+Think of it as Laravel's HTTP client, but for the decentralized social web.
+
+## Why use AtpClient?
+
+- **Laravel-style code** - Familiar patterns you already know
+- **OAuth 2.0 support** - Full PKCE, PAR, and DPoP implementation
+- **App password support** - Simple authentication for scripts and bots
+- **Automatic token refresh** - Sessions stay alive without manual intervention
+- **Type-safe API** - Method chaining with IDE autocompletion
+- **Rich text builder** - Fluent API for mentions, links, and hashtags
+- **Full Bluesky coverage** - Posts, profiles, follows, likes, and feeds
+- **AT Protocol operations** - Low-level repository access when needed
+
+## Quick Example
+
+```php
+use SocialDept\AtpClient\Facades\Atp;
+
+// Login with app password
+$client = Atp::login('yourhandle.bsky.social', 'your-app-password');
+
+// Create a post
+$post = $client->bsky->post->create('Hello from Laravel!');
+
+// Get your timeline
+$timeline = $client->bsky->feed->getTimeline(limit: 50);
+```
+
+## Installation
+
+```bash
+composer require socialdept/atp-client
+```
+
+Optionally publish the configuration:
+
+```bash
+php artisan vendor:publish --tag=atp-client-config
+```
+
+## Getting Started
+
+Once installed, you're three steps away from using the AT Protocol:
+
+### 1. Choose Your Authentication Method
+
+**App Password** (recommended for bots/scripts):
+```php
+$client = Atp::login('yourhandle.bsky.social', 'your-app-password');
+```
+
+**OAuth 2.0** (recommended for user-facing apps):
+```php
+$auth = Atp::oauth()->authorize('user@bsky.social');
+return redirect($auth->url);
+```
+
+### 2. Make API Calls
+
+```php
+// Create posts
+$client->bsky->post->create('Hello world!');
+
+// Get profiles
+$client->bsky->actor->getProfile('someone.bsky.social');
+
+// Browse feeds
+$client->bsky->feed->getTimeline();
+```
+
+### 3. Store Credentials (OAuth only)
+
+Implement the `CredentialProvider` interface to persist tokens between requests.
+
+## What can you build?
+
+- **Bluesky integrations** - Connect your app to the AT Protocol
+- **Social media management** - Post and manage content programmatically
+- **Automated posting** - Schedule and automate content delivery
+- **Analytics dashboards** - Track engagement and activity
+- **Moderation tools** - Build bots for community moderation
+- **Cross-platform syndication** - Mirror content across networks
+
+## Authentication
+
+### App Password Flow
+
+The simplest way to authenticate. Generate an app password in your Bluesky settings.
+
+```php
+use SocialDept\AtpClient\Facades\Atp;
+
+$client = Atp::login('yourhandle.bsky.social', 'your-app-password');
+
+// Client is now authenticated and ready to use
+$profile = $client->bsky->actor->getProfile('yourhandle.bsky.social');
+```
+
+### OAuth 2.0 Flow
+
+For user-facing applications where users authenticate with their own accounts.
+
+**Step 1: Initiate authorization**
+```php
+use SocialDept\AtpClient\Facades\Atp;
+
+public function redirect()
+{
+    $auth = Atp::oauth()->authorize('user@bsky.social');
+
+    // Store auth request in session for callback
+    session(['atp_auth' => $auth]);
+
+    return redirect($auth->url);
+}
+```
+
+**Step 2: Handle callback**
+```php
+public function callback(Request $request)
+{
+    $auth = session('atp_auth');
+
+    $token = Atp::oauth()->callback(
+        code: $request->get('code'),
+        state: $request->get('state'),
+        request: $auth
+    );
+
+    // Store credentials using your CredentialProvider
+    // $token contains: accessJwt, refreshJwt, did, handle, expiresAt
+}
+```
+
+**Step 3: Use stored credentials**
+```php
+// After storing credentials, use them with Atp::as()
+$client = Atp::as('user@bsky.social');
+```
+
+### Token Refresh
+
+Sessions automatically refresh when tokens are about to expire (default: 5 minutes before expiration). Listen to events if you need to persist refreshed tokens:
+
+```php
+use SocialDept\AtpClient\Events\TokenRefreshed;
+
+Event::listen(TokenRefreshed::class, function ($event) {
+    // $event->identifier - the user identifier
+    // $event->token - the new AccessToken
+    // Update your credential storage here
+});
+```
+
+## Working with Posts
+
+### Create a Simple Post
+
+```php
+$post = $client->bsky->post->create('Hello, Bluesky!');
+
+// Returns StrongRef with uri and cid
+echo $post->uri;  // at://did:plc:.../app.bsky.feed.post/...
+echo $post->cid;  // bafyre...
+```
+
+### Rich Text with Mentions, Links, and Hashtags
+
+Use the `TextBuilder` for posts with rich text formatting:
+
+```php
+use SocialDept\AtpClient\RichText\TextBuilder;
+
+$content = TextBuilder::make()
+    ->text('Check out ')
+    ->mention('someone.bsky.social')
+    ->text(' and visit ')
+    ->link('our website', 'https://example.com')
+    ->text(' ')
+    ->tag('Laravel')
+    ->toArray();
+
+$post = $client->bsky->post->create($content);
+```
+
+Or use auto-detection on plain text:
+
+```php
+// Facets are automatically detected
+$post = $client->bsky->post->create(
+    'Hello @someone.bsky.social! Check out https://example.com #Bluesky'
+);
+```
+
+### Reply to a Post
+
+```php
+$parent = new StrongRef(uri: 'at://...', cid: 'bafyre...');
+$root = $parent; // Same as parent for direct replies
+
+$reply = $client->bsky->post->reply(
+    parent: $parent,
+    root: $root,
+    content: 'This is a reply!'
+);
+```
+
+### Quote Post
+
+```php
+$quotedPost = new StrongRef(uri: 'at://...', cid: 'bafyre...');
+
+$quote = $client->bsky->post->quote(
+    quotedPost: $quotedPost,
+    content: 'Interesting take!'
+);
+```
+
+### Post with Images
+
+```php
+// Upload from a Laravel request
+$blob = $client->atproto->repo->uploadBlob($request->file('image'));
+
+// Or from a file path
+$blob = $client->atproto->repo->uploadBlob(new SplFileInfo('/path/to/image.jpg'));
+
+// Or from raw binary data (mimeType required)
+$blob = $client->atproto->repo->uploadBlob(
+    file: file_get_contents('/path/to/image.jpg'),
+    mimeType: 'image/jpeg'
+);
+
+$post = $client->bsky->post->withImages(
+    content: 'Check out this photo!',
+    images: [
+        [
+            'image' => $blob->json('blob'),
+            'alt' => 'Description of the image',
+        ],
+    ]
+);
+```
+
+### Post with External Link Card
+
+```php
+$post = $client->bsky->post->withLink(
+    content: 'Great article about Laravel',
+    uri: 'https://example.com/article',
+    title: 'Article Title',
+    description: 'A brief description of the article...'
+);
+```
+
+### Delete a Post
+
+```php
+// Extract rkey from the post URI
+$rkey = basename($post->uri);
+
+$client->bsky->post->delete($rkey);
+```
+
+## Working with Profiles
+
+### Get a Profile
+
+```php
+$profile = $client->bsky->actor->getProfile('someone.bsky.social');
+
+echo $profile->json('displayName');
+echo $profile->json('description');
+echo $profile->json('followersCount');
+```
+
+### Update Your Profile
+
+```php
+// Update display name
+$client->bsky->profile->updateDisplayName('New Name');
+
+// Update bio/description
+$client->bsky->profile->updateDescription('Laravel developer building on AT Protocol');
+
+// Update multiple fields at once
+$client->bsky->profile->update([
+    'displayName' => 'New Name',
+    'description' => 'New bio here',
+]);
+```
+
+### Update Avatar
+
+```php
+$blob = $client->atproto->repo->uploadBlob(new SplFileInfo('/path/to/avatar.jpg'));
+
+$client->bsky->profile->updateAvatar($blob->json('blob'));
+```
+
+## Social Graph
+
+### Follow a User
+
+```php
+// Follow requires the user's DID
+$follow = $client->bsky->follow->create('did:plc:...');
+```
+
+### Unfollow a User
+
+```php
+// Get the rkey from the follow record URI
+$client->bsky->follow->delete($rkey);
+```
+
+### Like a Post
+
+```php
+$postRef = new StrongRef(uri: 'at://...', cid: 'bafyre...');
+
+$like = $client->bsky->like->create($postRef);
+```
+
+### Unlike a Post
+
+```php
+$client->bsky->like->delete($rkey);
+```
+
+## Feed Operations
+
+### Get Your Timeline
+
+```php
+$timeline = $client->bsky->feed->getTimeline(limit: 50);
+
+foreach ($timeline->json('feed') as $item) {
+    $post = $item['post'];
+    echo $post['author']['handle'] . ': ' . $post['record']['text'];
+}
+```
+
+### Pagination with Cursors
+
+```php
+$cursor = null;
+
+do {
+    $timeline = $client->bsky->feed->getTimeline(limit: 100, cursor: $cursor);
+
+    foreach ($timeline->json('feed') as $item) {
+        // Process posts
+    }
+
+    $cursor = $timeline->json('cursor');
+} while ($cursor);
+```
+
+### Get Author Feed
+
+```php
+$feed = $client->bsky->feed->getAuthorFeed(
+    actor: 'someone.bsky.social',
+    limit: 50
+);
+```
+
+### Search Posts
+
+```php
+$results = $client->bsky->feed->searchPosts(
+    q: 'laravel php',
+    limit: 25
+);
+```
+
+### Get Post Thread
+
+```php
+$thread = $client->bsky->feed->getPostThread(
+    uri: 'at://did:plc:.../app.bsky.feed.post/...',
+    depth: 6
+);
+```
+
+### Get Likes on a Post
+
+```php
+$likes = $client->bsky->feed->getLikes(uri: 'at://...');
+```
+
+### Get Reposts
+
+```php
+$reposts = $client->bsky->feed->getRepostedBy(uri: 'at://...');
+```
+
+## Configuration
+
+After publishing the config file, you can customize these options:
+
+```php
+// config/client.php
+
+return [
+    // OAuth client metadata
+    'client' => [
+        'name' => env('ATP_CLIENT_NAME', config('app.name')),
+        'url' => env('ATP_CLIENT_URL', config('app.url')),
+        'redirect_uris' => [
+            env('ATP_CLIENT_REDIRECT_URI', config('app.url').'/auth/atp/callback'),
+        ],
+        'scopes' => ['atproto', 'transition:generic'],
+    ],
+
+    // Credential storage provider
+    'credential_provider' => \SocialDept\AtpClient\Providers\ArrayCredentialProvider::class,
+
+    // Session behavior
+    'session' => [
+        'refresh_threshold' => 300,      // Refresh if expires within 5 minutes
+        'dpop_key_rotation' => 86400,    // Rotate DPoP keys after 24 hours
+    ],
+
+    // OAuth settings
+    'oauth' => [
+        'disabled' => false,
+        'prefix' => '/atp/oauth/',
+        'private_key' => env('ATP_OAUTH_PRIVATE_KEY'),
+    ],
+
+    // HTTP client settings
+    'http' => [
+        'timeout' => 30,
+        'retry' => [
+            'times' => 3,
+            'sleep' => 100,
+        ],
+    ],
+];
+```
+
+### Environment Variables
+
+```env
+ATP_CLIENT_NAME="My App"
+ATP_CLIENT_URL="https://myapp.com"
+ATP_CLIENT_REDIRECT_URI="https://myapp.com/auth/atp/callback"
+ATP_OAUTH_PRIVATE_KEY="base64-encoded-private-key"
+ATP_REFRESH_THRESHOLD=300
+ATP_HTTP_TIMEOUT=30
+```
+
+## Credential Storage
+
+The package uses a `CredentialProvider` interface for token storage. The default `ArrayCredentialProvider` stores credentials in memory (lost on request end).
+
+### Implementing Custom Storage
+
+```php
+use SocialDept\AtpClient\Contracts\CredentialProvider;
+use SocialDept\AtpClient\Data\AccessToken;
+use SocialDept\AtpClient\Data\Credentials;
+
+class DatabaseCredentialProvider implements CredentialProvider
+{
+    public function getCredentials(string $identifier): ?Credentials
+    {
+        $record = AtpCredential::where('identifier', $identifier)->first();
+
+        if (!$record) {
+            return null;
+        }
+
+        return new Credentials(
+            identifier: $record->identifier,
+            did: $record->did,
+            accessToken: $record->access_token,
+            refreshToken: $record->refresh_token,
+            expiresAt: $record->expires_at,
+        );
+    }
+
+    public function storeCredentials(string $identifier, AccessToken $token): void
+    {
+        AtpCredential::create([
+            'identifier' => $identifier,
+            'did' => $token->did,
+            'access_token' => $token->accessJwt,
+            'refresh_token' => $token->refreshJwt,
+            'expires_at' => $token->expiresAt,
+        ]);
+    }
+
+    public function updateCredentials(string $identifier, AccessToken $token): void
+    {
+        AtpCredential::where('identifier', $identifier)->update([
+            'access_token' => $token->accessJwt,
+            'refresh_token' => $token->refreshJwt,
+            'expires_at' => $token->expiresAt,
+        ]);
+    }
+
+    public function removeCredentials(string $identifier): void
+    {
+        AtpCredential::where('identifier', $identifier)->delete();
+    }
+}
+```
+
+Register your provider in the config:
+
+```php
+'credential_provider' => App\Providers\DatabaseCredentialProvider::class,
+```
+
+## Events
+
+The package dispatches events you can listen to:
+
+```php
+use SocialDept\AtpClient\Events\TokenRefreshing;
+use SocialDept\AtpClient\Events\TokenRefreshed;
+
+// Before token refresh
+Event::listen(TokenRefreshing::class, function ($event) {
+    Log::info('Refreshing token for: ' . $event->identifier);
+});
+
+// After token refresh
+Event::listen(TokenRefreshed::class, function ($event) {
+    // Update your stored credentials
+    $this->credentialProvider->updateCredentials(
+        $event->identifier,
+        $event->token
+    );
+});
+```
+
+## Available Commands
+
+```bash
+# Generate OAuth private key
+php artisan atp-client:generate-key
+```
+
+## Requirements
+
+- PHP 8.2+
+- Laravel 11 or 12
+- [socialdept/atp-schema](https://github.com/socialdept/atp-schema) ^0.2
+- [socialdept/atp-resolver](https://github.com/socialdept/atp-resolver) ^1.0
+
+## Testing
+
+```bash
+composer test
+```
+
+## Resources
+
+- [AT Protocol Documentation](https://atproto.com/)
+- [Bluesky API Docs](https://docs.bsky.app/)
+- [CRYPTO.md](CRYPTO.md) - Cryptographic implementation details
+
+## Support & Contributing
+
+Found a bug or have a feature request? [Open an issue](https://github.com/socialdept/atp-client/issues).
+
+Want to contribute? Check out the [contribution guidelines](contributing.md).
+
+## Changelog
+
+Please see [changelog](changelog.md) for recent changes.
+
+## Credits
+
+- [Miguel Batres](https://batres.co) - founder & lead maintainer
+- [All contributors](https://github.com/socialdept/atp-client/graphs/contributors)
+
+## License
+
+AtpClient is open-source software licensed under the [MIT license](license.md).
+
+---
+
+**Built for the Federation** - By Social Dept.
