@@ -28,6 +28,8 @@ class ArrayCredentialProvider implements CredentialProvider
             accessToken: $token->accessJwt,
             refreshToken: $token->refreshJwt,
             expiresAt: $token->expiresAt,
+            handle: $token->handle,
+            issuer: $token->issuer,
         );
     }
 

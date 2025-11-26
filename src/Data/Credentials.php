@@ -10,6 +10,8 @@ class Credentials
         public readonly string $accessToken,
         public readonly string $refreshToken,
         public readonly \DateTimeInterface $expiresAt,
+        public readonly ?string $handle = null,
+        public readonly ?string $issuer = null,
     ) {}
 
     public function isExpired(): bool

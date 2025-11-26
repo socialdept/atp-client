@@ -98,7 +98,7 @@ class OAuthEngine
             throw new AuthenticationException('Token exchange failed: '.$response->body());
         }
 
-        return AccessToken::fromResponse($response->json(), $request->handle);
+        return AccessToken::fromResponse($response->json(), $request->handle, $request->pdsEndpoint);
     }
 
     /**

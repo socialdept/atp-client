@@ -20,7 +20,8 @@ class TokenRefresher
     public function refresh(
         string $refreshToken,
         string $pdsEndpoint,
-        DPoPKey $dpopKey
+        DPoPKey $dpopKey,
+        ?string $handle = null
     ): AccessToken {
         $tokenUrl = $pdsEndpoint.'/oauth/token';
 
@@ -35,6 +36,6 @@ class TokenRefresher
             throw new AuthenticationException('Token refresh failed: '.$response->body());
         }
 
-        return AccessToken::fromResponse($response->json());
+        return AccessToken::fromResponse($response->json(), $handle, $pdsEndpoint);
     }
 }
