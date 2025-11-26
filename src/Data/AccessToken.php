@@ -18,7 +18,7 @@ class AccessToken
      * Handles both legacy createSession format (accessJwt, refreshJwt, did)
      * and OAuth token format (access_token, refresh_token, sub).
      */
-    public static function fromResponse(array $data): self
+    public static function fromResponse(array $data, ?string $handle = null): self
     {
         // OAuth token endpoint format
         if (isset($data['access_token'])) {
@@ -27,7 +27,7 @@ class AccessToken
                 refreshJwt: $data['refresh_token'] ?? '',
                 did: $data['sub'] ?? '',
                 expiresAt: now()->addSeconds($data['expires_in'] ?? 300),
-                handle: null,
+                handle: $handle,
             );
         }
 
@@ -37,7 +37,7 @@ class AccessToken
             refreshJwt: $data['refreshJwt'],
             did: $data['did'],
             expiresAt: now()->addSeconds($data['expiresIn'] ?? 300),
-            handle: $data['handle'] ?? null,
+            handle: $data['handle'] ?? $handle,
         );
     }
 }

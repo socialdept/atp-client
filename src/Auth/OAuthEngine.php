@@ -66,6 +66,7 @@ class OAuthEngine
             dpopKey: $dpopKey,
             requestUri: $parResponse['request_uri'],
             pdsEndpoint: $pdsEndpoint,
+            handle: $identifier,
         );
     }
 
@@ -97,7 +98,7 @@ class OAuthEngine
             throw new AuthenticationException('Token exchange failed: '.$response->body());
         }
 
-        return AccessToken::fromResponse($response->json());
+        return AccessToken::fromResponse($response->json(), $request->handle);
     }
 
     /**
