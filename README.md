@@ -844,6 +844,108 @@ Event::listen(TokenRefreshed::class, function (TokenRefreshed $event) {
 });
 ```
 
+## Scope Authorization
+
+The package provides Laravel-native authorization features for checking ATP OAuth scopes, similar to Laravel's Gate/Policy system.
+
+### Setup
+
+Have your User model implement the `HasAtpSession` interface:
+
+```php
+use SocialDept\AtpClient\Contracts\HasAtpSession;
+
+class User extends Authenticatable implements HasAtpSession
+{
+    public function getAtpDid(): ?string
+    {
+        return $this->atp_did; // or however you store the DID
+    }
+}
+```
+
+### Route Middleware
+
+Protect routes by requiring specific scopes. Uses AND logic (all listed scopes required):
+
+```php
+use Illuminate\Support\Facades\Route;
+
+// Requires transition:generic scope
+Route::post('/posts', [PostController::class, 'store'])
+    ->middleware('atp.scope:transition:generic');
+
+// Requires BOTH scopes
+Route::post('/dm', [MessageController::class, 'store'])
+    ->middleware('atp.scope:transition:generic,transition:chat.bsky');
+```
+
+### AtpScope Facade
+
+Use the `AtpScope` facade for programmatic scope checks:
+
+```php
+use SocialDept\AtpClient\Facades\AtpScope;
+
+// Check if user has a scope
+if (AtpScope::can('transition:generic')) {
+    // ...
+}
+
+// Check if user has any of the scopes
+if (AtpScope::canAny(['transition:generic', 'transition:chat.bsky'])) {
+    // ...
+}
+
+// Check if user has all scopes
+if (AtpScope::canAll(['atproto', 'transition:generic'])) {
+    // ...
+}
+
+// Authorize or fail (throws/aborts based on config)
+AtpScope::authorize('transition:generic');
+
+// Check for a specific user
+AtpScope::forUser($did)->authorize('transition:generic');
+
+// Get all granted scopes
+$scopes = AtpScope::granted();
+```
+
+### Session Helper Methods
+
+The Session class also has convenience methods:
+
+```php
+$session = Atp::as($did)->session();
+
+$session->can('transition:generic');
+$session->canAny(['transition:generic', 'transition:chat.bsky']);
+$session->canAll(['atproto', 'transition:generic']);
+$session->cannot('transition:chat.bsky');
+```
+
+### Configuration
+
+Configure authorization failure behavior in `config/client.php`:
+
+```php
+'scope_authorization' => [
+    // What happens when scope check fails: 'abort', 'redirect', or 'exception'
+    'failure_action' => ScopeAuthorizationFailure::Abort,
+
+    // Redirect URL when failure_action is 'redirect'
+    'redirect_to' => '/login',
+],
+```
+
+Or via environment variables:
+
+```env
+ATP_SCOPE_FAILURE_ACTION=abort
+ATP_SCOPE_REDIRECT=/login
+```
+
 ## Available Commands
 
 ```bash
