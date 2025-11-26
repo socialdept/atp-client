@@ -5,7 +5,7 @@ namespace SocialDept\AtpClient\Events;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TokenRefreshing
+class OAuthTokenRefreshing
 {
     use Dispatchable, SerializesModels;
 

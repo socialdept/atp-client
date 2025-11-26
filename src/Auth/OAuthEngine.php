@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\AuthorizationRequest;
 use SocialDept\AtpClient\Data\DPoPKey;
-use SocialDept\AtpClient\Events\UserAuthenticated;
+use SocialDept\AtpClient\Events\OAuthUserAuthenticated;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Http\DPoPClient;
 use SocialDept\AtpResolver\Facades\Resolver;
@@ -101,7 +101,7 @@ class OAuthEngine
 
         $token = AccessToken::fromResponse($response->json(), $request->handle, $request->pdsEndpoint);
 
-        event(new UserAuthenticated($token));
+        event(new OAuthUserAuthenticated($token));
 
         return $token;
     }
