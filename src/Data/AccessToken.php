@@ -12,8 +12,26 @@ class AccessToken
         public readonly ?string $handle = null,
     ) {}
 
+    /**
+     * Create from API response.
+     *
+     * Handles both legacy createSession format (accessJwt, refreshJwt, did)
+     * and OAuth token format (access_token, refresh_token, sub).
+     */
     public static function fromResponse(array $data): self
     {
+        // OAuth token endpoint format
+        if (isset($data['access_token'])) {
+            return new self(
+                accessJwt: $data['access_token'],
+                refreshJwt: $data['refresh_token'] ?? '',
+                did: $data['sub'] ?? '',
+                expiresAt: now()->addSeconds($data['expires_in'] ?? 300),
+                handle: null,
+            );
+        }
+
+        // Legacy createSession format
         return new self(
             accessJwt: $data['accessJwt'],
             refreshJwt: $data['refreshJwt'],
