@@ -70,6 +70,7 @@ return [
         'disabled' => env('ATP_OAUTH_DISABLED', false),
         'prefix' => env('ATP_OAUTH_PREFIX', '/atp/oauth/'),
         'private_key' => env('ATP_OAUTH_PRIVATE_KEY'),
+        'kid' => env('ATP_OAUTH_KID', 'atp-client-key'),
         'scope' => env('ATP_OAUTH_SCOPE', 'atproto transition:generic'),
 
         'client_metadata' => [
