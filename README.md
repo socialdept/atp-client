@@ -719,7 +719,7 @@ use SocialDept\AtpClient\Events\OAuthTokenRefreshed;
 Event::listen(OAuthTokenRefreshed::class, function (OAuthTokenRefreshed $event) {
     // The CredentialProvider.updateCredentials() is already called,
     // but you can do additional logging or notifications here
-    Log::info("Token refreshed for: {$event->did}");
+    Log::info("Token refreshed for: {$event->session->did()}");
 });
 ```
 
@@ -759,21 +759,24 @@ Event::listen(OAuthUserAuthenticated::class, function (OAuthUserAuthenticated $e
 
 ### OAuthTokenRefreshing / OAuthTokenRefreshed
 
-Fired before and after automatic token refresh:
+Fired before and after automatic token refresh. Use `OAuthTokenRefreshing` to invalidate your stored refresh token before it's used (refresh tokens are single-use):
 
 ```php
 use SocialDept\AtpClient\Events\OAuthTokenRefreshing;
 use SocialDept\AtpClient\Events\OAuthTokenRefreshed;
 
-// Before token refresh
-Event::listen(OAuthTokenRefreshing::class, function ($event) {
-    Log::info('Refreshing token for: ' . $event->did);
+// Before token refresh - invalidate old refresh token
+Event::listen(OAuthTokenRefreshing::class, function (OAuthTokenRefreshing $event) {
+    // $event->session gives access to did(), handle(), etc.
+    Log::info('Refreshing token for: ' . $event->session->did());
 });
 
-// After token refresh
-Event::listen(OAuthTokenRefreshed::class, function ($event) {
+// After token refresh - new tokens available
+Event::listen(OAuthTokenRefreshed::class, function (OAuthTokenRefreshed $event) {
+    // $event->session - the session being refreshed
+    // $event->token - the new AccessToken with fresh tokens
     // CredentialProvider.updateCredentials() is already called automatically
-    Log::info('Token refreshed for: ' . $event->did);
+    Log::info('Token refreshed for: ' . $event->session->did());
 });
 ```
 
