@@ -9,7 +9,7 @@ use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\DPoPNonceManager;
 use SocialDept\AtpClient\Exceptions\ValidationException;
 use SocialDept\AtpClient\Session\SessionManager;
-use SocialDept\Schema\Facades\Schema;
+use SocialDept\AtpSchema\Facades\Schema;
 
 trait HasHttp
 {
