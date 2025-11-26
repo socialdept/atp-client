@@ -5,6 +5,7 @@ namespace SocialDept\AtpClient\Client\Requests\Atproto;
 use Illuminate\Http\UploadedFile;
 use InvalidArgumentException;
 use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Auth\ScopeChecker;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Http\Response;
@@ -16,7 +17,7 @@ class RepoRequestClient extends Request
     /**
      * Create a record
      *
-     * @requires transition:generic (repo:[collection]?action=create)
+     * @requires transition:generic OR repo:[collection]?action=create
      *
      * @see https://docs.bsky.app/docs/api/com-atproto-repo-create-record
      */
@@ -29,6 +30,8 @@ class RepoRequestClient extends Request
         bool $validate = true,
         ?string $swapCommit = null
     ): Response {
+        $this->checkCollectionScope($collection, 'create');
+
         return $this->atp->client->post(
             endpoint: 'com.atproto.repo.createRecord',
             body: array_filter(
@@ -41,7 +44,7 @@ class RepoRequestClient extends Request
     /**
      * Delete a record
      *
-     * @requires transition:generic (repo:[collection]?action=delete)
+     * @requires transition:generic OR repo:[collection]?action=delete
      *
      * @see https://docs.bsky.app/docs/api/com-atproto-repo-delete-record
      */
@@ -53,6 +56,8 @@ class RepoRequestClient extends Request
         ?string $swapRecord = null,
         ?string $swapCommit = null
     ): Response {
+        $this->checkCollectionScope($collection, 'delete');
+
         return $this->atp->client->post(
             endpoint: 'com.atproto.repo.deleteRecord',
             body: array_filter(
@@ -65,7 +70,7 @@ class RepoRequestClient extends Request
     /**
      * Put (upsert) a record
      *
-     * @requires transition:generic (repo:[collection]?action=update)
+     * @requires transition:generic OR repo:[collection]?action=update
      *
      * @see https://docs.bsky.app/docs/api/com-atproto-repo-put-record
      */
@@ -79,6 +84,8 @@ class RepoRequestClient extends Request
         ?string $swapRecord = null,
         ?string $swapCommit = null
     ): Response {
+        $this->checkCollectionScope($collection, 'update');
+
         return $this->atp->client->post(
             endpoint: 'com.atproto.repo.putRecord',
             body: array_filter(
@@ -179,5 +186,25 @@ class RepoRequestClient extends Request
             endpoint: 'com.atproto.repo.describeRepo',
             params: compact('repo')
         );
+    }
+
+    /**
+     * Check if the session has repo access for a specific collection and action.
+     *
+     * This check is in addition to the transition:generic scope check.
+     * Users need either transition:generic OR the specific repo scope.
+     */
+    protected function checkCollectionScope(string $collection, string $action): void
+    {
+        $session = $this->atp->session();
+        $checker = app(ScopeChecker::class);
+
+        // If user has transition:generic, they have broad access
+        if ($checker->hasScope($session, Scope::TransitionGeneric)) {
+            return;
+        }
+
+        // Otherwise, check for specific repo scope
+        $checker->checkRepoScopeOrFail($session, $collection, $action);
     }
 }
