@@ -12,7 +12,7 @@ use SocialDept\AtpClient\Events\TokenRefreshed;
 use SocialDept\AtpClient\Events\TokenRefreshing;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\SessionExpiredException;
-use SocialDept\Resolver\Facades\Resolver;
+use SocialDept\AtpResolver\Facades\Resolver;
 
 class SessionManager
 {
