@@ -1,5 +1,8 @@
 <?php
 
+use SocialDept\AtpClient\Enums\ScopeAuthorizationFailure;
+use SocialDept\AtpClient\Enums\ScopeEnforcementLevel;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -122,7 +125,30 @@ return [
     | - 'permissive': Logs a warning but attempts the request anyway
     |
     */
-    'scope_enforcement' => \SocialDept\AtpClient\Enums\ScopeEnforcementLevel::tryFrom(
+    'scope_enforcement' => ScopeEnforcementLevel::tryFrom(
         env('ATP_SCOPE_ENFORCEMENT', 'permissive')
-    ) ?? \SocialDept\AtpClient\Enums\ScopeEnforcementLevel::Permissive,
+    ) ?? ScopeEnforcementLevel::Permissive,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scope Authorization
+    |--------------------------------------------------------------------------
+    |
+    | Configure behavior for the AtpScope facade and atp.scope middleware.
+    |
+    | failure_action: What happens when a scope check fails
+    | - 'abort': Return a 403 HTTP response
+    | - 'redirect': Redirect to the configured URL
+    | - 'exception': Throw ScopeAuthorizationException
+    |
+    | redirect_to: URL to redirect to when failure_action is 'redirect'
+    |
+    */
+    'scope_authorization' => [
+        'failure_action' => ScopeAuthorizationFailure::tryFrom(
+            env('ATP_SCOPE_FAILURE_ACTION', 'abort')
+        ) ?? ScopeAuthorizationFailure::Abort,
+
+        'redirect_to' => env('ATP_SCOPE_REDIRECT', '/login'),
+    ],
 ];
