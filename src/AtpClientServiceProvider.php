@@ -9,9 +9,11 @@ use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\DPoPNonceManager;
 use SocialDept\AtpClient\Auth\OAuthEngine;
 use SocialDept\AtpClient\Auth\TokenRefresher;
+use SocialDept\AtpClient\Console\GenerateOAuthKeyCommand;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
-use SocialDept\AtpClient\Providers\ArrayCredentialProvider;
+use SocialDept\AtpClient\Http\Controllers\ClientMetadataController;
+use SocialDept\AtpClient\Http\Controllers\JwksController;
 use SocialDept\AtpClient\Session\SessionManager;
 use SocialDept\AtpClient\Storage\EncryptedFileKeyStore;
 
@@ -109,7 +111,7 @@ class AtpClientServiceProvider extends ServiceProvider
             ], 'atp-client-config');
 
             $this->commands([
-                \SocialDept\AtpClient\Console\GenerateOAuthKeyCommand::class,
+                GenerateOAuthKeyCommand::class,
             ]);
         }
 
@@ -128,15 +130,15 @@ class AtpClientServiceProvider extends ServiceProvider
         $prefix = config('atp-client.oauth.prefix', '/atp/oauth/');
 
         Route::prefix($prefix)->group(function () {
-            Route::get('client-metadata.json', \SocialDept\AtpClient\Http\Controllers\ClientMetadataController::class)
+            Route::get('client-metadata.json', ClientMetadataController::class)
                 ->name('atp.oauth.client-metadata');
 
-            Route::get('jwks.json', \SocialDept\AtpClient\Http\Controllers\JwksController::class)
+            Route::get('jwks.json', JwksController::class)
                 ->name('atp.oauth.jwks');
         });
 
         // Register standard .well-known endpoint
-        Route::get('.well-known/oauth-client-metadata', \SocialDept\AtpClient\Http\Controllers\ClientMetadataController::class)
+        Route::get('.well-known/oauth-client-metadata', ClientMetadataController::class)
             ->name('atp.oauth.well-known');
     }
 
