@@ -31,12 +31,12 @@ class ScopeGate
     }
 
     /**
-     * Set the session context via handle or DID.
+     * Set the session context via actor (handle or DID).
      */
-    public function forUser(string $handleOrDid): self
+    public function forUser(string $actor): self
     {
         $instance = new self($this->sessions, $this->checker);
-        $instance->session = $this->sessions->session($handleOrDid);
+        $instance->session = $this->sessions->session($actor);
 
         return $instance;
     }

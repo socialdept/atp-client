@@ -9,7 +9,7 @@ use SocialDept\AtpClient\Session\Session;
 
 /**
  * @method static ScopeGate forSession(Session $session)
- * @method static ScopeGate forUser(string $handleOrDid)
+ * @method static ScopeGate forUser(string $actor)
  * @method static bool can(string|Scope $scope)
  * @method static bool canAny(array $scopes)
  * @method static bool canAll(array $scopes)
