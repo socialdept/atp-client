@@ -2,7 +2,9 @@
 
 namespace SocialDept\AtpClient\Client\Requests\Ozone;
 
+use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Http\Response;
 
 class ModerationRequestClient extends Request
@@ -10,8 +12,11 @@ class ModerationRequestClient extends Request
     /**
      * Get moderation event
      *
+     * @requires transition:generic (rpc:tools.ozone.moderation.getEvent)
+     *
      * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-get-event
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.moderation.getEvent')]
     public function getModerationEvent(int $id): Response
     {
         return $this->atp->client->get(
@@ -23,8 +28,11 @@ class ModerationRequestClient extends Request
     /**
      * Get moderation events
      *
+     * @requires transition:generic (rpc:tools.ozone.moderation.getEvents)
+     *
      * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-query-events
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.moderation.getEvents')]
     public function getModerationEvents(
         ?string $subject = null,
         ?array $types = null,
@@ -44,8 +52,11 @@ class ModerationRequestClient extends Request
     /**
      * Get record
      *
+     * @requires transition:generic (rpc:tools.ozone.moderation.getRecord)
+     *
      * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-get-record
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.moderation.getRecord')]
     public function getRecord(string $uri, ?string $cid = null): Response
     {
         return $this->atp->client->get(
@@ -57,8 +68,11 @@ class ModerationRequestClient extends Request
     /**
      * Get repo
      *
+     * @requires transition:generic (rpc:tools.ozone.moderation.getRepo)
+     *
      * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-get-repo
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.moderation.getRepo')]
     public function getRepo(string $did): Response
     {
         return $this->atp->client->get(
@@ -70,8 +84,11 @@ class ModerationRequestClient extends Request
     /**
      * Query events
      *
+     * @requires transition:generic (rpc:tools.ozone.moderation.queryEvents)
+     *
      * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-query-events
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.moderation.queryEvents')]
     public function queryEvents(
         ?array $types = null,
         ?string $createdBy = null,
@@ -92,8 +109,11 @@ class ModerationRequestClient extends Request
     /**
      * Query statuses
      *
+     * @requires transition:generic (rpc:tools.ozone.moderation.queryStatuses)
+     *
      * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-query-statuses
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.moderation.queryStatuses')]
     public function queryStatuses(
         ?string $subject = null,
         ?array $tags = null,
@@ -113,8 +133,11 @@ class ModerationRequestClient extends Request
     /**
      * Search repos
      *
+     * @requires transition:generic (rpc:tools.ozone.moderation.searchRepos)
+     *
      * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-search-repos
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.moderation.searchRepos')]
     public function searchRepos(
         ?string $term = null,
         ?string $invitedBy = null,
@@ -133,8 +156,11 @@ class ModerationRequestClient extends Request
     /**
      * Emit moderation event
      *
+     * @requires transition:generic (rpc:tools.ozone.moderation.emitEvent)
+     *
      * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-emit-event
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.moderation.emitEvent')]
     public function emitEvent(
         array $event,
         string $subject,
