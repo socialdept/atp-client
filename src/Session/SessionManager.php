@@ -14,6 +14,7 @@ use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\HandleResolutionException;
 use SocialDept\AtpClient\Exceptions\SessionExpiredException;
 use SocialDept\AtpResolver\Facades\Resolver;
+use SocialDept\Resolver\Support\Identity;
 
 class SessionManager
 {
@@ -35,7 +36,7 @@ class SessionManager
     protected function resolveToDid(string $handleOrDid): string
     {
         // If already a DID, return as-is
-        if (str_starts_with($handleOrDid, 'did:')) {
+        if (Identity::isDid($handleOrDid)) {
             return $handleOrDid;
         }
 
