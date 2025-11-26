@@ -71,7 +71,7 @@ class SessionManager
             throw new AuthenticationException('Login failed');
         }
 
-        $token = AccessToken::fromResponse($response->json());
+        $token = AccessToken::fromResponse($response->json(), $identifier, $pdsEndpoint);
 
         // Store credentials
         $this->credentials->storeCredentials($identifier, $token);
@@ -98,8 +98,8 @@ class SessionManager
             $dpopKey = $this->dpopManager->generateKey($sessionId);
         }
 
-        // Resolve PDS endpoint
-        $pdsEndpoint = Resolver::resolvePds($creds->did);
+        // Use stored issuer if available, otherwise resolve PDS endpoint
+        $pdsEndpoint = $creds->issuer ?? Resolver::resolvePds($creds->did);
 
         return new Session($creds, $dpopKey, $pdsEndpoint);
     }
@@ -116,6 +116,7 @@ class SessionManager
             refreshToken: $session->refreshToken(),
             pdsEndpoint: $session->pdsEndpoint(),
             dpopKey: $session->dpopKey(),
+            handle: $session->handle(),
         );
 
         // Update credentials (CRITICAL: refresh tokens are single-use)
