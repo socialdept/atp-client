@@ -163,12 +163,17 @@ $client = Atp::as('user@bsky.social');
 Sessions automatically refresh when tokens are about to expire (default: 5 minutes before expiration). Listen to events if you need to persist refreshed tokens:
 
 ```php
-use SocialDept\AtpClient\Events\OAuthTokenRefreshed;
+use SocialDept\AtpClient\Events\TokenRefreshed;
 
-Event::listen(OAuthTokenRefreshed::class, function ($event) {
-    // $event->did - the user's DID (e.g., did:plc:abc123...)
+Event::listen(TokenRefreshed::class, function ($event) {
+    // $event->session - the Session being refreshed
     // $event->token - the new AccessToken
     // Update your credential storage here
+
+    // Check auth type if needed
+    if ($event->session->isLegacy()) {
+        // App password session
+    }
 });
 ```
 
@@ -532,6 +537,7 @@ Schema::create('atp_credentials', function (Blueprint $table) {
     $table->text('refresh_token');           // Single-use refresh token
     $table->timestamp('expires_at');         // Token expiration time
     $table->json('scope')->nullable();       // Granted OAuth scopes
+    $table->string('auth_type')->default('oauth'); // 'oauth' or 'legacy'
     $table->timestamps();
 });
 ```
@@ -547,6 +553,7 @@ use App\Models\AtpCredential;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\Credentials;
+use SocialDept\AtpClient\Enums\AuthType;
 
 class DatabaseCredentialProvider implements CredentialProvider
 {
@@ -566,6 +573,7 @@ class DatabaseCredentialProvider implements CredentialProvider
             handle: $record->handle,
             issuer: $record->issuer,
             scope: $record->scope ?? [],
+            authType: AuthType::from($record->auth_type),
         );
     }
 
@@ -580,6 +588,7 @@ class DatabaseCredentialProvider implements CredentialProvider
                 'refresh_token' => $token->refreshJwt,
                 'expires_at' => $token->expiresAt,
                 'scope' => $token->scope,
+                'auth_type' => $token->authType->value,
             ]
         );
     }
@@ -593,6 +602,7 @@ class DatabaseCredentialProvider implements CredentialProvider
             'handle' => $token->handle,
             'issuer' => $token->issuer,
             'scope' => $token->scope,
+            'auth_type' => $token->authType->value,
         ]);
     }
 
@@ -622,6 +632,7 @@ class AtpCredential extends Model
         'refresh_token',
         'expires_at',
         'scope',
+        'auth_type',
     ];
 
     protected $casts = [
@@ -713,19 +724,25 @@ public function storeCredentials(string $did, AccessToken $token): void
 | `refreshToken` | Token to get new access tokens (single-use!) |
 | `expiresAt` | When the access token expires |
 | `scope` | Array of granted scopes (e.g., `['atproto', 'transition:generic']`) |
+| `authType` | Authentication method: `AuthType::OAuth` or `AuthType::Legacy` |
 
 ### Handling Token Refresh Events
 
 When tokens are automatically refreshed, you can listen for events:
 
 ```php
-use SocialDept\AtpClient\Events\OAuthTokenRefreshed;
+use SocialDept\AtpClient\Events\TokenRefreshed;
 
 // In EventServiceProvider or via Event::listen()
-Event::listen(OAuthTokenRefreshed::class, function (OAuthTokenRefreshed $event) {
+Event::listen(TokenRefreshed::class, function (TokenRefreshed $event) {
     // The CredentialProvider.updateCredentials() is already called,
     // but you can do additional logging or notifications here
     Log::info("Token refreshed for: {$event->session->did()}");
+
+    // Check if this is a legacy (app password) session
+    if ($event->session->isLegacy()) {
+        // Handle legacy sessions differently if needed
+    }
 });
 ```
 
@@ -768,26 +785,31 @@ Event::listen(OAuthUserAuthenticated::class, function (OAuthUserAuthenticated $e
 });
 ```
 
-### OAuthTokenRefreshing / OAuthTokenRefreshed
+### TokenRefreshing / TokenRefreshed
 
-Fired before and after automatic token refresh. Use `OAuthTokenRefreshing` to invalidate your stored refresh token before it's used (refresh tokens are single-use):
+Fired before and after automatic token refresh for both OAuth and legacy sessions. Use `TokenRefreshing` to invalidate your stored refresh token before it's used (refresh tokens are single-use):
 
 ```php
-use SocialDept\AtpClient\Events\OAuthTokenRefreshing;
-use SocialDept\AtpClient\Events\OAuthTokenRefreshed;
+use SocialDept\AtpClient\Events\TokenRefreshing;
+use SocialDept\AtpClient\Events\TokenRefreshed;
 
 // Before token refresh - invalidate old refresh token
-Event::listen(OAuthTokenRefreshing::class, function (OAuthTokenRefreshing $event) {
-    // $event->session gives access to did(), handle(), etc.
+Event::listen(TokenRefreshing::class, function (TokenRefreshing $event) {
+    // $event->session gives access to did(), handle(), authType(), isLegacy(), etc.
     Log::info('Refreshing token for: ' . $event->session->did());
 });
 
 // After token refresh - new tokens available
-Event::listen(OAuthTokenRefreshed::class, function (OAuthTokenRefreshed $event) {
+Event::listen(TokenRefreshed::class, function (TokenRefreshed $event) {
     // $event->session - the session being refreshed
     // $event->token - the new AccessToken with fresh tokens
     // CredentialProvider.updateCredentials() is already called automatically
     Log::info('Token refreshed for: ' . $event->session->did());
+
+    // Check auth type if needed
+    if ($event->session->isLegacy()) {
+        // Legacy (app password) session
+    }
 });
 ```
 
