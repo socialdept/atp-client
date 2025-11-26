@@ -5,6 +5,7 @@ namespace SocialDept\AtpClient\Client;
 use SocialDept\AtpClient\AtpClient;
 use SocialDept\AtpClient\Http\DPoPClient;
 use SocialDept\AtpClient\Http\HasHttp;
+use SocialDept\AtpClient\Session\Session;
 use SocialDept\AtpClient\Session\SessionManager;
 
 class Client
@@ -25,5 +26,13 @@ class Client
         $this->sessions = $sessions;
         $this->did = $did;
         $this->dpopClient = app(DPoPClient::class);
+    }
+
+    /**
+     * Get the current session.
+     */
+    public function session(): Session
+    {
+        return $this->sessions->session($this->did);
     }
 }
