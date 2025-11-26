@@ -10,5 +10,6 @@ class AuthorizationRequest
         public readonly string $codeVerifier,
         public readonly DPoPKey $dpopKey,
         public readonly string $requestUri,
+        public readonly string $pdsEndpoint,
     ) {}
 }

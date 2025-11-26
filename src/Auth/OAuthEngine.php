@@ -65,6 +65,7 @@ class OAuthEngine
             codeVerifier: $codeVerifier,
             dpopKey: $dpopKey,
             requestUri: $parResponse['request_uri'],
+            pdsEndpoint: $pdsEndpoint,
         );
     }
 
@@ -80,11 +81,9 @@ class OAuthEngine
             throw new AuthenticationException('State mismatch');
         }
 
-        // Get PDS endpoint from request
-        $pdsEndpoint = $this->extractPdsFromRequestUri($request->requestUri);
-        $tokenUrl = $pdsEndpoint.'/oauth/token';
+        $tokenUrl = $request->pdsEndpoint.'/oauth/token';
 
-        $response = $this->dpopClient->request($pdsEndpoint, $tokenUrl, 'POST', $request->dpopKey)
+        $response = $this->dpopClient->request($request->pdsEndpoint, $tokenUrl, 'POST', $request->dpopKey)
             ->asForm()
             ->post($tokenUrl, [
                 'grant_type' => 'authorization_code',
@@ -138,15 +137,5 @@ class OAuthEngine
     protected function generatePkceChallenge(string $verifier): string
     {
         return rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
-    }
-
-    /**
-     * Extract PDS endpoint from request URI
-     */
-    protected function extractPdsFromRequestUri(string $requestUri): string
-    {
-        $parts = parse_url($requestUri);
-
-        return ($parts['scheme'] ?? 'https').'://'.($parts['host'] ?? '');
     }
 }
