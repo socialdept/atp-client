@@ -28,15 +28,15 @@ class OAuthMetadata
         if (static::$clientMetadataUsing) {
             $stored = call_user_func(static::$clientMetadataUsing);
         } else {
-            $stored = config('atp-client.oauth.client_metadata', []);
+            $stored = config('client.oauth.client_metadata', []);
         }
 
         // Base metadata that should always be present
         $base = [
             'client_id' => route('atp.oauth.client-metadata'),
             'jwks_uri' => route('atp.oauth.jwks'),
-            'redirect_uris' => config('atp-client.client.redirect_uris', []),
-            'scope' => config('atp-client.oauth.scope', 'atproto transition:generic'),
+            'redirect_uris' => config('client.client.redirect_uris', []),
+            'scope' => config('client.oauth.scope', 'atproto transition:generic'),
             'grant_types' => ['authorization_code', 'refresh_token'],
             'response_types' => ['code'],
             'token_endpoint_auth_method' => 'private_key_jwt',

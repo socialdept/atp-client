@@ -9,7 +9,7 @@ class ClientMetadataManager
      */
     public function getClientId(): string
     {
-        return config('atp-client.client.url');
+        return config('client.client.url');
     }
 
     /**
@@ -17,7 +17,7 @@ class ClientMetadataManager
      */
     public function getMetadataUrl(): ?string
     {
-        return config('atp-client.client.metadata_url');
+        return config('client.client.metadata_url');
     }
 
     /**
@@ -27,7 +27,7 @@ class ClientMetadataManager
      */
     public function getRedirectUris(): array
     {
-        return config('atp-client.client.redirect_uris', []);
+        return config('client.client.redirect_uris', []);
     }
 
     /**
@@ -37,7 +37,7 @@ class ClientMetadataManager
      */
     public function getScopes(): array
     {
-        return config('atp-client.client.scopes', ['atproto', 'transition:generic']);
+        return config('client.client.scopes', ['atproto', 'transition:generic']);
     }
 
     /**
@@ -49,8 +49,8 @@ class ClientMetadataManager
     {
         return [
             'client_id' => $this->getClientId(),
-            'client_name' => config('atp-client.client.name'),
-            'client_uri' => config('atp-client.client.url'),
+            'client_name' => config('client.client.name'),
+            'client_uri' => config('client.client.url'),
             'redirect_uris' => $this->getRedirectUris(),
             'scope' => implode(' ', $this->getScopes()),
             'grant_types' => [
