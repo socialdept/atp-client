@@ -11,5 +11,6 @@ class AuthorizationRequest
         public readonly DPoPKey $dpopKey,
         public readonly string $requestUri,
         public readonly string $pdsEndpoint,
+        public readonly ?string $handle = null,
     ) {}
 }
