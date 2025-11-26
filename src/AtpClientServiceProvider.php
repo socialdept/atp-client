@@ -70,20 +70,20 @@ class AtpClientServiceProvider extends ServiceProvider
                     $this->app = $app;
                 }
 
-                public function as(string $identifier): AtpClient
+                public function as(string $handleOrDid): AtpClient
                 {
                     return new AtpClient(
                         $this->app->make(SessionManager::class),
-                        $identifier
+                        $handleOrDid
                     );
                 }
 
-                public function login(string $identifier, string $password): AtpClient
+                public function login(string $handleOrDid, string $password): AtpClient
                 {
-                    $session = $this->app->make(SessionManager::class)
-                        ->fromAppPassword($identifier, $password);
+                    $this->app->make(SessionManager::class)
+                        ->fromAppPassword($handleOrDid, $password);
 
-                    return $this->as($identifier);
+                    return $this->as($handleOrDid);
                 }
 
                 public function oauth(): OAuthEngine
