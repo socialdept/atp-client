@@ -15,10 +15,13 @@ class DPoPKey
 
     public function getPublicJwk(): array
     {
-        $jwk = $this->publicKey->toString('JWK');
+        $jwks = json_decode($this->publicKey->toString('JWK'), true);
+
+        // phpseclib returns JWKS format {"keys":[...]}, extract the first key
+        $jwk = $jwks['keys'][0] ?? $jwks;
 
         return array_merge(
-            json_decode($jwk, true),
+            $jwk,
             [
                 'alg' => 'ES256',
                 'use' => 'sig',
@@ -29,10 +32,13 @@ class DPoPKey
 
     public function getPrivateJwk(): array
     {
-        $jwk = $this->privateKey->toString('JWK');
+        $jwks = json_decode($this->privateKey->toString('JWK'), true);
+
+        // phpseclib returns JWKS format {"keys":[...]}, extract the first key
+        $jwk = $jwks['keys'][0] ?? $jwks;
 
         return array_merge(
-            json_decode($jwk, true),
+            $jwk,
             [
                 'alg' => 'ES256',
                 'use' => 'sig',
