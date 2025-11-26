@@ -11,6 +11,7 @@ use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Events\TokenRefreshed;
 use SocialDept\AtpClient\Events\TokenRefreshing;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
+use SocialDept\AtpClient\Exceptions\HandleResolutionException;
 use SocialDept\AtpClient\Exceptions\SessionExpiredException;
 use SocialDept\AtpResolver\Facades\Resolver;
 
@@ -27,23 +28,47 @@ class SessionManager
     ) {}
 
     /**
-     * Get or create session for identifier
+     * Resolve a handle or DID to a DID.
+     *
+     * @throws HandleResolutionException
      */
-    public function session(string $identifier): Session
+    protected function resolveToDid(string $handleOrDid): string
     {
-        if (! isset($this->sessions[$identifier])) {
-            $this->sessions[$identifier] = $this->createSession($identifier);
+        // If already a DID, return as-is
+        if (str_starts_with($handleOrDid, 'did:')) {
+            return $handleOrDid;
         }
 
-        return $this->sessions[$identifier];
+        // Resolve handle to DID
+        $did = Resolver::handleToDid($handleOrDid);
+
+        if (! $did) {
+            throw new HandleResolutionException($handleOrDid);
+        }
+
+        return $did;
+    }
+
+    /**
+     * Get or create session for handle or DID
+     */
+    public function session(string $handleOrDid): Session
+    {
+        $did = $this->resolveToDid($handleOrDid);
+
+        if (! isset($this->sessions[$did])) {
+            $this->sessions[$did] = $this->createSession($did);
+        }
+
+        return $this->sessions[$did];
     }
 
     /**
      * Ensure session is valid, refresh if needed
      */
-    public function ensureValid(string $identifier): Session
+    public function ensureValid(string $handleOrDid): Session
     {
-        $session = $this->session($identifier);
+        $session = $this->session($handleOrDid);
 
         // Check if token needs refresh
         if ($session->expiresIn() < $this->refreshThreshold) {
@@ -57,13 +82,14 @@ class SessionManager
      * Create session from app password
      */
     public function fromAppPassword(
-        string $identifier,
+        string $handleOrDid,
         string $password
     ): Session {
-        $pdsEndpoint = Resolver::resolvePds($identifier);
+        $did = $this->resolveToDid($handleOrDid);
+        $pdsEndpoint = Resolver::resolvePds($did);
 
         $response = Http::post($pdsEndpoint.'/xrpc/com.atproto.server.createSession', [
-            'identifier' => $identifier,
+            'identifier' => $handleOrDid,
             'password' => $password,
         ]);
 
@@ -71,23 +97,23 @@ class SessionManager
             throw new AuthenticationException('Login failed');
         }
 
-        $token = AccessToken::fromResponse($response->json(), $identifier, $pdsEndpoint);
+        $token = AccessToken::fromResponse($response->json(), $handleOrDid, $pdsEndpoint);
 
-        // Store credentials
-        $this->credentials->storeCredentials($identifier, $token);
+        // Store credentials using DID as key
+        $this->credentials->storeCredentials($did, $token);
 
-        return $this->createSession($identifier);
+        return $this->createSession($did);
     }
 
     /**
      * Create session from credentials
      */
-    protected function createSession(string $identifier): Session
+    protected function createSession(string $did): Session
     {
-        $creds = $this->credentials->getCredentials($identifier);
+        $creds = $this->credentials->getCredentials($did);
 
         if (! $creds) {
-            throw new SessionExpiredException("No credentials found for {$identifier}");
+            throw new SessionExpiredException("No credentials found for {$did}");
         }
 
         // Get or create DPoP key
@@ -109,8 +135,10 @@ class SessionManager
      */
     protected function refreshSession(Session $session): Session
     {
+        $did = $session->did();
+
         // Fire event before refresh (allows developers to invalidate old token)
-        event(new TokenRefreshing($session->identifier(), $session->refreshToken()));
+        event(new TokenRefreshing($did, $session->refreshToken()));
 
         $newToken = $this->refresher->refresh(
             refreshToken: $session->refreshToken(),
@@ -120,20 +148,17 @@ class SessionManager
         );
 
         // Update credentials (CRITICAL: refresh tokens are single-use)
-        $this->credentials->updateCredentials(
-            $session->identifier(),
-            $newToken
-        );
+        $this->credentials->updateCredentials($did, $newToken);
 
         // Fire event after successful refresh
-        event(new TokenRefreshed($session->identifier(), $newToken));
+        event(new TokenRefreshed($did, $newToken));
 
         // Update session
-        $newCreds = $this->credentials->getCredentials($session->identifier());
+        $newCreds = $this->credentials->getCredentials($did);
         $newSession = $session->withCredentials($newCreds);
 
         // Update cached session
-        $this->sessions[$session->identifier()] = $newSession;
+        $this->sessions[$did] = $newSession;
 
         return $newSession;
     }
