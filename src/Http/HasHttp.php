@@ -13,7 +13,7 @@ trait HasHttp
 {
     protected SessionManager $sessions;
 
-    protected string $identifier;
+    protected string $did;
 
     protected DPoPClient $dpopClient;
 
@@ -26,7 +26,7 @@ trait HasHttp
         ?array $params = null,
         ?array $body = null
     ): Response {
-        $session = $this->sessions->ensureValid($this->identifier);
+        $session = $this->sessions->ensureValid($this->did);
         $url = rtrim($session->pdsEndpoint(), '/').'/xrpc/'.$endpoint;
 
         $params = array_filter($params ?? [], fn ($v) => ! is_null($v));
@@ -110,7 +110,7 @@ trait HasHttp
      */
     protected function postBlob(string $endpoint, string $data, string $mimeType): Response
     {
-        $session = $this->sessions->ensureValid($this->identifier);
+        $session = $this->sessions->ensureValid($this->did);
         $url = rtrim($session->pdsEndpoint(), '/').'/xrpc/'.$endpoint;
 
         $response = $this->buildAuthenticatedRequest($session, $url, 'POST')

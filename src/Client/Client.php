@@ -19,11 +19,11 @@ class Client
     public function __construct(
         AtpClient $parent,
         SessionManager $sessions,
-        string $identifier,
+        string $did,
     ) {
         $this->atp = $parent;
         $this->sessions = $sessions;
-        $this->identifier = $identifier;
+        $this->did = $did;
         $this->dpopClient = app(DPoPClient::class);
     }
 }
