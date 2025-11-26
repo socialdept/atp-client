@@ -8,7 +8,9 @@ use SocialDept\AtpClient\Auth\ClientMetadataManager;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\DPoPNonceManager;
 use SocialDept\AtpClient\Auth\OAuthEngine;
+use SocialDept\AtpClient\Auth\ScopeChecker;
 use SocialDept\AtpClient\Auth\TokenRefresher;
+use SocialDept\AtpClient\Enums\ScopeEnforcementLevel;
 use SocialDept\AtpClient\Console\GenerateOAuthKeyCommand;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
@@ -56,6 +58,11 @@ class AtpClientServiceProvider extends ServiceProvider
             );
         });
         $this->app->singleton(OAuthEngine::class);
+        $this->app->singleton(ScopeChecker::class, function ($app) {
+            return new ScopeChecker(
+                config('atp-client.scope_enforcement', ScopeEnforcementLevel::Permissive)
+            );
+        });
 
         // Register main client facade accessor
         $this->app->bind('atp-client', function ($app) {
