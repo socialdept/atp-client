@@ -448,6 +448,7 @@ return [
         'disabled' => false,
         'prefix' => '/atp/oauth/',
         'private_key' => env('ATP_OAUTH_PRIVATE_KEY'),
+        'kid' => env('ATP_OAUTH_KID', 'atp-client-key'),
     ],
 
     // HTTP client settings
@@ -468,9 +469,12 @@ ATP_CLIENT_NAME="My App"
 ATP_CLIENT_URL="https://myapp.com"
 ATP_CLIENT_REDIRECT_URI="https://myapp.com/auth/atp/callback"
 ATP_OAUTH_PRIVATE_KEY="base64-encoded-private-key"
+ATP_OAUTH_KID="atp-client-key"
 ATP_REFRESH_THRESHOLD=300
 ATP_HTTP_TIMEOUT=30
 ```
+
+The `ATP_OAUTH_KID` is the Key ID used in your JWKS endpoint. Some developers may require this to match a specific value. The default is `atp-client-key`.
 
 ## Credential Storage
 

@@ -19,8 +19,9 @@ class JsonWebKeySet implements Arrayable, Jsonable, Stringable
     public static function load(): static
     {
         $key = \SocialDept\AtpClient\Auth\OAuthKey::load();
+        $kid = config('client.oauth.kid', 'key-1');
 
-        return (new static)->addKey($key->toJWK()->asPublic());
+        return (new static)->addKey($key->toJWK()->withKid($kid)->asPublic());
     }
 
     /**
