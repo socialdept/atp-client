@@ -49,6 +49,7 @@ class OAuthEngine
             $pdsEndpoint,
             $scopes,
             $codeChallenge,
+            $state,
             $dpopKey
         );
 
@@ -107,6 +108,7 @@ class OAuthEngine
         string $pdsEndpoint,
         array $scopes,
         string $codeChallenge,
+        string $state,
         DPoPKey $dpopKey
     ): array {
         $parUrl = $pdsEndpoint.'/oauth/par';
@@ -120,7 +122,7 @@ class OAuthEngine
                 'scope' => implode(' ', $scopes),
                 'code_challenge' => $codeChallenge,
                 'code_challenge_method' => 'S256',
-                'state' => Str::random(32),
+                'state' => $state,
             ]);
 
         if ($response->failed()) {
