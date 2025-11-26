@@ -11,7 +11,7 @@ class TokenRefreshed
     use Dispatchable, SerializesModels;
 
     public function __construct(
-        public readonly string $identifier,
+        public readonly string $did,
         public readonly AccessToken $token,
     ) {}
 }
