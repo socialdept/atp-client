@@ -3,6 +3,7 @@
 namespace SocialDept\AtpClient\Http;
 
 use Illuminate\Http\Client\Response as LaravelResponse;
+use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
 use SocialDept\AtpClient\Exceptions\ValidationException;
 use SocialDept\AtpClient\Session\Session;
@@ -48,13 +49,20 @@ trait HasHttp
     }
 
     /**
-     * Build authenticated request with DPoP proof and automatic nonce retry
+     * Build authenticated request.
+     *
+     * OAuth sessions use DPoP proof with Bearer token.
+     * Legacy sessions use plain Bearer token.
      */
     protected function buildAuthenticatedRequest(
         Session $session,
         string $url,
         string $method
     ): \Illuminate\Http\Client\PendingRequest {
+        if ($session->isLegacy()) {
+            return Http::withHeader('Authorization', 'Bearer '.$session->accessToken());
+        }
+
         return $this->dpopClient->request(
             pdsEndpoint: $session->pdsEndpoint(),
             url: $url,
