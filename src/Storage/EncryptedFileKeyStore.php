@@ -3,7 +3,6 @@
 namespace SocialDept\AtpClient\Storage;
 
 use Illuminate\Contracts\Encryption\Encrypter;
-use phpseclib3\Crypt\PublicKeyLoader;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Data\DPoPKey;
 
@@ -23,8 +22,8 @@ class EncryptedFileKeyStore implements KeyStore
     public function store(string $sessionId, DPoPKey $key): void
     {
         $data = [
-            'privateKey' => $key->privateKey->toString('PKCS8'),
-            'publicKey' => $key->publicKey->toString('PKCS8'),
+            'privateKey' => $key->toPEM(),
+            'publicKey' => $key->getPublicKey()->toString('PKCS8'),
             'keyId' => $key->keyId,
         ];
 
@@ -47,12 +46,9 @@ class EncryptedFileKeyStore implements KeyStore
         $encrypted = file_get_contents($path);
         $data = $this->encrypter->decrypt($encrypted);
 
-        $privateKey = PublicKeyLoader::load($data['privateKey']);
-        $publicKey = PublicKeyLoader::load($data['publicKey']);
-
         return new DPoPKey(
-            privateKey: $privateKey,
-            publicKey: $publicKey,
+            privateKey: $data['privateKey'],
+            publicKey: $data['publicKey'],
             keyId: $data['keyId'],
         );
     }
