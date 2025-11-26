@@ -6,7 +6,7 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use SocialDept\AtpClient\Data\AccessToken;
 
-class UserAuthenticated
+class OAuthUserAuthenticated
 {
     use Dispatchable, SerializesModels;
 

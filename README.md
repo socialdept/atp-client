@@ -163,9 +163,9 @@ $client = Atp::as('user@bsky.social');
 Sessions automatically refresh when tokens are about to expire (default: 5 minutes before expiration). Listen to events if you need to persist refreshed tokens:
 
 ```php
-use SocialDept\AtpClient\Events\TokenRefreshed;
+use SocialDept\AtpClient\Events\OAuthTokenRefreshed;
 
-Event::listen(TokenRefreshed::class, function ($event) {
+Event::listen(OAuthTokenRefreshed::class, function ($event) {
     // $event->did - the user's DID (e.g., did:plc:abc123...)
     // $event->token - the new AccessToken
     // Update your credential storage here
@@ -713,10 +713,10 @@ public function storeCredentials(string $did, AccessToken $token): void
 When tokens are automatically refreshed, you can listen for events:
 
 ```php
-use SocialDept\AtpClient\Events\TokenRefreshed;
+use SocialDept\AtpClient\Events\OAuthTokenRefreshed;
 
 // In EventServiceProvider or via Event::listen()
-Event::listen(TokenRefreshed::class, function (TokenRefreshed $event) {
+Event::listen(OAuthTokenRefreshed::class, function (OAuthTokenRefreshed $event) {
     // The CredentialProvider.updateCredentials() is already called,
     // but you can do additional logging or notifications here
     Log::info("Token refreshed for: {$event->did}");
@@ -727,15 +727,15 @@ Event::listen(TokenRefreshed::class, function (TokenRefreshed $event) {
 
 The package dispatches events you can listen to:
 
-### UserAuthenticated
+### OAuthUserAuthenticated
 
 Fired after a successful OAuth callback. Use this to create or update users in your application:
 
 ```php
-use SocialDept\AtpClient\Events\UserAuthenticated;
+use SocialDept\AtpClient\Events\OAuthUserAuthenticated;
 use SocialDept\AtpClient\Facades\Atp;
 
-Event::listen(UserAuthenticated::class, function (UserAuthenticated $event) {
+Event::listen(OAuthUserAuthenticated::class, function (OAuthUserAuthenticated $event) {
     // $event->token contains: did, accessJwt, refreshJwt, handle, issuer, expiresAt
 
     // Fetch the user's profile
@@ -757,21 +757,21 @@ Event::listen(UserAuthenticated::class, function (UserAuthenticated $event) {
 });
 ```
 
-### TokenRefreshing / TokenRefreshed
+### OAuthTokenRefreshing / OAuthTokenRefreshed
 
 Fired before and after automatic token refresh:
 
 ```php
-use SocialDept\AtpClient\Events\TokenRefreshing;
-use SocialDept\AtpClient\Events\TokenRefreshed;
+use SocialDept\AtpClient\Events\OAuthTokenRefreshing;
+use SocialDept\AtpClient\Events\OAuthTokenRefreshed;
 
 // Before token refresh
-Event::listen(TokenRefreshing::class, function ($event) {
+Event::listen(OAuthTokenRefreshing::class, function ($event) {
     Log::info('Refreshing token for: ' . $event->did);
 });
 
 // After token refresh
-Event::listen(TokenRefreshed::class, function ($event) {
+Event::listen(OAuthTokenRefreshed::class, function ($event) {
     // CredentialProvider.updateCredentials() is already called automatically
     Log::info('Token refreshed for: ' . $event->did);
 });
