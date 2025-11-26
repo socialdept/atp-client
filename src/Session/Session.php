@@ -5,6 +5,7 @@ namespace SocialDept\AtpClient\Session;
 use SocialDept\AtpClient\Data\Credentials;
 use SocialDept\AtpClient\Data\DPoPKey;
 use SocialDept\AtpClient\Enums\AuthType;
+use SocialDept\AtpClient\Enums\Scope;
 
 class Session
 {
@@ -62,6 +63,56 @@ class Session
     public function hasScope(string $scope): bool
     {
         return in_array($scope, $this->credentials->scope, true);
+    }
+
+    /**
+     * Check if the session has the given scope (alias for hasScope with Scope enum support).
+     */
+    public function can(string|Scope $scope): bool
+    {
+        $scopeValue = $scope instanceof Scope ? $scope->value : $scope;
+
+        return $this->hasScope($scopeValue);
+    }
+
+    /**
+     * Check if the session has any of the given scopes.
+     *
+     * @param  array<string|Scope>  $scopes
+     */
+    public function canAny(array $scopes): bool
+    {
+        foreach ($scopes as $scope) {
+            if ($this->can($scope)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the session has all of the given scopes.
+     *
+     * @param  array<string|Scope>  $scopes
+     */
+    public function canAll(array $scopes): bool
+    {
+        foreach ($scopes as $scope) {
+            if (! $this->can($scope)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if the session does NOT have the given scope.
+     */
+    public function cannot(string|Scope $scope): bool
+    {
+        return ! $this->can($scope);
     }
 
     public function authType(): AuthType
