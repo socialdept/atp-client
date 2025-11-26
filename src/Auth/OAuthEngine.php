@@ -8,7 +8,7 @@ use SocialDept\AtpClient\Data\AuthorizationRequest;
 use SocialDept\AtpClient\Data\DPoPKey;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Http\DPoPClient;
-use SocialDept\Resolver\Facades\Resolver;
+use SocialDept\AtpResolver\Facades\Resolver;
 
 class OAuthEngine
 {
