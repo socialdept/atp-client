@@ -519,6 +519,37 @@ interface CredentialProvider
 }
 ```
 
+### Built-in Credential Providers
+
+The package includes several credential providers for different use cases:
+
+| Provider | Persistence | Setup | Best For |
+|----------|-------------|-------|----------|
+| `ArrayCredentialProvider` | None (memory) | None | Testing, single requests |
+| `CacheCredentialProvider` | Cache driver | None | Quick prototyping, APIs |
+| `SessionCredentialProvider` | Session lifetime | None | Web apps with user sessions |
+| `FileCredentialProvider` | Permanent (disk) | None | CLI tools, bots |
+
+**CacheCredentialProvider** - Uses Laravel's cache system (file cache by default):
+```php
+// config/client.php
+'credential_provider' => \SocialDept\AtpClient\Providers\CacheCredentialProvider::class,
+```
+
+**SessionCredentialProvider** - Credentials cleared when session expires or user logs out:
+```php
+// config/client.php
+'credential_provider' => \SocialDept\AtpClient\Providers\SessionCredentialProvider::class,
+```
+
+**FileCredentialProvider** - Stores credentials in `storage/app/atp-credentials/`:
+```php
+// config/client.php
+'credential_provider' => \SocialDept\AtpClient\Providers\FileCredentialProvider::class,
+```
+
+For production applications with multiple users, implement a database-backed provider as shown below.
+
 ### Database Migration
 
 Create a migration for storing credentials:
