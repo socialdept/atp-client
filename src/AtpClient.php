@@ -38,10 +38,10 @@ class AtpClient
 
     public function __construct(
         SessionManager $sessions,
-        string $identifier,
+        string $did,
     ) {
         // Load the network client
-        $this->client = new Client($this, $sessions, $identifier);
+        $this->client = new Client($this, $sessions, $did);
 
         // Load all function collections
         $this->bsky = new BskyClient($this);
