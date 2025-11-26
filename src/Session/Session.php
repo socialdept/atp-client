@@ -13,11 +13,6 @@ class Session
         protected string $pdsEndpoint,
     ) {}
 
-    public function identifier(): string
-    {
-        return $this->credentials->identifier;
-    }
-
     public function did(): string
     {
         return $this->credentials->did;

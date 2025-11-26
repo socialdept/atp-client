@@ -5,7 +5,6 @@ namespace SocialDept\AtpClient\Data;
 class Credentials
 {
     public function __construct(
-        public readonly string $identifier,
         public readonly string $did,
         public readonly string $accessToken,
         public readonly string $refreshToken,

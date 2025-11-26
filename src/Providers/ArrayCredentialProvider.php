@@ -15,15 +15,14 @@ class ArrayCredentialProvider implements CredentialProvider
      */
     protected array $credentials = [];
 
-    public function getCredentials(string $identifier): ?Credentials
+    public function getCredentials(string $did): ?Credentials
     {
-        return $this->credentials[$identifier] ?? null;
+        return $this->credentials[$did] ?? null;
     }
 
-    public function storeCredentials(string $identifier, AccessToken $token): void
+    public function storeCredentials(string $did, AccessToken $token): void
     {
-        $this->credentials[$identifier] = new Credentials(
-            identifier: $identifier,
+        $this->credentials[$did] = new Credentials(
             did: $token->did,
             accessToken: $token->accessJwt,
             refreshToken: $token->refreshJwt,
@@ -33,13 +32,13 @@ class ArrayCredentialProvider implements CredentialProvider
         );
     }
 
-    public function updateCredentials(string $identifier, AccessToken $token): void
+    public function updateCredentials(string $did, AccessToken $token): void
     {
-        $this->storeCredentials($identifier, $token);
+        $this->storeCredentials($did, $token);
     }
 
-    public function removeCredentials(string $identifier): void
+    public function removeCredentials(string $did): void
     {
-        unset($this->credentials[$identifier]);
+        unset($this->credentials[$did]);
     }
 }

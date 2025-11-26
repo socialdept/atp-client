@@ -8,8 +8,8 @@ use SocialDept\AtpClient\Client\AtpClient;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 
 /**
- * @method static AtpClient as(string $identifier)
- * @method static AtpClient login(string $identifier, string $password)
+ * @method static AtpClient as(string $handleOrDid)
+ * @method static AtpClient login(string $handleOrDid, string $password)
  * @method static OAuthEngine oauth()
  * @method static void setDefaultProvider(CredentialProvider $provider)
  *
