@@ -138,7 +138,7 @@ class SessionManager
         $did = $session->did();
 
         // Fire event before refresh (allows developers to invalidate old token)
-        event(new OAuthTokenRefreshing($did, $session->refreshToken()));
+        event(new OAuthTokenRefreshing($session));
 
         $newToken = $this->refresher->refresh(
             refreshToken: $session->refreshToken(),
@@ -151,7 +151,7 @@ class SessionManager
         $this->credentials->updateCredentials($did, $newToken);
 
         // Fire event after successful refresh
-        event(new OAuthTokenRefreshed($did, $newToken));
+        event(new OAuthTokenRefreshed($session, $newToken));
 
         // Update session
         $newCreds = $this->credentials->getCredentials($did);
