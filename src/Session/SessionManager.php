@@ -8,8 +8,8 @@ use SocialDept\AtpClient\Auth\TokenRefresher;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Data\AccessToken;
-use SocialDept\AtpClient\Events\OAuthTokenRefreshed;
-use SocialDept\AtpClient\Events\OAuthTokenRefreshing;
+use SocialDept\AtpClient\Events\TokenRefreshed;
+use SocialDept\AtpClient\Events\TokenRefreshing;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\HandleResolutionException;
 use SocialDept\AtpClient\Exceptions\SessionExpiredException;
@@ -138,20 +138,21 @@ class SessionManager
         $did = $session->did();
 
         // Fire event before refresh (allows developers to invalidate old token)
-        event(new OAuthTokenRefreshing($session));
+        event(new TokenRefreshing($session));
 
         $newToken = $this->refresher->refresh(
             refreshToken: $session->refreshToken(),
             pdsEndpoint: $session->pdsEndpoint(),
             dpopKey: $session->dpopKey(),
             handle: $session->handle(),
+            authType: $session->authType(),
         );
 
         // Update credentials (CRITICAL: refresh tokens are single-use)
         $this->credentials->updateCredentials($did, $newToken);
 
         // Fire event after successful refresh
-        event(new OAuthTokenRefreshed($session, $newToken));
+        event(new TokenRefreshed($session, $newToken));
 
         // Update session
         $newCreds = $this->credentials->getCredentials($did);
