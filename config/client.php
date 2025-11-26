@@ -111,4 +111,18 @@ return [
             'sleep' => env('ATP_HTTP_RETRY_SLEEP', 100),
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scope Enforcement
+    |--------------------------------------------------------------------------
+    |
+    | Configure how scope requirements are enforced. Options:
+    | - 'strict': Throws MissingScopeException if required scopes are missing
+    | - 'permissive': Logs a warning but attempts the request anyway
+    |
+    */
+    'scope_enforcement' => \SocialDept\AtpClient\Enums\ScopeEnforcementLevel::tryFrom(
+        env('ATP_SCOPE_ENFORCEMENT', 'permissive')
+    ) ?? \SocialDept\AtpClient\Enums\ScopeEnforcementLevel::Permissive,
 ];
