@@ -2,12 +2,10 @@
 
 namespace SocialDept\AtpClient\Http;
 
-use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\Response as LaravelResponse;
 use InvalidArgumentException;
-use SocialDept\AtpClient\Auth\DPoPKeyManager;
-use SocialDept\AtpClient\Auth\DPoPNonceManager;
 use SocialDept\AtpClient\Exceptions\ValidationException;
+use SocialDept\AtpClient\Session\Session;
 use SocialDept\AtpClient\Session\SessionManager;
 use SocialDept\AtpSchema\Facades\Schema;
 
@@ -15,11 +13,9 @@ trait HasHttp
 {
     protected SessionManager $sessions;
 
-    protected Factory $http;
-
     protected string $identifier;
 
-    protected DPoPNonceManager $nonceManager;
+    protected DPoPClient $dpopClient;
 
     /**
      * Make XRPC call
@@ -30,35 +26,13 @@ trait HasHttp
         ?array $params = null,
         ?array $body = null
     ): Response {
-        // Ensure session is valid (auto-refresh)
         $session = $this->sessions->ensureValid($this->identifier);
-
-        // Build URL
         $url = rtrim($session->pdsEndpoint(), '/').'/xrpc/'.$endpoint;
 
-        // Get DPoP nonce
-        $nonce = $this->nonceManager->getNonce($session->pdsEndpoint());
-
-        // Create DPoP proof using DPoPKeyManager
-        $dpopProof = app(DPoPKeyManager::class)->createProof(
-            key: $session->dpopKey(),
-            method: $method,
-            url: $url,
-            nonce: $nonce,
-            accessToken: $session->accessToken(),
-        );
-
-        // Filter null parameters
         $params = array_filter($params ?? [], fn ($v) => ! is_null($v));
 
-        // Build request
-        $request = $this->http
-            ->withHeaders([
-                'Authorization' => 'Bearer '.$session->accessToken(),
-                'DPoP' => $dpopProof,
-            ]);
+        $request = $this->buildAuthenticatedRequest($session, $url, $method);
 
-        // Send request
         $response = match ($method) {
             'GET' => $request->get($url, $params),
             'POST' => $request->post($url, $body ?? $params),
@@ -66,12 +40,6 @@ trait HasHttp
             default => throw new InvalidArgumentException("Unsupported method: {$method}"),
         };
 
-        // Store nonce from response if present
-        if ($newNonce = $response->header('DPoP-Nonce')) {
-            $this->nonceManager->storeNonce($session->pdsEndpoint(), $newNonce);
-        }
-
-        // Validate response if schema exists
         if (Schema::exists($endpoint)) {
             $this->validateResponse($endpoint, $response);
         }
@@ -80,12 +48,29 @@ trait HasHttp
     }
 
     /**
+     * Build authenticated request with DPoP proof and automatic nonce retry
+     */
+    protected function buildAuthenticatedRequest(
+        Session $session,
+        string $url,
+        string $method
+    ): \Illuminate\Http\Client\PendingRequest {
+        return $this->dpopClient->request(
+            pdsEndpoint: $session->pdsEndpoint(),
+            url: $url,
+            method: $method,
+            dpopKey: $session->dpopKey(),
+            accessToken: $session->accessToken(),
+        );
+    }
+
+    /**
      * Validate response against schema
      */
     protected function validateResponse(string $endpoint, LaravelResponse $response): void
     {
         if (! $response->successful()) {
-            return; // Don't validate error responses
+            return;
         }
 
         $data = $response->json();
@@ -125,37 +110,12 @@ trait HasHttp
      */
     protected function postBlob(string $endpoint, string $data, string $mimeType): Response
     {
-        // Ensure session is valid (auto-refresh)
         $session = $this->sessions->ensureValid($this->identifier);
-
-        // Build URL
         $url = rtrim($session->pdsEndpoint(), '/').'/xrpc/'.$endpoint;
 
-        // Get DPoP nonce
-        $nonce = $this->nonceManager->getNonce($session->pdsEndpoint());
-
-        // Create DPoP proof using DPoPKeyManager
-        $dpopProof = app(DPoPKeyManager::class)->createProof(
-            key: $session->dpopKey(),
-            method: 'POST',
-            url: $url,
-            nonce: $nonce,
-            accessToken: $session->accessToken(),
-        );
-
-        // Build and send request with raw binary body
-        $response = $this->http
-            ->withHeaders([
-                'Authorization' => 'Bearer '.$session->accessToken(),
-                'DPoP' => $dpopProof,
-            ])
+        $response = $this->buildAuthenticatedRequest($session, $url, 'POST')
             ->withBody($data, $mimeType)
             ->post($url);
-
-        // Store nonce from response if present
-        if ($newNonce = $response->header('DPoP-Nonce')) {
-            $this->nonceManager->storeNonce($session->pdsEndpoint(), $newNonce);
-        }
 
         return new Response($response);
     }

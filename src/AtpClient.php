@@ -2,11 +2,10 @@
 
 namespace SocialDept\AtpClient;
 
-use Illuminate\Http\Client\Factory;
-use SocialDept\AtpClient\Client\Client;
 use SocialDept\AtpClient\Client\AtprotoClient;
 use SocialDept\AtpClient\Client\BskyClient;
 use SocialDept\AtpClient\Client\ChatClient;
+use SocialDept\AtpClient\Client\Client;
 use SocialDept\AtpClient\Client\OzoneClient;
 use SocialDept\AtpClient\Session\SessionManager;
 
@@ -39,11 +38,10 @@ class AtpClient
 
     public function __construct(
         SessionManager $sessions,
-        Factory $http,
         string $identifier,
     ) {
         // Load the network client
-        $this->client = new Client($this, $sessions, $http, $identifier);
+        $this->client = new Client($this, $sessions, $identifier);
 
         // Load all function collections
         $this->bsky = new BskyClient($this);

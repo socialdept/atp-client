@@ -2,7 +2,7 @@
 
 namespace SocialDept\AtpClient\Session;
 
-use Illuminate\Http\Client\Factory as HttpClient;
+use Illuminate\Support\Facades\Http;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\TokenRefresher;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
@@ -12,7 +12,7 @@ use SocialDept\AtpClient\Events\TokenRefreshed;
 use SocialDept\AtpClient\Events\TokenRefreshing;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\SessionExpiredException;
-use SocialDept\AtpResolver\Facades\Resolver;
+use SocialDept\Resolver\Facades\Resolver;
 
 class SessionManager
 {
@@ -23,7 +23,6 @@ class SessionManager
         protected TokenRefresher $refresher,
         protected DPoPKeyManager $dpopManager,
         protected KeyStore $keyStore,
-        protected HttpClient $http,
         protected int $refreshThreshold = 300, // 5 minutes
     ) {}
 
@@ -63,7 +62,7 @@ class SessionManager
     ): Session {
         $pdsEndpoint = Resolver::resolvePds($identifier);
 
-        $response = $this->http->post($pdsEndpoint.'/xrpc/com.atproto.server.createSession', [
+        $response = Http::post($pdsEndpoint.'/xrpc/com.atproto.server.createSession', [
             'identifier' => $identifier,
             'password' => $password,
         ]);
