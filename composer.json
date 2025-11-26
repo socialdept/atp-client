@@ -1,22 +1,37 @@
 {
-    "name": "social-dept/atp-client",
-    "description": ":package_description",
+    "name": "socialdept/atp-client",
+    "description": "Type-safe AT Protocol HTTP client with OAuth 2.0 support for Laravel",
+    "type": "library",
     "license": "MIT",
+    "keywords": [
+        "atproto",
+        "bluesky",
+        "at-protocol",
+        "oauth",
+        "xrpc",
+        "laravel"
+    ],
     "authors": [
         {
-            "name": "Author Name",
-            "email": "author@email.com",
-            "homepage": "http://author.com"
+            "name": "SocialDept",
+            "email": "hello@socialdept.com"
         }
     ],
-    "homepage": "https://github.com/social-dept/atp-client",
-    "keywords": ["Laravel", "AtpClient"],
     "require": {
-        "illuminate/support": "~9"
+        "php": "^8.2",
+        "illuminate/support": "^11.0|^12.0",
+        "illuminate/http": "^11.0|^12.0",
+        "guzzlehttp/guzzle": "^7.0",
+        "phpseclib/phpseclib": "^3.0",
+        "firebase/php-jwt": "^6.0",
+        "socialdept/atp-schema": "^0.2",
+        "socialdept/atp-resolver": "^0.1"
     },
     "require-dev": {
-        "../../../vendor/phpunit/phpunit": "~9.0",
-        "orchestra/testbench": "~7"
+        "orchestra/testbench": "^9.0",
+        "phpunit/phpunit": "^11.0",
+        "friendsofphp/php-cs-fixer": "^3.89",
+        "mockery/mockery": "^1.6"
     },
     "autoload": {
         "psr-4": {
@@ -25,8 +40,13 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "SocialDept\\AtpClient\\Tests\\": "tests"
+            "SocialDept\\AtpClient\\Tests\\": "tests/"
         }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/php-cs-fixer fix"
     },
     "extra": {
         "laravel": {
@@ -34,8 +54,15 @@
                 "SocialDept\\AtpClient\\AtpClientServiceProvider"
             ],
             "aliases": {
-                "AtpClient": "SocialDept\\AtpClient\\Facades\\AtpClient"
+                "Atp": "SocialDept\\AtpClient\\Facades\\Atp"
             }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": false
         }
     }
 }
