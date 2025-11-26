@@ -25,7 +25,7 @@
         "phpseclib/phpseclib": "^3.0",
         "firebase/php-jwt": "^6.0",
         "socialdept/atp-schema": "^0.2",
-        "socialdept/atp-resolver": "^0.1"
+        "socialdept/atp-resolver": "^1.0"
     },
     "require-dev": {
         "orchestra/testbench": "^9.0",
