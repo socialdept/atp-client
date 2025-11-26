@@ -4,6 +4,7 @@ namespace SocialDept\AtpClient\Session;
 
 use SocialDept\AtpClient\Data\Credentials;
 use SocialDept\AtpClient\Data\DPoPKey;
+use SocialDept\AtpClient\Enums\AuthType;
 
 class Session
 {
@@ -61,6 +62,16 @@ class Session
     public function hasScope(string $scope): bool
     {
         return in_array($scope, $this->credentials->scope, true);
+    }
+
+    public function authType(): AuthType
+    {
+        return $this->credentials->authType;
+    }
+
+    public function isLegacy(): bool
+    {
+        return $this->credentials->authType === AuthType::Legacy;
     }
 
     public function withCredentials(Credentials $credentials): self
