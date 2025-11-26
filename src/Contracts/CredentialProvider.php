@@ -8,23 +8,23 @@ use SocialDept\AtpClient\Data\Credentials;
 interface CredentialProvider
 {
     /**
-     * Get credentials for the given identifier
+     * Get credentials for the given DID
      */
-    public function getCredentials(string $identifier): ?Credentials;
+    public function getCredentials(string $did): ?Credentials;
 
     /**
      * Store new credentials (initial OAuth or app password login)
      */
-    public function storeCredentials(string $identifier, AccessToken $token): void;
+    public function storeCredentials(string $did, AccessToken $token): void;
 
     /**
      * Update credentials after token refresh
      * CRITICAL: Refresh tokens are single-use!
      */
-    public function updateCredentials(string $identifier, AccessToken $token): void;
+    public function updateCredentials(string $did, AccessToken $token): void;
 
     /**
      * Remove credentials
      */
-    public function removeCredentials(string $identifier): void;
+    public function removeCredentials(string $did): void;
 }
