@@ -9,6 +9,8 @@ class ModerationRequestClient extends Request
 {
     /**
      * Get moderation event
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-get-event
      */
     public function getModerationEvent(int $id): Response
     {
@@ -20,6 +22,8 @@ class ModerationRequestClient extends Request
 
     /**
      * Get moderation events
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-query-events
      */
     public function getModerationEvents(
         ?string $subject = null,
@@ -39,6 +43,8 @@ class ModerationRequestClient extends Request
 
     /**
      * Get record
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-get-record
      */
     public function getRecord(string $uri, ?string $cid = null): Response
     {
@@ -50,6 +56,8 @@ class ModerationRequestClient extends Request
 
     /**
      * Get repo
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-get-repo
      */
     public function getRepo(string $did): Response
     {
@@ -61,6 +69,8 @@ class ModerationRequestClient extends Request
 
     /**
      * Query events
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-query-events
      */
     public function queryEvents(
         ?array $types = null,
@@ -81,6 +91,8 @@ class ModerationRequestClient extends Request
 
     /**
      * Query statuses
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-query-statuses
      */
     public function queryStatuses(
         ?string $subject = null,
@@ -100,6 +112,8 @@ class ModerationRequestClient extends Request
 
     /**
      * Search repos
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-search-repos
      */
     public function searchRepos(
         ?string $term = null,
@@ -118,6 +132,8 @@ class ModerationRequestClient extends Request
 
     /**
      * Emit moderation event
+     *
+     * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-emit-event
      */
     public function emitEvent(
         array $event,

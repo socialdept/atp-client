@@ -9,6 +9,8 @@ class ServerRequestClient extends Request
 {
     /**
      * Get current session
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-server-get-session
      */
     public function getSession(): Response
     {
@@ -19,6 +21,8 @@ class ServerRequestClient extends Request
 
     /**
      * Describe server
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-server-describe-server
      */
     public function describeServer(): Response
     {

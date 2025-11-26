@@ -9,6 +9,8 @@ class IdentityRequestClient extends Request
 {
     /**
      * Resolve handle to DID
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-identity-resolve-handle
      */
     public function resolveHandle(string $handle): Response
     {
@@ -20,6 +22,8 @@ class IdentityRequestClient extends Request
 
     /**
      * Update handle
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-identity-update-handle
      */
     public function updateHandle(string $handle): Response
     {

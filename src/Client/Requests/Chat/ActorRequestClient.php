@@ -9,6 +9,8 @@ class ActorRequestClient extends Request
 {
     /**
      * Get actor metadata
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-actor-export-account-data
      */
     public function getActorMetadata(): Response
     {
@@ -19,6 +21,8 @@ class ActorRequestClient extends Request
 
     /**
      * Export account data
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-actor-export-account-data
      */
     public function exportAccountData(): Response
     {
@@ -29,6 +33,8 @@ class ActorRequestClient extends Request
 
     /**
      * Delete account
+     *
+     * @see https://docs.bsky.app/docs/api/chat-bsky-actor-delete-account
      */
     public function deleteAccount(): Response
     {
