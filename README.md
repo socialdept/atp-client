@@ -727,6 +727,40 @@ Event::listen(TokenRefreshed::class, function (TokenRefreshed $event) {
 
 The package dispatches events you can listen to:
 
+### UserAuthenticated
+
+Fired after a successful OAuth callback. Use this to create or update users in your application:
+
+```php
+use SocialDept\AtpClient\Events\UserAuthenticated;
+use SocialDept\AtpClient\Facades\Atp;
+
+Event::listen(UserAuthenticated::class, function (UserAuthenticated $event) {
+    // $event->token contains: did, accessJwt, refreshJwt, handle, issuer, expiresAt
+
+    // Fetch the user's profile
+    $client = Atp::as($event->token->did);
+    $profile = $client->bsky->actor->getProfile($event->token->did);
+
+    // Create or update user in your database
+    $user = User::updateOrCreate(
+        ['did' => $event->token->did],
+        [
+            'handle' => $event->token->handle,
+            'name' => $profile->json('displayName'),
+            'avatar' => $profile->json('avatar'),
+        ]
+    );
+
+    // Log them in
+    Auth::login($user);
+});
+```
+
+### TokenRefreshing / TokenRefreshed
+
+Fired before and after automatic token refresh:
+
 ```php
 use SocialDept\AtpClient\Events\TokenRefreshing;
 use SocialDept\AtpClient\Events\TokenRefreshed;
@@ -738,11 +772,8 @@ Event::listen(TokenRefreshing::class, function ($event) {
 
 // After token refresh
 Event::listen(TokenRefreshed::class, function ($event) {
-    // Update your stored credentials
-    $this->credentialProvider->updateCredentials(
-        $event->did,
-        $event->token
-    );
+    // CredentialProvider.updateCredentials() is already called automatically
+    Log::info('Token refreshed for: ' . $event->did);
 });
 ```
 
