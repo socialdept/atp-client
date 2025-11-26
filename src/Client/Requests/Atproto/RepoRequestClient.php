@@ -196,7 +196,7 @@ class RepoRequestClient extends Request
      */
     protected function checkCollectionScope(string $collection, string $action): void
     {
-        $session = $this->atp->session();
+        $session = $this->atp->client->session();
         $checker = app(ScopeChecker::class);
 
         // If user has transition:generic, they have broad access
