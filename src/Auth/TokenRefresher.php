@@ -2,16 +2,15 @@
 
 namespace SocialDept\AtpClient\Auth;
 
-use Illuminate\Http\Client\Factory as HttpClient;
 use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\DPoPKey;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
+use SocialDept\AtpClient\Http\DPoPClient;
 
 class TokenRefresher
 {
     public function __construct(
-        protected HttpClient $http,
-        protected DPoPKeyManager $dpopManager,
+        protected DPoPClient $dpopClient,
     ) {}
 
     /**
@@ -23,37 +22,19 @@ class TokenRefresher
         string $pdsEndpoint,
         DPoPKey $dpopKey
     ): AccessToken {
-        $dpopProof = $this->dpopManager->createProof(
-            key: $dpopKey,
-            method: 'POST',
-            url: $pdsEndpoint.'/oauth/token',
-            nonce: $this->getDpopNonce($pdsEndpoint),
-        );
+        $tokenUrl = $pdsEndpoint.'/oauth/token';
 
-        $response = $this->http
-            ->withHeaders([
-                'DPoP' => $dpopProof,
-                'Content-Type' => 'application/x-www-form-urlencoded',
-            ])
+        $response = $this->dpopClient->request($pdsEndpoint, $tokenUrl, 'POST', $dpopKey)
             ->asForm()
-            ->post($pdsEndpoint.'/oauth/token', [
+            ->post($tokenUrl, [
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken,
             ]);
 
         if ($response->failed()) {
-            throw new AuthenticationException(
-                'Token refresh failed: '.$response->body()
-            );
+            throw new AuthenticationException('Token refresh failed: '.$response->body());
         }
 
         return AccessToken::fromResponse($response->json());
-    }
-
-    protected function getDpopNonce(string $pdsEndpoint): string
-    {
-        // TODO: Implement proper DPoP nonce fetching and caching
-        // For now, return a placeholder that will need to be replaced
-        return 'temp-nonce-'.time();
     }
 }

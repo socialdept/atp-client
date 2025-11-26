@@ -14,6 +14,7 @@ use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Http\Controllers\ClientMetadataController;
 use SocialDept\AtpClient\Http\Controllers\JwksController;
+use SocialDept\AtpClient\Http\DPoPClient;
 use SocialDept\AtpClient\Session\SessionManager;
 use SocialDept\AtpClient\Storage\EncryptedFileKeyStore;
 
@@ -43,6 +44,7 @@ class AtpClientServiceProvider extends ServiceProvider
         $this->app->singleton(ClientMetadataManager::class);
         $this->app->singleton(DPoPKeyManager::class);
         $this->app->singleton(DPoPNonceManager::class);
+        $this->app->singleton(DPoPClient::class);
         $this->app->singleton(TokenRefresher::class);
         $this->app->singleton(SessionManager::class, function ($app) {
             return new SessionManager(
@@ -50,7 +52,6 @@ class AtpClientServiceProvider extends ServiceProvider
                 refresher: $app->make(TokenRefresher::class),
                 dpopManager: $app->make(DPoPKeyManager::class),
                 keyStore: $app->make(KeyStore::class),
-                http: $app->make('http'),
                 refreshThreshold: config('client.session.refresh_threshold', 300),
             );
         });
@@ -73,7 +74,6 @@ class AtpClientServiceProvider extends ServiceProvider
                 {
                     return new AtpClient(
                         $this->app->make(SessionManager::class),
-                        $this->app->make('http'),
                         $identifier
                     );
                 }
