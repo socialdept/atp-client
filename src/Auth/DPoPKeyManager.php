@@ -38,7 +38,7 @@ class DPoPKeyManager
         DPoPKey $key,
         string $method,
         string $url,
-        string $nonce,
+        string $nonce = '',
         ?string $accessToken = null
     ): string {
         $now = time();
@@ -49,8 +49,12 @@ class DPoPKeyManager
             'htu' => $url,
             'iat' => $now,
             'exp' => $now + 60, // 1 minute validity
-            'nonce' => $nonce,
         ];
+
+        // Only include nonce if provided (first request may not have one)
+        if ($nonce !== '') {
+            $payload['nonce'] = $nonce;
+        }
 
         if ($accessToken) {
             $payload['ath'] = $this->hashAccessToken($accessToken);

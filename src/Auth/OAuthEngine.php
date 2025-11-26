@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\AuthorizationRequest;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
-use SocialDept\AtpResolver\Facades\Resolver;
+use SocialDept\Resolver\Facades\Resolver;
 
 class OAuthEngine
 {
@@ -15,6 +15,7 @@ class OAuthEngine
         protected HttpClient $http,
         protected DPoPKeyManager $dpopManager,
         protected ClientMetadataManager $metadata,
+        protected DPoPNonceManager $nonceManager,
     ) {}
 
     /**
@@ -77,13 +78,23 @@ class OAuthEngine
 
         // Get PDS endpoint from request
         $pdsEndpoint = $this->extractPdsFromRequestUri($request->requestUri);
+        $tokenUrl = $pdsEndpoint.'/oauth/token';
+        $tokenData = [
+            'grant_type' => 'authorization_code',
+            'code' => $code,
+            'redirect_uri' => $this->metadata->getRedirectUris()[0] ?? null,
+            'client_id' => $this->metadata->getClientId(),
+            'code_verifier' => $request->codeVerifier,
+        ];
 
-        // Exchange code for token
+        // Get cached nonce
+        $nonce = $this->nonceManager->getNonce($pdsEndpoint);
+
         $dpopProof = $this->dpopManager->createProof(
             key: $request->dpopKey,
             method: 'POST',
-            url: $pdsEndpoint.'/oauth/token',
-            nonce: $this->getDpopNonce($pdsEndpoint),
+            url: $tokenUrl,
+            nonce: $nonce,
         );
 
         $response = $this->http
@@ -92,13 +103,38 @@ class OAuthEngine
                 'Content-Type' => 'application/x-www-form-urlencoded',
             ])
             ->asForm()
-            ->post($pdsEndpoint.'/oauth/token', [
-                'grant_type' => 'authorization_code',
-                'code' => $code,
-                'redirect_uri' => $this->metadata->getRedirectUris()[0] ?? null,
-                'client_id' => $this->metadata->getClientId(),
-                'code_verifier' => $request->codeVerifier,
-            ]);
+            ->post($tokenUrl, $tokenData);
+
+        // Handle use_dpop_nonce error - retry with server-provided nonce
+        if ($response->status() === 400) {
+            $error = $response->json('error');
+
+            if ($error === 'use_dpop_nonce' && $response->header('DPoP-Nonce')) {
+                $nonce = $response->header('DPoP-Nonce');
+                $this->nonceManager->storeNonce($pdsEndpoint, $nonce);
+
+                // Retry with new nonce
+                $dpopProof = $this->dpopManager->createProof(
+                    key: $request->dpopKey,
+                    method: 'POST',
+                    url: $tokenUrl,
+                    nonce: $nonce,
+                );
+
+                $response = $this->http
+                    ->withHeaders([
+                        'DPoP' => $dpopProof,
+                        'Content-Type' => 'application/x-www-form-urlencoded',
+                    ])
+                    ->asForm()
+                    ->post($tokenUrl, $tokenData);
+            }
+        }
+
+        // Store nonce from response for future requests
+        if ($response->header('DPoP-Nonce')) {
+            $this->nonceManager->storeNonce($pdsEndpoint, $response->header('DPoP-Nonce'));
+        }
 
         if ($response->failed()) {
             throw new AuthenticationException(
@@ -118,25 +154,59 @@ class OAuthEngine
         string $codeChallenge,
         $dpopKey
     ): array {
+        $parUrl = $pdsEndpoint.'/oauth/par';
+        $parData = [
+            'client_id' => $this->metadata->getClientId(),
+            'redirect_uri' => $this->metadata->getRedirectUris()[0] ?? null,
+            'response_type' => 'code',
+            'scope' => implode(' ', $scopes),
+            'code_challenge' => $codeChallenge,
+            'code_challenge_method' => 'S256',
+            'state' => Str::random(32),
+        ];
+
+        // Try with cached nonce first (may be empty on first request)
+        $nonce = $this->nonceManager->getNonce($pdsEndpoint);
+
         $dpopProof = $this->dpopManager->createProof(
             key: $dpopKey,
             method: 'POST',
-            url: $pdsEndpoint.'/oauth/par',
-            nonce: $this->getDpopNonce($pdsEndpoint),
+            url: $parUrl,
+            nonce: $nonce,
         );
 
         $response = $this->http
             ->withHeaders(['DPoP' => $dpopProof])
             ->asForm()
-            ->post($pdsEndpoint.'/oauth/par', [
-                'client_id' => $this->metadata->getClientId(),
-                'redirect_uri' => $this->metadata->getRedirectUris()[0] ?? null,
-                'response_type' => 'code',
-                'scope' => implode(' ', $scopes),
-                'code_challenge' => $codeChallenge,
-                'code_challenge_method' => 'S256',
-                'state' => Str::random(32),
-            ]);
+            ->post($parUrl, $parData);
+
+        // Handle use_dpop_nonce error - retry with server-provided nonce
+        if ($response->status() === 400) {
+            $error = $response->json('error');
+
+            if ($error === 'use_dpop_nonce' && $response->header('DPoP-Nonce')) {
+                $nonce = $response->header('DPoP-Nonce');
+                $this->nonceManager->storeNonce($pdsEndpoint, $nonce);
+
+                // Retry with new nonce
+                $dpopProof = $this->dpopManager->createProof(
+                    key: $dpopKey,
+                    method: 'POST',
+                    url: $parUrl,
+                    nonce: $nonce,
+                );
+
+                $response = $this->http
+                    ->withHeaders(['DPoP' => $dpopProof])
+                    ->asForm()
+                    ->post($parUrl, $parData);
+            }
+        }
+
+        // Store nonce from successful response for future requests
+        if ($response->header('DPoP-Nonce')) {
+            $this->nonceManager->storeNonce($pdsEndpoint, $response->header('DPoP-Nonce'));
+        }
 
         if ($response->failed()) {
             throw new AuthenticationException('PAR failed: '.$response->body());
@@ -151,16 +221,6 @@ class OAuthEngine
     protected function generatePkceChallenge(string $verifier): string
     {
         return rtrim(strtr(base64_encode(hash('sha256', $verifier, true)), '+/', '-_'), '=');
-    }
-
-    /**
-     * Get DPoP nonce from server
-     */
-    protected function getDpopNonce(string $pdsEndpoint): string
-    {
-        // TODO: Implement proper DPoP nonce fetching and caching
-        // This is typically returned in DPoP-Nonce header
-        return 'temp-nonce-'.time();
     }
 
     /**
