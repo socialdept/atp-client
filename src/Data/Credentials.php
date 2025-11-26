@@ -11,6 +11,7 @@ class Credentials
         public readonly \DateTimeInterface $expiresAt,
         public readonly ?string $handle = null,
         public readonly ?string $issuer = null,
+        public readonly array $scope = [],
     ) {}
 
     public function isExpired(): bool

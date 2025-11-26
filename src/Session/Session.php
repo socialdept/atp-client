@@ -53,6 +53,16 @@ class Session
         return $this->credentials->expiresIn();
     }
 
+    public function scopes(): array
+    {
+        return $this->credentials->scope;
+    }
+
+    public function hasScope(string $scope): bool
+    {
+        return in_array($scope, $this->credentials->scope, true);
+    }
+
     public function withCredentials(Credentials $credentials): self
     {
         return new self($credentials, $this->dpopKey, $this->pdsEndpoint);

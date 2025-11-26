@@ -531,6 +531,7 @@ Schema::create('atp_credentials', function (Blueprint $table) {
     $table->text('access_token');            // JWT access token
     $table->text('refresh_token');           // Single-use refresh token
     $table->timestamp('expires_at');         // Token expiration time
+    $table->json('scope')->nullable();       // Granted OAuth scopes
     $table->timestamps();
 });
 ```
@@ -564,6 +565,7 @@ class DatabaseCredentialProvider implements CredentialProvider
             expiresAt: $record->expires_at,
             handle: $record->handle,
             issuer: $record->issuer,
+            scope: $record->scope ?? [],
         );
     }
 
@@ -577,6 +579,7 @@ class DatabaseCredentialProvider implements CredentialProvider
                 'access_token' => $token->accessJwt,
                 'refresh_token' => $token->refreshJwt,
                 'expires_at' => $token->expiresAt,
+                'scope' => $token->scope,
             ]
         );
     }
@@ -587,9 +590,9 @@ class DatabaseCredentialProvider implements CredentialProvider
             'access_token' => $token->accessJwt,
             'refresh_token' => $token->refreshJwt,
             'expires_at' => $token->expiresAt,
-            // Preserve handle and issuer, or update if provided
             'handle' => $token->handle,
             'issuer' => $token->issuer,
+            'scope' => $token->scope,
         ]);
     }
 
@@ -618,10 +621,12 @@ class AtpCredential extends Model
         'access_token',
         'refresh_token',
         'expires_at',
+        'scope',
     ];
 
     protected $casts = [
         'expires_at' => 'datetime',
+        'scope' => 'array',
     ];
 
     protected $hidden = [
@@ -707,6 +712,7 @@ public function storeCredentials(string $did, AccessToken $token): void
 | `accessToken` | JWT for API authentication (short-lived) |
 | `refreshToken` | Token to get new access tokens (single-use!) |
 | `expiresAt` | When the access token expires |
+| `scope` | Array of granted scopes (e.g., `['atproto', 'transition:generic']`) |
 
 ### Handling Token Refresh Events
 
@@ -736,7 +742,12 @@ use SocialDept\AtpClient\Events\OAuthUserAuthenticated;
 use SocialDept\AtpClient\Facades\Atp;
 
 Event::listen(OAuthUserAuthenticated::class, function (OAuthUserAuthenticated $event) {
-    // $event->token contains: did, accessJwt, refreshJwt, handle, issuer, expiresAt
+    // $event->token contains: did, accessJwt, refreshJwt, handle, issuer, expiresAt, scope
+
+    // Check granted scopes
+    if (in_array('atproto', $event->token->scope)) {
+        // User granted AT Protocol access
+    }
 
     // Fetch the user's profile
     $client = Atp::as($event->token->did);

@@ -29,6 +29,7 @@ class ArrayCredentialProvider implements CredentialProvider
             expiresAt: $token->expiresAt,
             handle: $token->handle,
             issuer: $token->issuer,
+            scope: $token->scope,
         );
     }
 
