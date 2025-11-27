@@ -14,7 +14,7 @@ use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\HandleResolutionException;
 use SocialDept\AtpClient\Exceptions\SessionExpiredException;
 use SocialDept\AtpResolver\Facades\Resolver;
-use SocialDept\Resolver\Support\Identity;
+use SocialDept\AtpResolver\Support\Identity;
 
 class SessionManager
 {
