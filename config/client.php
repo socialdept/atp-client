@@ -117,6 +117,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Schema Validation
+    |--------------------------------------------------------------------------
+    |
+    | Enable or disable response validation against AT Protocol lexicon schemas.
+    | When enabled, responses are validated and ValidationException is thrown
+    | if the response doesn't match the expected schema.
+    |
+    */
+    'schema_validation' => env('ATP_SCHEMA_VALIDATION', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Scope Enforcement
     |--------------------------------------------------------------------------
     |

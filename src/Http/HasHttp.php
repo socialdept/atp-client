@@ -45,7 +45,7 @@ trait HasHttp
             default => throw new InvalidArgumentException("Unsupported method: {$method}"),
         };
 
-        if (Schema::exists($endpoint)) {
+        if (config('atp-client.schema_validation') && Schema::exists($endpoint)) {
             $this->validateResponse($endpoint, $response);
         }
 
