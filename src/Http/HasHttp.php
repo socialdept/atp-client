@@ -96,7 +96,7 @@ trait HasHttp
     /**
      * Make GET request
      */
-    protected function get(string $endpoint, array $params = []): Response
+    public function get(string $endpoint, array $params = []): Response
     {
         return $this->call($endpoint, 'GET', $params);
     }
@@ -104,7 +104,7 @@ trait HasHttp
     /**
      * Make POST request
      */
-    protected function post(string $endpoint, array $body = []): Response
+    public function post(string $endpoint, array $body = []): Response
     {
         return $this->call($endpoint, 'POST', null, $body);
     }
@@ -112,7 +112,7 @@ trait HasHttp
     /**
      * Make DELETE request
      */
-    protected function delete(string $endpoint, array $params = []): Response
+    public function delete(string $endpoint, array $params = []): Response
     {
         return $this->call($endpoint, 'DELETE', $params);
     }
@@ -120,7 +120,7 @@ trait HasHttp
     /**
      * Make POST request with raw binary body (for blob uploads)
      */
-    protected function postBlob(string $endpoint, string $data, string $mimeType): Response
+    public function postBlob(string $endpoint, string $data, string $mimeType): Response
     {
         $session = $this->sessions->ensureValid($this->did);
         $url = rtrim($session->pdsEndpoint(), '/').'/xrpc/'.$endpoint;
