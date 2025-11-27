@@ -3,7 +3,10 @@
 namespace SocialDept\AtpClient\Http;
 
 use Illuminate\Http\Client\Response as LaravelResponse;
+use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
+use SocialDept\AtpClient\Auth\ScopeChecker;
+use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Exceptions\ValidationException;
 use SocialDept\AtpClient\Session\Session;
 use SocialDept\AtpClient\Session\SessionManager;
@@ -16,6 +19,8 @@ trait HasHttp
     protected string $did;
 
     protected DPoPClient $dpopClient;
+
+    protected ?ScopeChecker $scopeChecker = null;
 
     /**
      * Make XRPC call
@@ -48,13 +53,20 @@ trait HasHttp
     }
 
     /**
-     * Build authenticated request with DPoP proof and automatic nonce retry
+     * Build authenticated request.
+     *
+     * OAuth sessions use DPoP proof with Bearer token.
+     * Legacy sessions use plain Bearer token.
      */
     protected function buildAuthenticatedRequest(
         Session $session,
         string $url,
         string $method
     ): \Illuminate\Http\Client\PendingRequest {
+        if ($session->isLegacy()) {
+            return Http::withHeader('Authorization', 'Bearer '.$session->accessToken());
+        }
+
         return $this->dpopClient->request(
             pdsEndpoint: $session->pdsEndpoint(),
             url: $url,
@@ -118,5 +130,45 @@ trait HasHttp
             ->post($url);
 
         return new Response($response);
+    }
+
+    /**
+     * Require specific scopes before making a request.
+     *
+     * Checks if the session has the required scopes. In strict mode, throws
+     * MissingScopeException if scopes are missing. In permissive mode, logs
+     * a warning but allows the request to proceed.
+     *
+     * @param  string|Scope  ...$scopes  The required scopes
+     *
+     * @throws \SocialDept\AtpClient\Exceptions\MissingScopeException
+     */
+    protected function requireScopes(string|Scope ...$scopes): void
+    {
+        $session = $this->sessions->session($this->did);
+
+        $this->getScopeChecker()->checkOrFail($session, $scopes);
+    }
+
+    /**
+     * Check if the session has a specific scope.
+     */
+    protected function hasScope(string|Scope $scope): bool
+    {
+        $session = $this->sessions->session($this->did);
+
+        return $this->getScopeChecker()->hasScope($session, $scope);
+    }
+
+    /**
+     * Get the scope checker instance.
+     */
+    protected function getScopeChecker(): ScopeChecker
+    {
+        if ($this->scopeChecker === null) {
+            $this->scopeChecker = app(ScopeChecker::class);
+        }
+
+        return $this->scopeChecker;
     }
 }

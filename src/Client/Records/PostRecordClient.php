@@ -3,17 +3,22 @@
 namespace SocialDept\AtpClient\Client\Records;
 
 use DateTimeInterface;
+use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Contracts\Recordable;
 use SocialDept\AtpClient\Data\StrongRef;
-use SocialDept\AtpClient\Http\Response;
+use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\RichText\TextBuilder;
 
 class PostRecordClient extends Request
 {
     /**
      * Create a post
+     *
+     * @requires transition:generic OR (rpc:com.atproto.repo.createRecord AND repo:app.bsky.feed.post?action=create)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.createRecord')]
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=create')]
     public function create(
         string|array|Recordable $content,
         ?array $facets = null,
@@ -53,14 +58,10 @@ class PostRecordClient extends Request
             $record['$type'] = 'app.bsky.feed.post';
         }
 
-        // Create record via XRPC
-        $response = $this->atp->client->post(
-            endpoint: 'com.atproto.repo.createRecord',
-            body: [
-                'repo' => $this->atp->client->sessions->session($this->atp->client->identifier)->did(),
-                'collection' => 'app.bsky.feed.post',
-                'record' => $record,
-            ]
+        $response = $this->atp->atproto->repo->createRecord(
+            repo: $this->atp->client->session()->did(),
+            collection: 'app.bsky.feed.post',
+            record: $record
         );
 
         return StrongRef::fromResponse($response->json());
@@ -68,7 +69,11 @@ class PostRecordClient extends Request
 
     /**
      * Update a post
+     *
+     * @requires transition:generic OR (rpc:com.atproto.repo.putRecord AND repo:app.bsky.feed.post?action=update)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=update')]
     public function update(string $rkey, array $record): StrongRef
     {
         // Ensure $type is set
@@ -76,14 +81,11 @@ class PostRecordClient extends Request
             $record['$type'] = 'app.bsky.feed.post';
         }
 
-        $response = $this->atp->client->post(
-            endpoint: 'com.atproto.repo.putRecord',
-            body: [
-                'repo' => $this->atp->client->sessions->session($this->atp->client->identifier)->did(),
-                'collection' => 'app.bsky.feed.post',
-                'rkey' => $rkey,
-                'record' => $record,
-            ]
+        $response = $this->atp->atproto->repo->putRecord(
+            repo: $this->atp->client->session()->did(),
+            collection: 'app.bsky.feed.post',
+            rkey: $rkey,
+            record: $record
         );
 
         return StrongRef::fromResponse($response->json());
@@ -91,32 +93,33 @@ class PostRecordClient extends Request
 
     /**
      * Delete a post
+     *
+     * @requires transition:generic OR (rpc:com.atproto.repo.deleteRecord AND repo:app.bsky.feed.post?action=delete)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.deleteRecord')]
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=delete')]
     public function delete(string $rkey): void
     {
-        $this->atp->client->post(
-            endpoint: 'com.atproto.repo.deleteRecord',
-            body: [
-                'repo' => $this->atp->client->sessions->session($this->atp->client->identifier)->did(),
-                'collection' => 'app.bsky.feed.post',
-                'rkey' => $rkey,
-            ]
+        $this->atp->atproto->repo->deleteRecord(
+            repo: $this->atp->client->session()->did(),
+            collection: 'app.bsky.feed.post',
+            rkey: $rkey
         );
     }
 
     /**
      * Get a post
+     *
+     * @requires transition:generic (rpc:com.atproto.repo.getRecord)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
     public function get(string $rkey, ?string $cid = null): array
     {
-        $response = $this->atp->client->get(
-            endpoint: 'com.atproto.repo.getRecord',
-            params: array_filter([
-                'repo' => $this->atp->client->sessions->session($this->atp->client->identifier)->did(),
-                'collection' => 'app.bsky.feed.post',
-                'rkey' => $rkey,
-                'cid' => $cid,
-            ])
+        $response = $this->atp->atproto->repo->getRecord(
+            repo: $this->atp->client->session()->did(),
+            collection: 'app.bsky.feed.post',
+            rkey: $rkey,
+            cid: $cid
         );
 
         return $response->json('value');
@@ -124,7 +127,11 @@ class PostRecordClient extends Request
 
     /**
      * Create a reply to another post
+     *
+     * @requires transition:generic OR (rpc:com.atproto.repo.createRecord AND repo:app.bsky.feed.post?action=create)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.createRecord')]
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=create')]
     public function reply(
         StrongRef $parent,
         StrongRef $root,
@@ -151,7 +158,11 @@ class PostRecordClient extends Request
 
     /**
      * Create a quote post (post with embedded post)
+     *
+     * @requires transition:generic OR (rpc:com.atproto.repo.createRecord AND repo:app.bsky.feed.post?action=create)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.createRecord')]
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=create')]
     public function quote(
         StrongRef $quotedPost,
         string|array|Recordable $content,
@@ -175,7 +186,11 @@ class PostRecordClient extends Request
 
     /**
      * Create a post with images
+     *
+     * @requires transition:generic OR (rpc:com.atproto.repo.createRecord AND repo:app.bsky.feed.post?action=create)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.createRecord')]
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=create')]
     public function withImages(
         string|array|Recordable $content,
         array $images,
@@ -199,7 +214,11 @@ class PostRecordClient extends Request
 
     /**
      * Create a post with external link embed
+     *
+     * @requires transition:generic OR (rpc:com.atproto.repo.createRecord AND repo:app.bsky.feed.post?action=create)
      */
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.createRecord')]
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=create')]
     public function withLink(
         string|array|Recordable $content,
         string $uri,

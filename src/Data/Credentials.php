@@ -2,6 +2,8 @@
 
 namespace SocialDept\AtpClient\Data;
 
+use SocialDept\AtpClient\Enums\AuthType;
+
 class Credentials
 {
     public function __construct(
@@ -12,6 +14,7 @@ class Credentials
         public readonly ?string $handle = null,
         public readonly ?string $issuer = null,
         public readonly array $scope = [],
+        public readonly AuthType $authType = AuthType::OAuth,
     ) {}
 
     public function isExpired(): bool

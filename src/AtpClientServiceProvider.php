@@ -2,13 +2,18 @@
 
 namespace SocialDept\AtpClient;
 
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use SocialDept\AtpClient\Auth\ClientMetadataManager;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\DPoPNonceManager;
 use SocialDept\AtpClient\Auth\OAuthEngine;
+use SocialDept\AtpClient\Auth\ScopeChecker;
+use SocialDept\AtpClient\Auth\ScopeGate;
 use SocialDept\AtpClient\Auth\TokenRefresher;
+use SocialDept\AtpClient\Enums\ScopeEnforcementLevel;
+use SocialDept\AtpClient\Http\Middleware\RequiresScopeMiddleware;
 use SocialDept\AtpClient\Console\GenerateOAuthKeyCommand;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
@@ -56,6 +61,19 @@ class AtpClientServiceProvider extends ServiceProvider
             );
         });
         $this->app->singleton(OAuthEngine::class);
+        $this->app->singleton(ScopeChecker::class, function ($app) {
+            return new ScopeChecker(
+                config('atp-client.scope_enforcement', ScopeEnforcementLevel::Permissive)
+            );
+        });
+
+        // Register ScopeGate for AtpScope facade
+        $this->app->singleton('atp-scope', function ($app) {
+            return new ScopeGate(
+                $app->make(SessionManager::class),
+                $app->make(ScopeChecker::class),
+            );
+        });
 
         // Register main client facade accessor
         $this->app->bind('atp-client', function ($app) {
@@ -70,20 +88,20 @@ class AtpClientServiceProvider extends ServiceProvider
                     $this->app = $app;
                 }
 
-                public function as(string $handleOrDid): AtpClient
+                public function as(string $actor): AtpClient
                 {
                     return new AtpClient(
                         $this->app->make(SessionManager::class),
-                        $handleOrDid
+                        $actor
                     );
                 }
 
-                public function login(string $handleOrDid, string $password): AtpClient
+                public function login(string $actor, string $password): AtpClient
                 {
                     $this->app->make(SessionManager::class)
-                        ->fromAppPassword($handleOrDid, $password);
+                        ->fromAppPassword($actor, $password);
 
-                    return $this->as($handleOrDid);
+                    return $this->as($actor);
                 }
 
                 public function oauth(): OAuthEngine
@@ -116,6 +134,17 @@ class AtpClientServiceProvider extends ServiceProvider
         }
 
         $this->registerRoutes();
+        $this->registerMiddleware();
+    }
+
+    /**
+     * Register middleware aliases
+     */
+    protected function registerMiddleware(): void
+    {
+        /** @var Router $router */
+        $router = $this->app->make(Router::class);
+        $router->aliasMiddleware('atp.scope', RequiresScopeMiddleware::class);
     }
 
     /**
@@ -137,9 +166,9 @@ class AtpClientServiceProvider extends ServiceProvider
                 ->name('atp.oauth.jwks');
         });
 
-        // Register standard .well-known endpoint
-        Route::get('.well-known/oauth-client-metadata', ClientMetadataController::class)
-            ->name('atp.oauth.well-known');
+        // Register recommended client id convention (see: https://atproto.com/guides/oauth#clients)
+        Route::get('oauth-client-metadata.json', ClientMetadataController::class)
+            ->name('atp.oauth.json');
     }
 
     /**
@@ -149,6 +178,6 @@ class AtpClientServiceProvider extends ServiceProvider
      */
     public function provides(): array
     {
-        return ['atp-client'];
+        return ['atp-client', 'atp-scope'];
     }
 }

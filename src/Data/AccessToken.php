@@ -2,6 +2,8 @@
 
 namespace SocialDept\AtpClient\Data;
 
+use SocialDept\AtpClient\Enums\AuthType;
+
 class AccessToken
 {
     public function __construct(
@@ -12,6 +14,7 @@ class AccessToken
         public readonly ?string $handle = null,
         public readonly ?string $issuer = null,
         public readonly array $scope = [],
+        public readonly AuthType $authType = AuthType::OAuth,
     ) {}
 
     /**
@@ -32,6 +35,7 @@ class AccessToken
                 handle: $handle,
                 issuer: $issuer,
                 scope: isset($data['scope']) ? explode(' ', $data['scope']) : [],
+                authType: AuthType::OAuth,
             );
         }
 
@@ -44,6 +48,7 @@ class AccessToken
             handle: $data['handle'] ?? $handle,
             issuer: $issuer,
             scope: ['atproto', 'transition:generic', 'transition:email'],
+            authType: AuthType::Legacy,
         );
     }
 }

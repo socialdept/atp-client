@@ -163,12 +163,17 @@ $client = Atp::as('user@bsky.social');
 Sessions automatically refresh when tokens are about to expire (default: 5 minutes before expiration). Listen to events if you need to persist refreshed tokens:
 
 ```php
-use SocialDept\AtpClient\Events\OAuthTokenRefreshed;
+use SocialDept\AtpClient\Events\TokenRefreshed;
 
-Event::listen(OAuthTokenRefreshed::class, function ($event) {
-    // $event->did - the user's DID (e.g., did:plc:abc123...)
+Event::listen(TokenRefreshed::class, function ($event) {
+    // $event->session - the Session being refreshed
     // $event->token - the new AccessToken
     // Update your credential storage here
+
+    // Check auth type if needed
+    if ($event->session->isLegacy()) {
+        // App password session
+    }
 });
 ```
 
@@ -514,6 +519,37 @@ interface CredentialProvider
 }
 ```
 
+### Built-in Credential Providers
+
+The package includes several credential providers for different use cases:
+
+| Provider | Persistence | Setup | Best For |
+|----------|-------------|-------|----------|
+| `ArrayCredentialProvider` | None (memory) | None | Testing, single requests |
+| `CacheCredentialProvider` | Cache driver | None | Quick prototyping, APIs |
+| `SessionCredentialProvider` | Session lifetime | None | Web apps with user sessions |
+| `FileCredentialProvider` | Permanent (disk) | None | CLI tools, bots |
+
+**CacheCredentialProvider** - Uses Laravel's cache system (file cache by default):
+```php
+// config/client.php
+'credential_provider' => \SocialDept\AtpClient\Providers\CacheCredentialProvider::class,
+```
+
+**SessionCredentialProvider** - Credentials cleared when session expires or user logs out:
+```php
+// config/client.php
+'credential_provider' => \SocialDept\AtpClient\Providers\SessionCredentialProvider::class,
+```
+
+**FileCredentialProvider** - Stores credentials in `storage/app/atp-credentials/`:
+```php
+// config/client.php
+'credential_provider' => \SocialDept\AtpClient\Providers\FileCredentialProvider::class,
+```
+
+For production applications with multiple users, implement a database-backed provider as shown below.
+
 ### Database Migration
 
 Create a migration for storing credentials:
@@ -532,6 +568,7 @@ Schema::create('atp_credentials', function (Blueprint $table) {
     $table->text('refresh_token');           // Single-use refresh token
     $table->timestamp('expires_at');         // Token expiration time
     $table->json('scope')->nullable();       // Granted OAuth scopes
+    $table->string('auth_type')->default('oauth'); // 'oauth' or 'legacy'
     $table->timestamps();
 });
 ```
@@ -547,6 +584,7 @@ use App\Models\AtpCredential;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\Credentials;
+use SocialDept\AtpClient\Enums\AuthType;
 
 class DatabaseCredentialProvider implements CredentialProvider
 {
@@ -566,6 +604,7 @@ class DatabaseCredentialProvider implements CredentialProvider
             handle: $record->handle,
             issuer: $record->issuer,
             scope: $record->scope ?? [],
+            authType: AuthType::from($record->auth_type),
         );
     }
 
@@ -580,6 +619,7 @@ class DatabaseCredentialProvider implements CredentialProvider
                 'refresh_token' => $token->refreshJwt,
                 'expires_at' => $token->expiresAt,
                 'scope' => $token->scope,
+                'auth_type' => $token->authType->value,
             ]
         );
     }
@@ -593,6 +633,7 @@ class DatabaseCredentialProvider implements CredentialProvider
             'handle' => $token->handle,
             'issuer' => $token->issuer,
             'scope' => $token->scope,
+            'auth_type' => $token->authType->value,
         ]);
     }
 
@@ -622,6 +663,7 @@ class AtpCredential extends Model
         'refresh_token',
         'expires_at',
         'scope',
+        'auth_type',
     ];
 
     protected $casts = [
@@ -713,19 +755,25 @@ public function storeCredentials(string $did, AccessToken $token): void
 | `refreshToken` | Token to get new access tokens (single-use!) |
 | `expiresAt` | When the access token expires |
 | `scope` | Array of granted scopes (e.g., `['atproto', 'transition:generic']`) |
+| `authType` | Authentication method: `AuthType::OAuth` or `AuthType::Legacy` |
 
 ### Handling Token Refresh Events
 
 When tokens are automatically refreshed, you can listen for events:
 
 ```php
-use SocialDept\AtpClient\Events\OAuthTokenRefreshed;
+use SocialDept\AtpClient\Events\TokenRefreshed;
 
 // In EventServiceProvider or via Event::listen()
-Event::listen(OAuthTokenRefreshed::class, function (OAuthTokenRefreshed $event) {
+Event::listen(TokenRefreshed::class, function (TokenRefreshed $event) {
     // The CredentialProvider.updateCredentials() is already called,
     // but you can do additional logging or notifications here
     Log::info("Token refreshed for: {$event->session->did()}");
+
+    // Check if this is a legacy (app password) session
+    if ($event->session->isLegacy()) {
+        // Handle legacy sessions differently if needed
+    }
 });
 ```
 
@@ -768,27 +816,134 @@ Event::listen(OAuthUserAuthenticated::class, function (OAuthUserAuthenticated $e
 });
 ```
 
-### OAuthTokenRefreshing / OAuthTokenRefreshed
+### TokenRefreshing / TokenRefreshed
 
-Fired before and after automatic token refresh. Use `OAuthTokenRefreshing` to invalidate your stored refresh token before it's used (refresh tokens are single-use):
+Fired before and after automatic token refresh for both OAuth and legacy sessions. Use `TokenRefreshing` to invalidate your stored refresh token before it's used (refresh tokens are single-use):
 
 ```php
-use SocialDept\AtpClient\Events\OAuthTokenRefreshing;
-use SocialDept\AtpClient\Events\OAuthTokenRefreshed;
+use SocialDept\AtpClient\Events\TokenRefreshing;
+use SocialDept\AtpClient\Events\TokenRefreshed;
 
 // Before token refresh - invalidate old refresh token
-Event::listen(OAuthTokenRefreshing::class, function (OAuthTokenRefreshing $event) {
-    // $event->session gives access to did(), handle(), etc.
+Event::listen(TokenRefreshing::class, function (TokenRefreshing $event) {
+    // $event->session gives access to did(), handle(), authType(), isLegacy(), etc.
     Log::info('Refreshing token for: ' . $event->session->did());
 });
 
 // After token refresh - new tokens available
-Event::listen(OAuthTokenRefreshed::class, function (OAuthTokenRefreshed $event) {
+Event::listen(TokenRefreshed::class, function (TokenRefreshed $event) {
     // $event->session - the session being refreshed
     // $event->token - the new AccessToken with fresh tokens
     // CredentialProvider.updateCredentials() is already called automatically
     Log::info('Token refreshed for: ' . $event->session->did());
+
+    // Check auth type if needed
+    if ($event->session->isLegacy()) {
+        // Legacy (app password) session
+    }
 });
+```
+
+## Scope Authorization
+
+The package provides Laravel-native authorization features for checking ATP OAuth scopes, similar to Laravel's Gate/Policy system.
+
+### Setup
+
+Have your User model implement the `HasAtpSession` interface:
+
+```php
+use SocialDept\AtpClient\Contracts\HasAtpSession;
+
+class User extends Authenticatable implements HasAtpSession
+{
+    public function getAtpDid(): ?string
+    {
+        return $this->atp_did; // or however you store the DID
+    }
+}
+```
+
+### Route Middleware
+
+Protect routes by requiring specific scopes. Uses AND logic (all listed scopes required):
+
+```php
+use Illuminate\Support\Facades\Route;
+
+// Requires transition:generic scope
+Route::post('/posts', [PostController::class, 'store'])
+    ->middleware('atp.scope:transition:generic');
+
+// Requires BOTH scopes
+Route::post('/dm', [MessageController::class, 'store'])
+    ->middleware('atp.scope:transition:generic,transition:chat.bsky');
+```
+
+### AtpScope Facade
+
+Use the `AtpScope` facade for programmatic scope checks:
+
+```php
+use SocialDept\AtpClient\Facades\AtpScope;
+
+// Check if user has a scope
+if (AtpScope::can('transition:generic')) {
+    // ...
+}
+
+// Check if user has any of the scopes
+if (AtpScope::canAny(['transition:generic', 'transition:chat.bsky'])) {
+    // ...
+}
+
+// Check if user has all scopes
+if (AtpScope::canAll(['atproto', 'transition:generic'])) {
+    // ...
+}
+
+// Authorize or fail (throws/aborts based on config)
+AtpScope::authorize('transition:generic');
+
+// Check for a specific user
+AtpScope::forUser($did)->authorize('transition:generic');
+
+// Get all granted scopes
+$scopes = AtpScope::granted();
+```
+
+### Session Helper Methods
+
+The Session class also has convenience methods:
+
+```php
+$session = Atp::as($did)->session();
+
+$session->can('transition:generic');
+$session->canAny(['transition:generic', 'transition:chat.bsky']);
+$session->canAll(['atproto', 'transition:generic']);
+$session->cannot('transition:chat.bsky');
+```
+
+### Configuration
+
+Configure authorization failure behavior in `config/client.php`:
+
+```php
+'scope_authorization' => [
+    // What happens when scope check fails: 'abort', 'redirect', or 'exception'
+    'failure_action' => ScopeAuthorizationFailure::Abort,
+
+    // Redirect URL when failure_action is 'redirect'
+    'redirect_to' => '/login',
+],
+```
+
+Or via environment variables:
+
+```env
+ATP_SCOPE_FAILURE_ACTION=abort
+ATP_SCOPE_REDIRECT=/login
 ```
 
 ## Available Commands

@@ -30,6 +30,7 @@ class ArrayCredentialProvider implements CredentialProvider
             handle: $token->handle,
             issuer: $token->issuer,
             scope: $token->scope,
+            authType: $token->authType,
         );
     }
 
