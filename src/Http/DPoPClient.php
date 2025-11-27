@@ -67,7 +67,7 @@ class DPoPClient
         $request = $request->withHeader('DPoP', $dpopProof);
 
         if ($accessToken) {
-            $request = $request->withHeader('Authorization', 'Bearer '.$accessToken);
+            $request = $request->withHeader('Authorization', 'DPoP '.$accessToken);
         }
 
         return $request;
