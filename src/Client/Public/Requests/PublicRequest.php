@@ -6,7 +6,7 @@ use SocialDept\AtpClient\Client\Public\AtpPublicClient;
 
 class PublicRequest
 {
-    public AtpPublicClient $atp;
+    protected AtpPublicClient $atp;
 
     public function __construct($parent)
     {

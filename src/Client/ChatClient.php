@@ -12,7 +12,7 @@ class ChatClient
     /**
      * The parent AtpClient instance
      */
-    public AtpClient $atp;
+    protected AtpClient $atp;
 
     /**
      * Conversation operations (chat.bsky.convo.*)
