@@ -5,14 +5,23 @@ namespace SocialDept\AtpClient\Events;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use SocialDept\AtpClient\Data\AccessToken;
-use SocialDept\AtpClient\Session\Session;
+use SocialDept\AtpClient\Enums\AuthType;
 
-class TokenRefreshed
+class SessionAuthenticated
 {
     use Dispatchable, SerializesModels;
 
     public function __construct(
-        public readonly Session $session,
         public readonly AccessToken $token,
     ) {}
+
+    public function isOAuth(): bool
+    {
+        return $this->token->authType === AuthType::OAuth;
+    }
+
+    public function isLegacy(): bool
+    {
+        return $this->token->authType === AuthType::Legacy;
+    }
 }

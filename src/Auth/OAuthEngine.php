@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\AuthorizationRequest;
 use SocialDept\AtpClient\Data\DPoPKey;
-use SocialDept\AtpClient\Events\OAuthUserAuthenticated;
+use SocialDept\AtpClient\Events\SessionAuthenticated;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Http\DPoPClient;
@@ -111,7 +111,7 @@ class OAuthEngine
         $sessionId = 'session_'.hash('sha256', $token->did);
         $this->keyStore->store($sessionId, $request->dpopKey);
 
-        event(new OAuthUserAuthenticated($token));
+        event(new SessionAuthenticated($token));
 
         return $token;
     }
