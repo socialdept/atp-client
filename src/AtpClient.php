@@ -7,10 +7,12 @@ use SocialDept\AtpClient\Client\BskyClient;
 use SocialDept\AtpClient\Client\ChatClient;
 use SocialDept\AtpClient\Client\Client;
 use SocialDept\AtpClient\Client\OzoneClient;
+use SocialDept\AtpClient\Concerns\HasExtensions;
 use SocialDept\AtpClient\Session\SessionManager;
 
 class AtpClient
 {
+    use HasExtensions;
     /**
      * Raw API communication/networking class
      */
