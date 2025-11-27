@@ -17,6 +17,7 @@ class OAuthEngine
         protected DPoPKeyManager $dpopManager,
         protected ClientMetadataManager $metadata,
         protected DPoPClient $dpopClient,
+        protected ClientAssertionManager $clientAssertion,
     ) {}
 
     /**
@@ -87,13 +88,15 @@ class OAuthEngine
 
         $response = $this->dpopClient->request($request->pdsEndpoint, $tokenUrl, 'POST', $request->dpopKey)
             ->asForm()
-            ->post($tokenUrl, [
-                'grant_type' => 'authorization_code',
-                'code' => $code,
-                'redirect_uri' => $this->metadata->getRedirectUris()[0] ?? null,
-                'client_id' => $this->metadata->getClientId(),
-                'code_verifier' => $request->codeVerifier,
-            ]);
+            ->post($tokenUrl, array_merge(
+                $this->clientAssertion->getAuthParams($request->pdsEndpoint),
+                [
+                    'grant_type' => 'authorization_code',
+                    'code' => $code,
+                    'redirect_uri' => $this->metadata->getRedirectUris()[0] ?? null,
+                    'code_verifier' => $request->codeVerifier,
+                ]
+            ));
 
         if ($response->failed()) {
             throw new AuthenticationException('Token exchange failed: '.$response->body());
@@ -120,15 +123,17 @@ class OAuthEngine
 
         $response = $this->dpopClient->request($pdsEndpoint, $parUrl, 'POST', $dpopKey)
             ->asForm()
-            ->post($parUrl, [
-                'client_id' => $this->metadata->getClientId(),
-                'redirect_uri' => $this->metadata->getRedirectUris()[0] ?? null,
-                'response_type' => 'code',
-                'scope' => implode(' ', $scopes),
-                'code_challenge' => $codeChallenge,
-                'code_challenge_method' => 'S256',
-                'state' => $state,
-            ]);
+            ->post($parUrl, array_merge(
+                $this->clientAssertion->getAuthParams($pdsEndpoint),
+                [
+                    'redirect_uri' => $this->metadata->getRedirectUris()[0] ?? null,
+                    'response_type' => 'code',
+                    'scope' => implode(' ', $scopes),
+                    'code_challenge' => $codeChallenge,
+                    'code_challenge_method' => 'S256',
+                    'state' => $state,
+                ]
+            ));
 
         if ($response->failed()) {
             throw new AuthenticationException('PAR failed: '.$response->body());

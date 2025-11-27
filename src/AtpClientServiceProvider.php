@@ -5,6 +5,7 @@ namespace SocialDept\AtpClient;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use SocialDept\AtpClient\Auth\ClientAssertionManager;
 use SocialDept\AtpClient\Auth\ClientMetadataManager;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\DPoPNonceManager;
@@ -48,6 +49,7 @@ class AtpClientServiceProvider extends ServiceProvider
 
         // Register core services
         $this->app->singleton(ClientMetadataManager::class);
+        $this->app->singleton(ClientAssertionManager::class);
         $this->app->singleton(DPoPKeyManager::class);
         $this->app->singleton(DPoPNonceManager::class);
         $this->app->singleton(DPoPClient::class);
