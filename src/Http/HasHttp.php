@@ -87,8 +87,9 @@ trait HasHttp
 
         $data = $response->json();
 
-        if (! Schema::validate($endpoint, $data)) {
-            $errors = Schema::getErrors($endpoint, $data);
+        $errors = Schema::validateWithErrors($endpoint, $data);
+
+        if (! empty($errors)) {
             throw new ValidationException($errors);
         }
     }
