@@ -13,6 +13,7 @@ class TokenRefresher
 {
     public function __construct(
         protected DPoPClient $dpopClient,
+        protected ClientMetadataManager $metadata,
     ) {}
 
     /**
@@ -47,6 +48,7 @@ class TokenRefresher
             ->post($tokenUrl, [
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken,
+                'client_id' => $this->metadata->getClientId(),
             ]);
 
         if ($response->failed()) {
