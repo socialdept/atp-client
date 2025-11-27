@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
 use SocialDept\AtpClient\Auth\ScopeChecker;
 use SocialDept\AtpClient\Enums\Scope;
+use SocialDept\AtpClient\Exceptions\AtpResponseException;
 use SocialDept\AtpClient\Exceptions\ValidationException;
 use SocialDept\AtpClient\Session\Session;
 use SocialDept\AtpClient\Session\SessionManager;
@@ -44,6 +45,10 @@ trait HasHttp
             'DELETE' => $request->delete($url, $params),
             default => throw new InvalidArgumentException("Unsupported method: {$method}"),
         };
+
+        if ($response->failed() || isset($response->json()['error'])) {
+            throw AtpResponseException::fromResponse($response, $endpoint);
+        }
 
         if (config('atp-client.schema_validation') && Schema::exists($endpoint)) {
             $this->validateResponse($endpoint, $response);
@@ -129,6 +134,10 @@ trait HasHttp
         $response = $this->buildAuthenticatedRequest($session, $url, 'POST')
             ->withBody($data, $mimeType)
             ->post($url);
+
+        if ($response->failed() || isset($response->json()['error'])) {
+            throw AtpResponseException::fromResponse($response, $endpoint);
+        }
 
         return new Response($response);
     }
