@@ -65,6 +65,7 @@ class TokenRefresher
         ?string $handle,
     ): AccessToken {
         $response = Http::withHeader('Authorization', 'Bearer '.$refreshToken)
+            ->withBody('', 'application/json')
             ->post($pdsEndpoint.'/xrpc/com.atproto.server.refreshSession');
 
         if ($response->failed()) {
