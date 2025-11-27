@@ -8,6 +8,7 @@ use SocialDept\AtpClient\Auth\TokenRefresher;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Data\AccessToken;
+use SocialDept\AtpClient\Events\LegacyUserAuthenticated;
 use SocialDept\AtpClient\Events\TokenRefreshed;
 use SocialDept\AtpClient\Events\TokenRefreshing;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
@@ -102,6 +103,8 @@ class SessionManager
 
         // Store credentials using DID as key
         $this->credentials->storeCredentials($did, $token);
+
+        event(new LegacyUserAuthenticated($token));
 
         return $this->createSession($did);
     }
