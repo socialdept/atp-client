@@ -5,7 +5,6 @@ namespace SocialDept\AtpClient\Client\Requests\Atproto;
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Enums\Scope;
-use SocialDept\AtpClient\Http\Response;
 
 class IdentityRequestClient extends Request
 {
@@ -17,12 +16,14 @@ class IdentityRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/com-atproto-identity-resolve-handle
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.identity.resolveHandle')]
-    public function resolveHandle(string $handle): Response
+    public function resolveHandle(string $handle): string
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'com.atproto.identity.resolveHandle',
             params: compact('handle')
         );
+
+        return $response->json()['did'];
     }
 
     /**
@@ -33,9 +34,9 @@ class IdentityRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/com-atproto-identity-update-handle
      */
     #[RequiresScope(Scope::Atproto, granular: 'identity:handle')]
-    public function updateHandle(string $handle): Response
+    public function updateHandle(string $handle): void
     {
-        return $this->atp->client->post(
+        $this->atp->client->post(
             endpoint: 'com.atproto.identity.updateHandle',
             body: compact('handle')
         );
