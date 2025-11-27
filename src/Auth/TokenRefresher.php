@@ -13,7 +13,7 @@ class TokenRefresher
 {
     public function __construct(
         protected DPoPClient $dpopClient,
-        protected ClientMetadataManager $metadata,
+        protected ClientAssertionManager $clientAssertion,
     ) {}
 
     /**
@@ -45,11 +45,13 @@ class TokenRefresher
 
         $response = $this->dpopClient->request($pdsEndpoint, $tokenUrl, 'POST', $dpopKey)
             ->asForm()
-            ->post($tokenUrl, [
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $refreshToken,
-                'client_id' => $this->metadata->getClientId(),
-            ]);
+            ->post($tokenUrl, array_merge(
+                $this->clientAssertion->getAuthParams($pdsEndpoint),
+                [
+                    'grant_type' => 'refresh_token',
+                    'refresh_token' => $refreshToken,
+                ]
+            ));
 
         if ($response->failed()) {
             throw new AuthenticationException('Token refresh failed: '.$response->body());
