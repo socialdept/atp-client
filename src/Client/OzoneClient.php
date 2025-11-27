@@ -12,7 +12,7 @@ class OzoneClient
     /**
      * The parent AtpClient instance
      */
-    public AtpClient $atp;
+    protected AtpClient $atp;
 
     /**
      * Moderation operations (tools.ozone.moderation.*)

@@ -12,7 +12,7 @@ class AtprotoClient
     /**
      * The parent AtpClient instance
      */
-    public AtpClient $atp;
+    protected AtpClient $atp;
 
     /**
      * Repository operations (com.atproto.repo.*)

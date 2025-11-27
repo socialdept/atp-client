@@ -10,7 +10,7 @@ class AtprotoPublicClient
 {
     use HasDomainExtensions;
 
-    public AtpPublicClient $atp;
+    protected AtpPublicClient $atp;
     public IdentityPublicRequestClient $identity;
     public RepoPublicRequestClient $repo;
 

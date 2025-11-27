@@ -9,7 +9,7 @@ class Request
     /**
      * The parent AtpClient instance we belong to
      */
-    public AtpClient $atp;
+    protected AtpClient $atp;
 
     public function __construct($parent)
     {

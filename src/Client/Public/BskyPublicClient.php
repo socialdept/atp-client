@@ -12,7 +12,7 @@ class BskyPublicClient
 {
     use HasDomainExtensions;
 
-    public AtpPublicClient $atp;
+    protected AtpPublicClient $atp;
     public ActorPublicRequestClient $actor;
     public FeedPublicRequestClient $feed;
     public GraphPublicRequestClient $graph;

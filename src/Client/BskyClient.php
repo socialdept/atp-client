@@ -16,7 +16,7 @@ class BskyClient
     /**
      * The parent AtpClient instance
      */
-    public AtpClient $atp;
+    protected AtpClient $atp;
 
     /**
      * Feed operations (app.bsky.feed.*)

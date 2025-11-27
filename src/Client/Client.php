@@ -15,7 +15,7 @@ class Client
     /**
      * The parent AtpClient instance we belong to
      */
-    public AtpClient $atp;
+    protected AtpClient $atp;
 
     public function __construct(
         AtpClient $parent,
