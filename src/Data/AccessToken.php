@@ -2,6 +2,7 @@
 
 namespace SocialDept\AtpClient\Data;
 
+use Carbon\Carbon;
 use SocialDept\AtpClient\Enums\AuthType;
 
 class AccessToken
@@ -40,15 +41,38 @@ class AccessToken
         }
 
         // Legacy createSession format (app passwords have full access)
+        // Parse expiry from JWT since createSession doesn't return expiresIn
+        $expiresAt = self::parseJwtExpiry($data['accessJwt']) ?? now()->addHour();
+
         return new self(
             accessJwt: $data['accessJwt'],
             refreshJwt: $data['refreshJwt'],
             did: $data['did'],
-            expiresAt: now()->addSeconds($data['expiresIn'] ?? 300),
+            expiresAt: $expiresAt,
             handle: $data['handle'] ?? $handle,
             issuer: $issuer,
             scope: ['atproto', 'transition:generic', 'transition:email'],
             authType: AuthType::Legacy,
         );
+    }
+
+    /**
+     * Parse the expiry timestamp from a JWT's payload.
+     */
+    protected static function parseJwtExpiry(string $jwt): ?\DateTimeInterface
+    {
+        $parts = explode('.', $jwt);
+
+        if (count($parts) !== 3) {
+            return null;
+        }
+
+        $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
+
+        if (! isset($payload['exp'])) {
+            return null;
+        }
+
+        return Carbon::createFromTimestamp($payload['exp']);
     }
 }
