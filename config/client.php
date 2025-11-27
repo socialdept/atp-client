@@ -129,6 +129,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Public API Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for unauthenticated public API access. The public API
+    | allows reading public data without authentication.
+    |
+    */
+    'public' => [
+        'service_url' => env('ATP_PUBLIC_SERVICE_URL', 'https://public.api.bsky.app'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Scope Enforcement
     |--------------------------------------------------------------------------
     |
