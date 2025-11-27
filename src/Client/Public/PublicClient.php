@@ -3,6 +3,7 @@
 namespace SocialDept\AtpClient\Client\Public;
 
 use Illuminate\Support\Facades\Http;
+use SocialDept\AtpClient\Exceptions\AtpResponseException;
 use SocialDept\AtpClient\Http\Response;
 
 class PublicClient
@@ -17,6 +18,10 @@ class PublicClient
         $params = array_filter($params, fn ($v) => !is_null($v));
 
         $response = Http::get($url, $params);
+
+        if ($response->failed() || isset($response->json()['error'])) {
+            throw AtpResponseException::fromResponse($response, $endpoint);
+        }
 
         return new Response($response);
     }
