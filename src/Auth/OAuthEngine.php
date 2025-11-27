@@ -7,6 +7,7 @@ use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\AuthorizationRequest;
 use SocialDept\AtpClient\Data\DPoPKey;
 use SocialDept\AtpClient\Events\OAuthUserAuthenticated;
+use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Http\DPoPClient;
 use SocialDept\AtpResolver\Facades\Resolver;
@@ -18,6 +19,7 @@ class OAuthEngine
         protected ClientMetadataManager $metadata,
         protected DPoPClient $dpopClient,
         protected ClientAssertionManager $clientAssertion,
+        protected KeyStore $keyStore,
     ) {}
 
     /**
@@ -103,6 +105,11 @@ class OAuthEngine
         }
 
         $token = AccessToken::fromResponse($response->json(), $request->handle, $request->pdsEndpoint);
+
+        // Store the DPoP key with the session ID so future requests can use it
+        // The token is bound to this key's thumbprint (cnf.jkt claim)
+        $sessionId = 'session_'.hash('sha256', $token->did);
+        $this->keyStore->store($sessionId, $request->dpopKey);
 
         event(new OAuthUserAuthenticated($token));
 
