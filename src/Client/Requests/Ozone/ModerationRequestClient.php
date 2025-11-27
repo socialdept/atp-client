@@ -4,8 +4,15 @@ namespace SocialDept\AtpClient\Client\Requests\Ozone;
 
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Data\Responses\Ozone\Moderation\QueryEventsResponse;
+use SocialDept\AtpClient\Data\Responses\Ozone\Moderation\QueryStatusesResponse;
+use SocialDept\AtpClient\Data\Responses\Ozone\Moderation\SearchReposResponse;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Http\Response;
+use SocialDept\AtpSchema\Generated\Tools\Ozone\Moderation\Defs\ModEventView;
+use SocialDept\AtpSchema\Generated\Tools\Ozone\Moderation\Defs\ModEventViewDetail;
+use SocialDept\AtpSchema\Generated\Tools\Ozone\Moderation\Defs\RecordViewDetail;
+use SocialDept\AtpSchema\Generated\Tools\Ozone\Moderation\Defs\RepoViewDetail;
 
 class ModerationRequestClient extends Request
 {
@@ -17,12 +24,14 @@ class ModerationRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-get-event
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.moderation.getEvent')]
-    public function getModerationEvent(int $id): Response
+    public function getModerationEvent(int $id): ModEventViewDetail
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'tools.ozone.moderation.getEvent',
             params: compact('id')
         );
+
+        return ModEventViewDetail::fromArray($response->json());
     }
 
     /**
@@ -57,12 +66,14 @@ class ModerationRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-get-record
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.moderation.getRecord')]
-    public function getRecord(string $uri, ?string $cid = null): Response
+    public function getRecord(string $uri, ?string $cid = null): RecordViewDetail
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'tools.ozone.moderation.getRecord',
             params: compact('uri', 'cid')
         );
+
+        return RecordViewDetail::fromArray($response->json());
     }
 
     /**
@@ -73,12 +84,14 @@ class ModerationRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/tools-ozone-moderation-get-repo
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.moderation.getRepo')]
-    public function getRepo(string $did): Response
+    public function getRepo(string $did): RepoViewDetail
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'tools.ozone.moderation.getRepo',
             params: compact('did')
         );
+
+        return RepoViewDetail::fromArray($response->json());
     }
 
     /**
@@ -96,14 +109,16 @@ class ModerationRequestClient extends Request
         int $limit = 50,
         ?string $cursor = null,
         bool $sortDirection = false
-    ): Response {
-        return $this->atp->client->get(
+    ): QueryEventsResponse {
+        $response = $this->atp->client->get(
             endpoint: 'tools.ozone.moderation.queryEvents',
             params: array_filter(
                 compact('types', 'createdBy', 'subject', 'limit', 'cursor', 'sortDirection'),
                 fn ($v) => ! is_null($v)
             )
         );
+
+        return QueryEventsResponse::fromArray($response->json());
     }
 
     /**
@@ -120,14 +135,16 @@ class ModerationRequestClient extends Request
         ?string $excludeTags = null,
         int $limit = 50,
         ?string $cursor = null
-    ): Response {
-        return $this->atp->client->get(
+    ): QueryStatusesResponse {
+        $response = $this->atp->client->get(
             endpoint: 'tools.ozone.moderation.queryStatuses',
             params: array_filter(
                 compact('subject', 'tags', 'excludeTags', 'limit', 'cursor'),
                 fn ($v) => ! is_null($v)
             )
         );
+
+        return QueryStatusesResponse::fromArray($response->json());
     }
 
     /**
@@ -143,14 +160,16 @@ class ModerationRequestClient extends Request
         ?string $invitedBy = null,
         int $limit = 50,
         ?string $cursor = null
-    ): Response {
-        return $this->atp->client->get(
+    ): SearchReposResponse {
+        $response = $this->atp->client->get(
             endpoint: 'tools.ozone.moderation.searchRepos',
             params: array_filter(
                 compact('term', 'invitedBy', 'limit', 'cursor'),
                 fn ($v) => ! is_null($v)
             )
         );
+
+        return SearchReposResponse::fromArray($response->json());
     }
 
     /**
@@ -166,10 +185,12 @@ class ModerationRequestClient extends Request
         string $subject,
         array $subjectBlobCids = [],
         ?string $createdBy = null
-    ): Response {
-        return $this->atp->client->post(
+    ): ModEventView {
+        $response = $this->atp->client->post(
             endpoint: 'tools.ozone.moderation.emitEvent',
             body: compact('event', 'subject', 'subjectBlobCids', 'createdBy')
         );
+
+        return ModEventView::fromArray($response->json());
     }
 }

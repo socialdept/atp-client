@@ -4,8 +4,8 @@ namespace SocialDept\AtpClient\Client\Requests\Ozone;
 
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Data\Responses\Ozone\Team\ListMembersResponse;
 use SocialDept\AtpClient\Enums\Scope;
-use SocialDept\AtpClient\Http\Response;
 
 class TeamRequestClient extends Request
 {
@@ -14,15 +14,19 @@ class TeamRequestClient extends Request
      *
      * @requires transition:generic (rpc:tools.ozone.team.getMember)
      *
+     * @return array<string, mixed>  Team member object
+     *
      * @see https://docs.bsky.app/docs/api/tools-ozone-team-list-members
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.getMember')]
-    public function getTeamMember(string $did): Response
+    public function getTeamMember(string $did): array
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'tools.ozone.team.getMember',
             params: compact('did')
         );
+
+        return $response->json();
     }
 
     /**
@@ -33,12 +37,14 @@ class TeamRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/tools-ozone-team-list-members
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.listMembers')]
-    public function listTeamMembers(int $limit = 50, ?string $cursor = null): Response
+    public function listTeamMembers(int $limit = 50, ?string $cursor = null): ListMembersResponse
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'tools.ozone.team.listMembers',
             params: compact('limit', 'cursor')
         );
+
+        return ListMembersResponse::fromArray($response->json());
     }
 
     /**
@@ -46,21 +52,27 @@ class TeamRequestClient extends Request
      *
      * @requires transition:generic (rpc:tools.ozone.team.addMember)
      *
+     * @return array<string, mixed>  Team member object
+     *
      * @see https://docs.bsky.app/docs/api/tools-ozone-team-add-member
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.addMember')]
-    public function addTeamMember(string $did, string $role): Response
+    public function addTeamMember(string $did, string $role): array
     {
-        return $this->atp->client->post(
+        $response = $this->atp->client->post(
             endpoint: 'tools.ozone.team.addMember',
             body: compact('did', 'role')
         );
+
+        return $response->json();
     }
 
     /**
      * Update team member
      *
      * @requires transition:generic (rpc:tools.ozone.team.updateMember)
+     *
+     * @return array<string, mixed>  Team member object
      *
      * @see https://docs.bsky.app/docs/api/tools-ozone-team-update-member
      */
@@ -69,14 +81,16 @@ class TeamRequestClient extends Request
         string $did,
         ?bool $disabled = null,
         ?string $role = null
-    ): Response {
-        return $this->atp->client->post(
+    ): array {
+        $response = $this->atp->client->post(
             endpoint: 'tools.ozone.team.updateMember',
             body: array_filter(
                 compact('did', 'disabled', 'role'),
                 fn ($v) => ! is_null($v)
             )
         );
+
+        return $response->json();
     }
 
     /**
@@ -87,9 +101,9 @@ class TeamRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/tools-ozone-team-delete-member
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.deleteMember')]
-    public function deleteTeamMember(string $did): Response
+    public function deleteTeamMember(string $did): void
     {
-        return $this->atp->client->post(
+        $this->atp->client->post(
             endpoint: 'tools.ozone.team.deleteMember',
             body: compact('did')
         );
