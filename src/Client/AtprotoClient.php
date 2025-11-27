@@ -4,9 +4,11 @@ namespace SocialDept\AtpClient\Client;
 
 use SocialDept\AtpClient\AtpClient;
 use SocialDept\AtpClient\Client\Requests\Atproto;
+use SocialDept\AtpClient\Concerns\HasDomainExtensions;
 
 class AtprotoClient
 {
+    use HasDomainExtensions;
     /**
      * The parent AtpClient instance
      */
@@ -39,5 +41,15 @@ class AtprotoClient
         $this->server = new Atproto\ServerRequestClient($this);
         $this->identity = new Atproto\IdentityRequestClient($this);
         $this->sync = new Atproto\SyncRequestClient($this);
+    }
+
+    protected function getDomainName(): string
+    {
+        return 'atproto';
+    }
+
+    protected function getRootClientClass(): string
+    {
+        return AtpClient::class;
     }
 }

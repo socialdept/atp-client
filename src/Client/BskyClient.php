@@ -8,9 +8,11 @@ use SocialDept\AtpClient\Client\Records\LikeRecordClient;
 use SocialDept\AtpClient\Client\Records\PostRecordClient;
 use SocialDept\AtpClient\Client\Records\ProfileRecordClient;
 use SocialDept\AtpClient\Client\Requests\Bsky;
+use SocialDept\AtpClient\Concerns\HasDomainExtensions;
 
 class BskyClient
 {
+    use HasDomainExtensions;
     /**
      * The parent AtpClient instance
      */
@@ -55,5 +57,15 @@ class BskyClient
         $this->profile = new ProfileRecordClient($this);
         $this->like = new LikeRecordClient($this);
         $this->follow = new FollowRecordClient($this);
+    }
+
+    protected function getDomainName(): string
+    {
+        return 'bsky';
+    }
+
+    protected function getRootClientClass(): string
+    {
+        return AtpClient::class;
     }
 }

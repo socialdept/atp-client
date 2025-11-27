@@ -4,9 +4,11 @@ namespace SocialDept\AtpClient\Client;
 
 use SocialDept\AtpClient\AtpClient;
 use SocialDept\AtpClient\Client\Requests\Chat;
+use SocialDept\AtpClient\Concerns\HasDomainExtensions;
 
 class ChatClient
 {
+    use HasDomainExtensions;
     /**
      * The parent AtpClient instance
      */
@@ -27,5 +29,15 @@ class ChatClient
         $this->atp = $parent;
         $this->convo = new Chat\ConvoRequestClient($this);
         $this->actor = new Chat\ActorRequestClient($this);
+    }
+
+    protected function getDomainName(): string
+    {
+        return 'chat';
+    }
+
+    protected function getRootClientClass(): string
+    {
+        return AtpClient::class;
     }
 }
