@@ -25,7 +25,7 @@ class ActorRequestClient extends Request
     }
 
     /**
-     * Export account data
+     * Export account data (returns JSONL stream)
      *
      * @requires transition:chat.bsky (rpc:chat.bsky.actor.exportAccountData)
      *
@@ -47,9 +47,9 @@ class ActorRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-actor-delete-account
      */
     #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.actor.deleteAccount')]
-    public function deleteAccount(): Response
+    public function deleteAccount(): void
     {
-        return $this->atp->client->post(
+        $this->atp->client->post(
             endpoint: 'chat.bsky.actor.deleteAccount'
         );
     }

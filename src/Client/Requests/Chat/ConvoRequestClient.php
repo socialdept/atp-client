@@ -4,8 +4,15 @@ namespace SocialDept\AtpClient\Client\Requests\Chat;
 
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Data\Responses\Chat\Convo\GetLogResponse;
+use SocialDept\AtpClient\Data\Responses\Chat\Convo\GetMessagesResponse;
+use SocialDept\AtpClient\Data\Responses\Chat\Convo\LeaveConvoResponse;
+use SocialDept\AtpClient\Data\Responses\Chat\Convo\ListConvosResponse;
+use SocialDept\AtpClient\Data\Responses\Chat\Convo\SendMessageBatchResponse;
 use SocialDept\AtpClient\Enums\Scope;
-use SocialDept\AtpClient\Http\Response;
+use SocialDept\AtpSchema\Generated\Chat\Bsky\Convo\Defs\ConvoView;
+use SocialDept\AtpSchema\Generated\Chat\Bsky\Convo\Defs\DeletedMessageView;
+use SocialDept\AtpSchema\Generated\Chat\Bsky\Convo\Defs\MessageView;
 
 class ConvoRequestClient extends Request
 {
@@ -17,12 +24,14 @@ class ConvoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-get-convo
      */
     #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.getConvo')]
-    public function getConvo(string $convoId): Response
+    public function getConvo(string $convoId): ConvoView
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'chat.bsky.convo.getConvo',
             params: compact('convoId')
         );
+
+        return ConvoView::fromArray($response->json()['convo']);
     }
 
     /**
@@ -33,12 +42,14 @@ class ConvoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-get-convo-for-members
      */
     #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.getConvoForMembers')]
-    public function getConvoForMembers(array $members): Response
+    public function getConvoForMembers(array $members): ConvoView
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'chat.bsky.convo.getConvoForMembers',
             params: compact('members')
         );
+
+        return ConvoView::fromArray($response->json()['convo']);
     }
 
     /**
@@ -49,12 +60,14 @@ class ConvoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-list-convos
      */
     #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.listConvos')]
-    public function listConvos(int $limit = 50, ?string $cursor = null): Response
+    public function listConvos(int $limit = 50, ?string $cursor = null): ListConvosResponse
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'chat.bsky.convo.listConvos',
             params: compact('limit', 'cursor')
         );
+
+        return ListConvosResponse::fromArray($response->json());
     }
 
     /**
@@ -69,11 +82,13 @@ class ConvoRequestClient extends Request
         string $convoId,
         int $limit = 50,
         ?string $cursor = null
-    ): Response {
-        return $this->atp->client->get(
+    ): GetMessagesResponse {
+        $response = $this->atp->client->get(
             endpoint: 'chat.bsky.convo.getMessages',
             params: compact('convoId', 'limit', 'cursor')
         );
+
+        return GetMessagesResponse::fromArray($response->json());
     }
 
     /**
@@ -84,12 +99,14 @@ class ConvoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-send-message
      */
     #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.sendMessage')]
-    public function sendMessage(string $convoId, array $message): Response
+    public function sendMessage(string $convoId, array $message): MessageView
     {
-        return $this->atp->client->post(
+        $response = $this->atp->client->post(
             endpoint: 'chat.bsky.convo.sendMessage',
             body: compact('convoId', 'message')
         );
+
+        return MessageView::fromArray($response->json());
     }
 
     /**
@@ -100,12 +117,14 @@ class ConvoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-send-message-batch
      */
     #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.sendMessageBatch')]
-    public function sendMessageBatch(array $items): Response
+    public function sendMessageBatch(array $items): SendMessageBatchResponse
     {
-        return $this->atp->client->post(
+        $response = $this->atp->client->post(
             endpoint: 'chat.bsky.convo.sendMessageBatch',
             body: compact('items')
         );
+
+        return SendMessageBatchResponse::fromArray($response->json());
     }
 
     /**
@@ -116,12 +135,14 @@ class ConvoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-delete-message-for-self
      */
     #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.deleteMessageForSelf')]
-    public function deleteMessageForSelf(string $convoId, string $messageId): Response
+    public function deleteMessageForSelf(string $convoId, string $messageId): DeletedMessageView
     {
-        return $this->atp->client->post(
+        $response = $this->atp->client->post(
             endpoint: 'chat.bsky.convo.deleteMessageForSelf',
             body: compact('convoId', 'messageId')
         );
+
+        return DeletedMessageView::fromArray($response->json());
     }
 
     /**
@@ -132,12 +153,14 @@ class ConvoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-update-read
      */
     #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.updateRead')]
-    public function updateRead(string $convoId, ?string $messageId = null): Response
+    public function updateRead(string $convoId, ?string $messageId = null): ConvoView
     {
-        return $this->atp->client->post(
+        $response = $this->atp->client->post(
             endpoint: 'chat.bsky.convo.updateRead',
             body: compact('convoId', 'messageId')
         );
+
+        return ConvoView::fromArray($response->json()['convo']);
     }
 
     /**
@@ -148,12 +171,14 @@ class ConvoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-mute-convo
      */
     #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.muteConvo')]
-    public function muteConvo(string $convoId): Response
+    public function muteConvo(string $convoId): ConvoView
     {
-        return $this->atp->client->post(
+        $response = $this->atp->client->post(
             endpoint: 'chat.bsky.convo.muteConvo',
             body: compact('convoId')
         );
+
+        return ConvoView::fromArray($response->json()['convo']);
     }
 
     /**
@@ -164,12 +189,14 @@ class ConvoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-unmute-convo
      */
     #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.unmuteConvo')]
-    public function unmuteConvo(string $convoId): Response
+    public function unmuteConvo(string $convoId): ConvoView
     {
-        return $this->atp->client->post(
+        $response = $this->atp->client->post(
             endpoint: 'chat.bsky.convo.unmuteConvo',
             body: compact('convoId')
         );
+
+        return ConvoView::fromArray($response->json()['convo']);
     }
 
     /**
@@ -180,12 +207,14 @@ class ConvoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-leave-convo
      */
     #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.leaveConvo')]
-    public function leaveConvo(string $convoId): Response
+    public function leaveConvo(string $convoId): LeaveConvoResponse
     {
-        return $this->atp->client->post(
+        $response = $this->atp->client->post(
             endpoint: 'chat.bsky.convo.leaveConvo',
             body: compact('convoId')
         );
+
+        return LeaveConvoResponse::fromArray($response->json());
     }
 
     /**
@@ -196,11 +225,13 @@ class ConvoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-get-log
      */
     #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.getLog')]
-    public function getLog(?string $cursor = null): Response
+    public function getLog(?string $cursor = null): GetLogResponse
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'chat.bsky.convo.getLog',
             params: compact('cursor')
         );
+
+        return GetLogResponse::fromArray($response->json());
     }
 }

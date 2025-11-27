@@ -4,8 +4,13 @@ namespace SocialDept\AtpClient\Client\Requests\Bsky;
 
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Data\Responses\Bsky\Feed\GetAuthorFeedResponse;
+use SocialDept\AtpClient\Data\Responses\Bsky\Feed\GetLikesResponse;
+use SocialDept\AtpClient\Data\Responses\Bsky\Feed\GetPostThreadResponse;
+use SocialDept\AtpClient\Data\Responses\Bsky\Feed\GetRepostedByResponse;
+use SocialDept\AtpClient\Data\Responses\Bsky\Feed\GetTimelineResponse;
+use SocialDept\AtpClient\Data\Responses\Bsky\Feed\SearchPostsResponse;
 use SocialDept\AtpClient\Enums\Scope;
-use SocialDept\AtpClient\Http\Response;
 
 class FeedRequestClient extends Request
 {
@@ -17,12 +22,14 @@ class FeedRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-timeline
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:app.bsky.feed.getTimeline')]
-    public function getTimeline(int $limit = 50, ?string $cursor = null): Response
+    public function getTimeline(int $limit = 50, ?string $cursor = null): GetTimelineResponse
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'app.bsky.feed.getTimeline',
             params: compact('limit', 'cursor')
         );
+
+        return GetTimelineResponse::fromArray($response->json());
     }
 
     /**
@@ -37,11 +44,13 @@ class FeedRequestClient extends Request
         string $actor,
         int $limit = 50,
         ?string $cursor = null
-    ): Response {
-        return $this->atp->client->get(
+    ): GetAuthorFeedResponse {
+        $response = $this->atp->client->get(
             endpoint: 'app.bsky.feed.getAuthorFeed',
             params: compact('actor', 'limit', 'cursor')
         );
+
+        return GetAuthorFeedResponse::fromArray($response->json());
     }
 
     /**
@@ -52,12 +61,14 @@ class FeedRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-post-thread
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:app.bsky.feed.getPostThread')]
-    public function getPostThread(string $uri, int $depth = 6): Response
+    public function getPostThread(string $uri, int $depth = 6): GetPostThreadResponse
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'app.bsky.feed.getPostThread',
             params: compact('uri', 'depth')
         );
+
+        return GetPostThreadResponse::fromArray($response->json());
     }
 
     /**
@@ -72,11 +83,13 @@ class FeedRequestClient extends Request
         string $q,
         int $limit = 25,
         ?string $cursor = null
-    ): Response {
-        return $this->atp->client->get(
+    ): SearchPostsResponse {
+        $response = $this->atp->client->get(
             endpoint: 'app.bsky.feed.searchPosts',
             params: compact('q', 'limit', 'cursor')
         );
+
+        return SearchPostsResponse::fromArray($response->json());
     }
 
     /**
@@ -91,11 +104,13 @@ class FeedRequestClient extends Request
         string $uri,
         int $limit = 50,
         ?string $cursor = null
-    ): Response {
-        return $this->atp->client->get(
+    ): GetLikesResponse {
+        $response = $this->atp->client->get(
             endpoint: 'app.bsky.feed.getLikes',
             params: compact('uri', 'limit', 'cursor')
         );
+
+        return GetLikesResponse::fromArray($response->json());
     }
 
     /**
@@ -110,10 +125,12 @@ class FeedRequestClient extends Request
         string $uri,
         int $limit = 50,
         ?string $cursor = null
-    ): Response {
-        return $this->atp->client->get(
+    ): GetRepostedByResponse {
+        $response = $this->atp->client->get(
             endpoint: 'app.bsky.feed.getRepostedBy',
             params: compact('uri', 'limit', 'cursor')
         );
+
+        return GetRepostedByResponse::fromArray($response->json());
     }
 }

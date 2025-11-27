@@ -7,8 +7,14 @@ use InvalidArgumentException;
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Auth\ScopeChecker;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\CreateRecordResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\DeleteRecordResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\DescribeRepoResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\GetRecordResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\ListRecordsResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\PutRecordResponse;
 use SocialDept\AtpClient\Enums\Scope;
-use SocialDept\AtpClient\Http\Response;
+use SocialDept\AtpSchema\Data\BlobReference;
 use SplFileInfo;
 use Throwable;
 
@@ -29,16 +35,18 @@ class RepoRequestClient extends Request
         ?string $rkey = null,
         bool $validate = true,
         ?string $swapCommit = null
-    ): Response {
+    ): CreateRecordResponse {
         $this->checkCollectionScope($collection, 'create');
 
-        return $this->atp->client->post(
+        $response = $this->atp->client->post(
             endpoint: 'com.atproto.repo.createRecord',
             body: array_filter(
                 compact('repo', 'collection', 'record', 'rkey', 'validate', 'swapCommit'),
                 fn ($v) => ! is_null($v)
             )
         );
+
+        return CreateRecordResponse::fromArray($response->json());
     }
 
     /**
@@ -55,16 +63,18 @@ class RepoRequestClient extends Request
         string $rkey,
         ?string $swapRecord = null,
         ?string $swapCommit = null
-    ): Response {
+    ): DeleteRecordResponse {
         $this->checkCollectionScope($collection, 'delete');
 
-        return $this->atp->client->post(
+        $response = $this->atp->client->post(
             endpoint: 'com.atproto.repo.deleteRecord',
             body: array_filter(
                 compact('repo', 'collection', 'rkey', 'swapRecord', 'swapCommit'),
                 fn ($v) => ! is_null($v)
             )
         );
+
+        return DeleteRecordResponse::fromArray($response->json());
     }
 
     /**
@@ -83,16 +93,18 @@ class RepoRequestClient extends Request
         bool $validate = true,
         ?string $swapRecord = null,
         ?string $swapCommit = null
-    ): Response {
+    ): PutRecordResponse {
         $this->checkCollectionScope($collection, 'update');
 
-        return $this->atp->client->post(
+        $response = $this->atp->client->post(
             endpoint: 'com.atproto.repo.putRecord',
             body: array_filter(
                 compact('repo', 'collection', 'rkey', 'record', 'validate', 'swapRecord', 'swapCommit'),
                 fn ($v) => ! is_null($v)
             )
         );
+
+        return PutRecordResponse::fromArray($response->json());
     }
 
     /**
@@ -108,11 +120,13 @@ class RepoRequestClient extends Request
         string $collection,
         string $rkey,
         ?string $cid = null
-    ): Response {
-        return $this->atp->client->get(
+    ): GetRecordResponse {
+        $response = $this->atp->client->get(
             endpoint: 'com.atproto.repo.getRecord',
             params: compact('repo', 'collection', 'rkey', 'cid')
         );
+
+        return GetRecordResponse::fromArray($response->json());
     }
 
     /**
@@ -129,11 +143,13 @@ class RepoRequestClient extends Request
         int $limit = 50,
         ?string $cursor = null,
         bool $reverse = false
-    ): Response {
-        return $this->atp->client->get(
+    ): ListRecordsResponse {
+        $response = $this->atp->client->get(
             endpoint: 'com.atproto.repo.listRecords',
             params: compact('repo', 'collection', 'limit', 'cursor', 'reverse')
         );
+
+        return ListRecordsResponse::fromArray($response->json());
     }
 
     /**
@@ -151,7 +167,7 @@ class RepoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/com-atproto-repo-upload-blob
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'blob:*/*')]
-    public function uploadBlob(UploadedFile|SplFileInfo|string $file, ?string $mimeType = null): Response
+    public function uploadBlob(UploadedFile|SplFileInfo|string $file, ?string $mimeType = null): BlobReference
     {
         // Handle different input types
         if ($file instanceof UploadedFile) {
@@ -165,11 +181,13 @@ class RepoRequestClient extends Request
             $data = $file;
         }
 
-        return $this->atp->client->postBlob(
+        $response = $this->atp->client->postBlob(
             endpoint: 'com.atproto.repo.uploadBlob',
             data: $data,
             mimeType: $mimeType
         );
+
+        return BlobReference::fromArray($response->json()['blob']);
     }
 
     /**
@@ -180,12 +198,14 @@ class RepoRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/com-atproto-repo-describe-repo
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.describeRepo')]
-    public function describeRepo(string $repo): Response
+    public function describeRepo(string $repo): DescribeRepoResponse
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'com.atproto.repo.describeRepo',
             params: compact('repo')
         );
+
+        return DescribeRepoResponse::fromArray($response->json());
     }
 
     /**

@@ -4,8 +4,12 @@ namespace SocialDept\AtpClient\Client\Requests\Atproto;
 
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Data\Responses\Atproto\Sync\GetRepoStatusResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Sync\ListBlobsResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Sync\ListReposResponse;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Http\Response;
+use SocialDept\AtpSchema\Generated\Com\Atproto\Repo\Defs\CommitMeta;
 
 class SyncRequestClient extends Request
 {
@@ -49,12 +53,14 @@ class SyncRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/com-atproto-sync-list-repos
      */
     #[RequiresScope(Scope::Atproto, granular: 'rpc:com.atproto.sync.listRepos')]
-    public function listRepos(int $limit = 500, ?string $cursor = null): Response
+    public function listRepos(int $limit = 500, ?string $cursor = null): ListReposResponse
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'com.atproto.sync.listRepos',
             params: compact('limit', 'cursor')
         );
+
+        return ListReposResponse::fromArray($response->json());
     }
 
     /**
@@ -65,12 +71,14 @@ class SyncRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/com-atproto-sync-get-latest-commit
      */
     #[RequiresScope(Scope::Atproto, granular: 'rpc:com.atproto.sync.getLatestCommit')]
-    public function getLatestCommit(string $did): Response
+    public function getLatestCommit(string $did): CommitMeta
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'com.atproto.sync.getLatestCommit',
             params: compact('did')
         );
+
+        return CommitMeta::fromArray($response->json());
     }
 
     /**
@@ -102,11 +110,13 @@ class SyncRequestClient extends Request
         ?string $since = null,
         int $limit = 500,
         ?string $cursor = null
-    ): Response {
-        return $this->atp->client->get(
+    ): ListBlobsResponse {
+        $response = $this->atp->client->get(
             endpoint: 'com.atproto.sync.listBlobs',
             params: compact('did', 'since', 'limit', 'cursor')
         );
+
+        return ListBlobsResponse::fromArray($response->json());
     }
 
     /**
@@ -133,11 +143,13 @@ class SyncRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/com-atproto-sync-get-repo-status
      */
     #[RequiresScope(Scope::Atproto, granular: 'rpc:com.atproto.sync.getRepoStatus')]
-    public function getRepoStatus(string $did): Response
+    public function getRepoStatus(string $did): GetRepoStatusResponse
     {
-        return $this->atp->client->get(
+        $response = $this->atp->client->get(
             endpoint: 'com.atproto.sync.getRepoStatus',
             params: compact('did')
         );
+
+        return GetRepoStatusResponse::fromArray($response->json());
     }
 }
