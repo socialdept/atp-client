@@ -14,14 +14,16 @@ enum Scope: string
      * Build a repo scope string for record operations.
      *
      * @param  string  $collection  The collection NSID (e.g., 'app.bsky.feed.post')
-     * @param  string|null  $action  The action (create, update, delete)
+     * @param  array|null  $actions  The action (create, update, delete)
+     *
+     * @return string
      */
-    public static function repo(string $collection, ?string $action = null): string
+    public static function repo(string $collection, ?array $actions = []): string
     {
         $scope = "repo:{$collection}";
 
-        if ($action !== null) {
-            $scope .= "?action={$action}";
+        if (!empty($actions)) {
+            $scope .= '?' . implode('&', array_map(fn ($action) => "action={$action}", $actions));
         }
 
         return $scope;
