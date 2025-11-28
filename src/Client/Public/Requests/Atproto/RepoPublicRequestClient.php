@@ -6,6 +6,7 @@ use SocialDept\AtpClient\Client\Public\Requests\PublicRequest;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\DescribeRepoResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\GetRecordResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\ListRecordsResponse;
+use SocialDept\AtpClient\Enums\Nsid\AtprotoRepo;
 
 class RepoPublicRequestClient extends PublicRequest
 {
@@ -21,8 +22,8 @@ class RepoPublicRequestClient extends PublicRequest
         ?string $cid = null
     ): GetRecordResponse {
         $response = $this->atp->client->get(
-            'com.atproto.repo.getRecord',
-            compact('repo', 'collection', 'rkey', 'cid')
+            endpoint: AtprotoRepo::GetRecord,
+            params: compact('repo', 'collection', 'rkey', 'cid')
         );
 
         return GetRecordResponse::fromArray($response->json());
@@ -41,8 +42,8 @@ class RepoPublicRequestClient extends PublicRequest
         bool $reverse = false
     ): ListRecordsResponse {
         $response = $this->atp->client->get(
-            'com.atproto.repo.listRecords',
-            compact('repo', 'collection', 'limit', 'cursor', 'reverse')
+            endpoint: AtprotoRepo::ListRecords,
+            params: compact('repo', 'collection', 'limit', 'cursor', 'reverse')
         );
 
         return ListRecordsResponse::fromArray($response->json());
@@ -56,8 +57,8 @@ class RepoPublicRequestClient extends PublicRequest
     public function describeRepo(string $repo): DescribeRepoResponse
     {
         $response = $this->atp->client->get(
-            'com.atproto.repo.describeRepo',
-            compact('repo')
+            endpoint: AtprotoRepo::DescribeRepo,
+            params: compact('repo')
         );
 
         return DescribeRepoResponse::fromArray($response->json());

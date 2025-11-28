@@ -10,6 +10,7 @@ use SocialDept\AtpClient\Data\Responses\Bsky\Feed\GetPostThreadResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Feed\GetRepostedByResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Feed\GetTimelineResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Feed\SearchPostsResponse;
+use SocialDept\AtpClient\Enums\Nsid\BskyFeed;
 use SocialDept\AtpClient\Enums\Scope;
 
 class FeedRequestClient extends Request
@@ -25,7 +26,7 @@ class FeedRequestClient extends Request
     public function getTimeline(int $limit = 50, ?string $cursor = null): GetTimelineResponse
     {
         $response = $this->atp->client->get(
-            endpoint: 'app.bsky.feed.getTimeline',
+            endpoint: BskyFeed::GetTimeline,
             params: compact('limit', 'cursor')
         );
 
@@ -46,7 +47,7 @@ class FeedRequestClient extends Request
         ?string $cursor = null
     ): GetAuthorFeedResponse {
         $response = $this->atp->client->get(
-            endpoint: 'app.bsky.feed.getAuthorFeed',
+            endpoint: BskyFeed::GetAuthorFeed,
             params: compact('actor', 'limit', 'cursor')
         );
 
@@ -64,7 +65,7 @@ class FeedRequestClient extends Request
     public function getPostThread(string $uri, int $depth = 6): GetPostThreadResponse
     {
         $response = $this->atp->client->get(
-            endpoint: 'app.bsky.feed.getPostThread',
+            endpoint: BskyFeed::GetPostThread,
             params: compact('uri', 'depth')
         );
 
@@ -85,7 +86,7 @@ class FeedRequestClient extends Request
         ?string $cursor = null
     ): SearchPostsResponse {
         $response = $this->atp->client->get(
-            endpoint: 'app.bsky.feed.searchPosts',
+            endpoint: BskyFeed::SearchPosts,
             params: compact('q', 'limit', 'cursor')
         );
 
@@ -106,7 +107,7 @@ class FeedRequestClient extends Request
         ?string $cursor = null
     ): GetLikesResponse {
         $response = $this->atp->client->get(
-            endpoint: 'app.bsky.feed.getLikes',
+            endpoint: BskyFeed::GetLikes,
             params: compact('uri', 'limit', 'cursor')
         );
 
@@ -127,7 +128,7 @@ class FeedRequestClient extends Request
         ?string $cursor = null
     ): GetRepostedByResponse {
         $response = $this->atp->client->get(
-            endpoint: 'app.bsky.feed.getRepostedBy',
+            endpoint: BskyFeed::GetRepostedBy,
             params: compact('uri', 'limit', 'cursor')
         );
 

@@ -2,6 +2,7 @@
 
 namespace SocialDept\AtpClient\Http;
 
+use BackedEnum;
 use Illuminate\Http\Client\Response as LaravelResponse;
 use Illuminate\Support\Facades\Http;
 use InvalidArgumentException;
@@ -27,11 +28,12 @@ trait HasHttp
      * Make XRPC call
      */
     protected function call(
-        string $endpoint,
+        string|BackedEnum $endpoint,
         string $method,
         ?array $params = null,
         ?array $body = null
     ): Response {
+        $endpoint = $endpoint instanceof BackedEnum ? $endpoint->value : $endpoint;
         $session = $this->sessions->ensureValid($this->did);
         $url = rtrim($session->pdsEndpoint(), '/').'/xrpc/'.$endpoint;
 
@@ -102,7 +104,7 @@ trait HasHttp
     /**
      * Make GET request
      */
-    public function get(string $endpoint, array $params = []): Response
+    public function get(string|BackedEnum $endpoint, array $params = []): Response
     {
         return $this->call($endpoint, 'GET', $params);
     }
@@ -110,7 +112,7 @@ trait HasHttp
     /**
      * Make POST request
      */
-    public function post(string $endpoint, array $body = []): Response
+    public function post(string|BackedEnum $endpoint, array $body = []): Response
     {
         return $this->call($endpoint, 'POST', null, $body);
     }
@@ -118,7 +120,7 @@ trait HasHttp
     /**
      * Make DELETE request
      */
-    public function delete(string $endpoint, array $params = []): Response
+    public function delete(string|BackedEnum $endpoint, array $params = []): Response
     {
         return $this->call($endpoint, 'DELETE', $params);
     }
@@ -126,8 +128,9 @@ trait HasHttp
     /**
      * Make POST request with raw binary body (for blob uploads)
      */
-    public function postBlob(string $endpoint, string $data, string $mimeType): Response
+    public function postBlob(string|BackedEnum $endpoint, string $data, string $mimeType): Response
     {
+        $endpoint = $endpoint instanceof BackedEnum ? $endpoint->value : $endpoint;
         $session = $this->sessions->ensureValid($this->did);
         $url = rtrim($session->pdsEndpoint(), '/').'/xrpc/'.$endpoint;
 

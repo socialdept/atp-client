@@ -7,6 +7,7 @@ use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Atproto\Sync\GetRepoStatusResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Sync\ListBlobsResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Sync\ListReposResponse;
+use SocialDept\AtpClient\Enums\Nsid\AtprotoSync;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Http\Response;
 use SocialDept\AtpSchema\Generated\Com\Atproto\Repo\Defs\CommitMeta;
@@ -24,7 +25,7 @@ class SyncRequestClient extends Request
     public function getBlob(string $did, string $cid): Response
     {
         return $this->atp->client->get(
-            endpoint: 'com.atproto.sync.getBlob',
+            endpoint: AtprotoSync::GetBlob,
             params: compact('did', 'cid')
         );
     }
@@ -40,7 +41,7 @@ class SyncRequestClient extends Request
     public function getRepo(string $did, ?string $since = null): Response
     {
         return $this->atp->client->get(
-            endpoint: 'com.atproto.sync.getRepo',
+            endpoint: AtprotoSync::GetRepo,
             params: compact('did', 'since')
         );
     }
@@ -56,7 +57,7 @@ class SyncRequestClient extends Request
     public function listRepos(int $limit = 500, ?string $cursor = null): ListReposResponse
     {
         $response = $this->atp->client->get(
-            endpoint: 'com.atproto.sync.listRepos',
+            endpoint: AtprotoSync::ListRepos,
             params: compact('limit', 'cursor')
         );
 
@@ -74,7 +75,7 @@ class SyncRequestClient extends Request
     public function getLatestCommit(string $did): CommitMeta
     {
         $response = $this->atp->client->get(
-            endpoint: 'com.atproto.sync.getLatestCommit',
+            endpoint: AtprotoSync::GetLatestCommit,
             params: compact('did')
         );
 
@@ -92,7 +93,7 @@ class SyncRequestClient extends Request
     public function getRecord(string $did, string $collection, string $rkey): Response
     {
         return $this->atp->client->get(
-            endpoint: 'com.atproto.sync.getRecord',
+            endpoint: AtprotoSync::GetRecord,
             params: compact('did', 'collection', 'rkey')
         );
     }
@@ -112,7 +113,7 @@ class SyncRequestClient extends Request
         ?string $cursor = null
     ): ListBlobsResponse {
         $response = $this->atp->client->get(
-            endpoint: 'com.atproto.sync.listBlobs',
+            endpoint: AtprotoSync::ListBlobs,
             params: compact('did', 'since', 'limit', 'cursor')
         );
 
@@ -130,7 +131,7 @@ class SyncRequestClient extends Request
     public function getBlocks(string $did, array $cids): Response
     {
         return $this->atp->client->get(
-            endpoint: 'com.atproto.sync.getBlocks',
+            endpoint: AtprotoSync::GetBlocks,
             params: compact('did', 'cids')
         );
     }
@@ -146,7 +147,7 @@ class SyncRequestClient extends Request
     public function getRepoStatus(string $did): GetRepoStatusResponse
     {
         $response = $this->atp->client->get(
-            endpoint: 'com.atproto.sync.getRepoStatus',
+            endpoint: AtprotoSync::GetRepoStatus,
             params: compact('did')
         );
 

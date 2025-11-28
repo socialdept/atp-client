@@ -7,6 +7,7 @@ use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Ozone\Moderation\QueryEventsResponse;
 use SocialDept\AtpClient\Data\Responses\Ozone\Moderation\QueryStatusesResponse;
 use SocialDept\AtpClient\Data\Responses\Ozone\Moderation\SearchReposResponse;
+use SocialDept\AtpClient\Enums\Nsid\OzoneModeration;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Http\Response;
 use SocialDept\AtpSchema\Generated\Tools\Ozone\Moderation\Defs\ModEventView;
@@ -27,7 +28,7 @@ class ModerationRequestClient extends Request
     public function getModerationEvent(int $id): ModEventViewDetail
     {
         $response = $this->atp->client->get(
-            endpoint: 'tools.ozone.moderation.getEvent',
+            endpoint: OzoneModeration::GetEvent,
             params: compact('id')
         );
 
@@ -50,7 +51,7 @@ class ModerationRequestClient extends Request
         ?string $cursor = null
     ): Response {
         return $this->atp->client->get(
-            endpoint: 'tools.ozone.moderation.getEvents',
+            endpoint: OzoneModeration::GetEvents,
             params: array_filter(
                 compact('subject', 'types', 'createdBy', 'limit', 'cursor'),
                 fn ($v) => ! is_null($v)
@@ -69,7 +70,7 @@ class ModerationRequestClient extends Request
     public function getRecord(string $uri, ?string $cid = null): RecordViewDetail
     {
         $response = $this->atp->client->get(
-            endpoint: 'tools.ozone.moderation.getRecord',
+            endpoint: OzoneModeration::GetRecord,
             params: compact('uri', 'cid')
         );
 
@@ -87,7 +88,7 @@ class ModerationRequestClient extends Request
     public function getRepo(string $did): RepoViewDetail
     {
         $response = $this->atp->client->get(
-            endpoint: 'tools.ozone.moderation.getRepo',
+            endpoint: OzoneModeration::GetRepo,
             params: compact('did')
         );
 
@@ -111,7 +112,7 @@ class ModerationRequestClient extends Request
         bool $sortDirection = false
     ): QueryEventsResponse {
         $response = $this->atp->client->get(
-            endpoint: 'tools.ozone.moderation.queryEvents',
+            endpoint: OzoneModeration::QueryEvents,
             params: array_filter(
                 compact('types', 'createdBy', 'subject', 'limit', 'cursor', 'sortDirection'),
                 fn ($v) => ! is_null($v)
@@ -137,7 +138,7 @@ class ModerationRequestClient extends Request
         ?string $cursor = null
     ): QueryStatusesResponse {
         $response = $this->atp->client->get(
-            endpoint: 'tools.ozone.moderation.queryStatuses',
+            endpoint: OzoneModeration::QueryStatuses,
             params: array_filter(
                 compact('subject', 'tags', 'excludeTags', 'limit', 'cursor'),
                 fn ($v) => ! is_null($v)
@@ -162,7 +163,7 @@ class ModerationRequestClient extends Request
         ?string $cursor = null
     ): SearchReposResponse {
         $response = $this->atp->client->get(
-            endpoint: 'tools.ozone.moderation.searchRepos',
+            endpoint: OzoneModeration::SearchRepos,
             params: array_filter(
                 compact('term', 'invitedBy', 'limit', 'cursor'),
                 fn ($v) => ! is_null($v)
@@ -187,7 +188,7 @@ class ModerationRequestClient extends Request
         ?string $createdBy = null
     ): ModEventView {
         $response = $this->atp->client->post(
-            endpoint: 'tools.ozone.moderation.emitEvent',
+            endpoint: OzoneModeration::EmitEvent,
             body: compact('event', 'subject', 'subjectBlobCids', 'createdBy')
         );
 

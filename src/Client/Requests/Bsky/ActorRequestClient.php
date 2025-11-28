@@ -4,6 +4,7 @@ namespace SocialDept\AtpClient\Client\Requests\Bsky;
 
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Enums\Nsid\BskyActor;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpSchema\Generated\App\Bsky\Actor\Defs\ProfileViewDetailed;
 
@@ -20,7 +21,7 @@ class ActorRequestClient extends Request
     public function getProfile(string $actor): ProfileViewDetailed
     {
         $response = $this->atp->client->get(
-            endpoint: 'app.bsky.actor.getProfile',
+            endpoint: BskyActor::GetProfile,
             params: compact('actor')
         );
 

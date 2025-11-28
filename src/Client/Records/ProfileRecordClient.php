@@ -5,6 +5,7 @@ namespace SocialDept\AtpClient\Client\Records;
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\StrongRef;
+use SocialDept\AtpClient\Enums\Nsid\BskyActor;
 use SocialDept\AtpClient\Enums\Scope;
 
 class ProfileRecordClient extends Request
@@ -20,12 +21,12 @@ class ProfileRecordClient extends Request
     {
         // Ensure $type is set
         if (! isset($profile['$type'])) {
-            $profile['$type'] = 'app.bsky.actor.profile';
+            $profile['$type'] = BskyActor::Profile->value;
         }
 
         $response = $this->atp->atproto->repo->putRecord(
             repo: $this->atp->client->session()->did(),
-            collection: 'app.bsky.actor.profile',
+            collection: BskyActor::Profile,
             rkey: 'self', // Profile records always use 'self' as rkey
             record: $profile
         );
@@ -43,7 +44,7 @@ class ProfileRecordClient extends Request
     {
         $response = $this->atp->atproto->repo->getRecord(
             repo: $this->atp->client->session()->did(),
-            collection: 'app.bsky.actor.profile',
+            collection: BskyActor::Profile,
             rkey: 'self'
         );
 
@@ -120,7 +121,7 @@ class ProfileRecordClient extends Request
         } catch (\Exception $e) {
             // Profile doesn't exist, return empty structure
             return [
-                '$type' => 'app.bsky.actor.profile',
+                '$type' => BskyActor::Profile->value,
             ];
         }
     }
