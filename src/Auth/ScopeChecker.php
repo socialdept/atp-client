@@ -2,6 +2,7 @@
 
 namespace SocialDept\AtpClient\Auth;
 
+use BackedEnum;
 use Illuminate\Support\Facades\Log;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Enums\ScopeEnforcementLevel;
@@ -197,8 +198,9 @@ class ScopeChecker
     /**
      * Check if the session has repo access for a specific collection and action.
      */
-    public function checkRepoScope(Session $session, string $collection, string $action): bool
+    public function checkRepoScope(Session $session, string|BackedEnum $collection, string $action): bool
     {
+        $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $required = "repo:{$collection}?action={$action}";
 
         return $this->sessionHasScope($session, $required);
@@ -209,8 +211,9 @@ class ScopeChecker
      *
      * @throws MissingScopeException
      */
-    public function checkRepoScopeOrFail(Session $session, string $collection, string $action): void
+    public function checkRepoScopeOrFail(Session $session, string|BackedEnum $collection, string $action): void
     {
+        $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $required = "repo:{$collection}?action={$action}";
 
         $this->checkOrFail($session, [$required]);

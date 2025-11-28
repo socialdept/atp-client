@@ -2,6 +2,8 @@
 
 namespace SocialDept\AtpClient\Enums;
 
+use BackedEnum;
+
 enum Scope: string
 {
     // Transition scopes (current)
@@ -13,13 +15,14 @@ enum Scope: string
     /**
      * Build a repo scope string for record operations.
      *
-     * @param  string  $collection  The collection NSID (e.g., 'app.bsky.feed.post')
+     * @param  string|BackedEnum  $collection  The collection NSID (e.g., 'app.bsky.feed.post')
      * @param  array|null  $actions  The action (create, update, delete)
      *
      * @return string
      */
-    public static function repo(string $collection, ?array $actions = []): string
+    public static function repo(string|BackedEnum $collection, ?array $actions = []): string
     {
+        $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $scope = "repo:{$collection}";
 
         if (!empty($actions)) {
