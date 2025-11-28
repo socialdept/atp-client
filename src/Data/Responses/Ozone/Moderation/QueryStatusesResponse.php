@@ -2,24 +2,24 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Ozone\Moderation;
 
+use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\Tools\Ozone\Moderation\Defs\SubjectStatusView;
 
 class QueryStatusesResponse
 {
     /**
-     * @param  array<SubjectStatusView>  $subjectStatuses
+     * @param  Collection<int, SubjectStatusView>  $subjectStatuses
      */
     public function __construct(
-        public readonly array $subjectStatuses,
+        public readonly Collection $subjectStatuses,
         public readonly ?string $cursor = null,
     ) {}
 
     public static function fromArray(array $data): self
     {
         return new self(
-            subjectStatuses: array_map(
-                fn (array $status) => SubjectStatusView::fromArray($status),
-                $data['subjectStatuses'] ?? []
+            subjectStatuses: collect($data['subjectStatuses'] ?? [])->map(
+                fn (array $status) => SubjectStatusView::fromArray($status)
             ),
             cursor: $data['cursor'] ?? null,
         );
