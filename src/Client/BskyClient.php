@@ -68,4 +68,9 @@ class BskyClient
     {
         return AtpClient::class;
     }
+
+    public function root(): AtpClient
+    {
+        return $this->atp;
+    }
 }
