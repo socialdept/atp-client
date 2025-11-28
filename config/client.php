@@ -176,4 +176,18 @@ return [
 
         'redirect_to' => env('ATP_SCOPE_REDIRECT', '/login'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Generator Settings
+    |--------------------------------------------------------------------------
+    |
+    | Configure paths for the make:atp-client and make:atp-request commands.
+    | Paths are relative to the application base path.
+    |
+    */
+    'generators' => [
+        'client_path' => 'app/Services/Clients',
+        'request_path' => 'app/Services/Clients/Requests',
+    ],
 ];
