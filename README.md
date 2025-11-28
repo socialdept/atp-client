@@ -980,6 +980,12 @@ For complete documentation including creating custom clients, testing, and advan
 ```bash
 # Generate OAuth private key
 php artisan atp-client:generate-key
+
+# Create a domain client extension
+php artisan make:atp-client AnalyticsClient
+
+# Create a request client extension for an existing domain
+php artisan make:atp-request MetricsClient --domain=bsky
 ```
 
 ## Requirements

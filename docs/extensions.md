@@ -23,6 +23,33 @@ The same methods are available on `AtpPublicClient` for unauthenticated extensio
 | Domain Client | `$client->myDomain` | Group related functionality under a namespace |
 | Request Client | `$client->bsky->myFeature` | Add methods to an existing domain |
 
+### Generator Commands
+
+Quickly scaffold extension classes using artisan commands:
+
+```bash
+# Create a domain client extension
+php artisan make:atp-client AnalyticsClient
+
+# Create a public domain client extension
+php artisan make:atp-client DiscoverClient --public
+
+# Create a request client extension for an existing domain
+php artisan make:atp-request MetricsClient --domain=bsky
+
+# Create a public request client extension
+php artisan make:atp-request TrendingClient --domain=bsky --public
+```
+
+The generated files are placed in `app/Services/Clients/` (domain clients) and `app/Services/Clients/Requests/` (request clients). You can customize these paths in `config/client.php`:
+
+```php
+'generators' => [
+    'client_path' => 'app/Services/Clients',
+    'request_path' => 'app/Services/Clients/Requests',
+],
+```
+
 ## Understanding Extensions
 
 Extensions follow a lazy-loading pattern. When you register an extension, the callback is stored but not executed. The extension is only instantiated when first accessed:
