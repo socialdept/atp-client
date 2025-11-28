@@ -41,12 +41,14 @@ php artisan make:atp-request MetricsClient --domain=bsky
 php artisan make:atp-request TrendingClient --domain=bsky --public
 ```
 
-The generated files are placed in `app/Services/Clients/` (domain clients) and `app/Services/Clients/Requests/` (request clients). You can customize these paths in `config/client.php`:
+The generated files are placed in configurable directories. You can customize these paths in `config/client.php`:
 
 ```php
 'generators' => [
     'client_path' => 'app/Services/Clients',
+    'client_public_path' => 'app/Services/Clients/Public',
     'request_path' => 'app/Services/Clients/Requests',
+    'request_public_path' => 'app/Services/Clients/Public/Requests',
 ],
 ```
 

@@ -188,6 +188,8 @@ return [
     */
     'generators' => [
         'client_path' => 'app/Services/Clients',
+        'client_public_path' => 'app/Services/Clients/Public',
         'request_path' => 'app/Services/Clients/Requests',
+        'request_public_path' => 'app/Services/Clients/Public/Requests',
     ],
 ];
