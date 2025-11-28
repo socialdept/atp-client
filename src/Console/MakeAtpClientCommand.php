@@ -99,7 +99,7 @@ class MakeAtpClientCommand extends Command
         $this->line("use SocialDept\\AtpClient\\".($isPublic ? 'Client\\Public\\' : '').$clientClass.';');
         $this->newLine();
         $this->line("// In boot() method:");
-        $this->line("{$clientClass}::extend('{$extensionName}', fn(\${$clientClass} \$atp) => new {$name}(\$atp));");
+        $this->line("{$clientClass}::extend('{$extensionName}', fn({$clientClass} \$atp) => new {$name}(\$atp));");
     }
 
     protected function getStub(): string
