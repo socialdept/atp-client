@@ -11,8 +11,10 @@ class AtpPublicClient
     public BskyPublicClient $bsky;
     public AtprotoPublicClient $atproto;
 
-    public function __construct(string $serviceUrl)
+    public function __construct(string $serviceUrl = null)
     {
+        $serviceUrl = $serviceUrl ?? config('client.public.service_url');
+
         $this->client = new PublicClient($serviceUrl);
         $this->bsky = new BskyPublicClient($this);
         $this->atproto = new AtprotoPublicClient($this);
