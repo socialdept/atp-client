@@ -2,9 +2,13 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Ozone\Team;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 
-class ListMembersResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class ListMembersResponse implements Arrayable
 {
     /**
      * @param  Collection<int, array<string, mixed>>  $members  Collection of team member objects
@@ -20,5 +24,13 @@ class ListMembersResponse
             members: collect($data['members'] ?? []),
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'members' => $this->members->all(),
+            'cursor' => $this->cursor,
+        ];
     }
 }

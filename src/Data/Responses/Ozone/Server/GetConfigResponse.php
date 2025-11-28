@@ -2,10 +2,14 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Ozone\Server;
 
+use Illuminate\Contracts\Support\Arrayable;
 use SocialDept\AtpSchema\Generated\Tools\Ozone\Server\GetConfig\ServiceConfig;
 use SocialDept\AtpSchema\Generated\Tools\Ozone\Server\GetConfig\ViewerConfig;
 
-class GetConfigResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetConfigResponse implements Arrayable
 {
     public function __construct(
         public readonly ?ServiceConfig $appview = null,
@@ -26,5 +30,17 @@ class GetConfigResponse
             viewer: isset($data['viewer']) ? ViewerConfig::fromArray($data['viewer']) : null,
             verifierDid: $data['verifierDid'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'appview' => $this->appview?->toArray(),
+            'pds' => $this->pds?->toArray(),
+            'blobDivert' => $this->blobDivert?->toArray(),
+            'chat' => $this->chat?->toArray(),
+            'viewer' => $this->viewer?->toArray(),
+            'verifierDid' => $this->verifierDid,
+        ];
     }
 }
