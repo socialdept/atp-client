@@ -24,6 +24,11 @@ trait HasDomainExtensions
     abstract protected function getRootClientClass(): string;
 
     /**
+     * Get the root client instance.
+     */
+    abstract public function root(): object;
+
+    /**
      * Resolve a domain extension instance.
      */
     protected function resolveDomainExtension(string $name): object
