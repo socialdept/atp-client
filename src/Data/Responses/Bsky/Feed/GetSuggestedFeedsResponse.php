@@ -2,10 +2,14 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Bsky\Feed;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\App\Bsky\Feed\Defs\GeneratorView;
 
-class GetSuggestedFeedsResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetSuggestedFeedsResponse implements Arrayable
 {
     /**
      * @param  Collection<int, GeneratorView>  $feeds
@@ -23,5 +27,13 @@ class GetSuggestedFeedsResponse
             ),
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'feeds' => $this->feeds->map(fn (GeneratorView $f) => $f->toArray())->all(),
+            'cursor' => $this->cursor,
+        ];
     }
 }

@@ -2,10 +2,14 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Bsky\Feed;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\App\Bsky\Actor\Defs\ProfileView;
 
-class GetRepostedByResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetRepostedByResponse implements Arrayable
 {
     /**
      * @param  Collection<int, ProfileView>  $repostedBy
@@ -27,5 +31,15 @@ class GetRepostedByResponse
             cid: $data['cid'] ?? null,
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'uri' => $this->uri,
+            'repostedBy' => $this->repostedBy->map(fn (ProfileView $p) => $p->toArray())->all(),
+            'cid' => $this->cid,
+            'cursor' => $this->cursor,
+        ];
     }
 }

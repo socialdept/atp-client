@@ -2,9 +2,13 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Bsky\Feed;
 
+use Illuminate\Contracts\Support\Arrayable;
 use SocialDept\AtpSchema\Generated\App\Bsky\Feed\Defs\ThreadViewPost;
 
-class GetPostThreadResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetPostThreadResponse implements Arrayable
 {
     public function __construct(
         public readonly ThreadViewPost $thread,
@@ -17,5 +21,13 @@ class GetPostThreadResponse
             thread: ThreadViewPost::fromArray($data['thread']),
             threadgate: $data['threadgate'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'thread' => $this->thread->toArray(),
+            'threadgate' => $this->threadgate,
+        ];
     }
 }

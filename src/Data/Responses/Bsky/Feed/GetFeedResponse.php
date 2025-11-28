@@ -2,10 +2,14 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Bsky\Feed;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\App\Bsky\Feed\Defs\FeedViewPost;
 
-class GetFeedResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetFeedResponse implements Arrayable
 {
     /**
      * @param  Collection<int, FeedViewPost>  $feed
@@ -23,5 +27,13 @@ class GetFeedResponse
             ),
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'feed' => $this->feed->map(fn (FeedViewPost $p) => $p->toArray())->all(),
+            'cursor' => $this->cursor,
+        ];
     }
 }
