@@ -2,6 +2,7 @@
 
 namespace SocialDept\AtpClient\Client\Public;
 
+use BackedEnum;
 use Illuminate\Support\Facades\Http;
 use SocialDept\AtpClient\Exceptions\AtpResponseException;
 use SocialDept\AtpClient\Http\Response;
@@ -12,8 +13,9 @@ class PublicClient
         protected string $serviceUrl
     ) {}
 
-    public function get(string $endpoint, array $params = []): Response
+    public function get(string|BackedEnum $endpoint, array $params = []): Response
     {
+        $endpoint = $endpoint instanceof BackedEnum ? $endpoint->value : $endpoint;
         $url = rtrim($this->serviceUrl, '/') . '/xrpc/' . $endpoint;
         $params = array_filter($params, fn ($v) => !is_null($v));
 
