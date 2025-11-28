@@ -2,7 +2,12 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Atproto\Server;
 
-class DescribeServerResponse
+use Illuminate\Contracts\Support\Arrayable;
+
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class DescribeServerResponse implements Arrayable
 {
     /**
      * @param  array<string>  $availableUserDomains
@@ -26,5 +31,17 @@ class DescribeServerResponse
             links: $data['links'] ?? null,
             contact: $data['contact'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'did' => $this->did,
+            'availableUserDomains' => $this->availableUserDomains,
+            'inviteCodeRequired' => $this->inviteCodeRequired,
+            'phoneVerificationRequired' => $this->phoneVerificationRequired,
+            'links' => $this->links,
+            'contact' => $this->contact,
+        ];
     }
 }

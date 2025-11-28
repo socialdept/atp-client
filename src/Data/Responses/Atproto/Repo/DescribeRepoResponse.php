@@ -2,7 +2,12 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Atproto\Repo;
 
-class DescribeRepoResponse
+use Illuminate\Contracts\Support\Arrayable;
+
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class DescribeRepoResponse implements Arrayable
 {
     /**
      * @param  array<string>  $collections
@@ -24,5 +29,16 @@ class DescribeRepoResponse
             collections: $data['collections'] ?? [],
             handleIsCorrect: $data['handleIsCorrect'],
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'handle' => $this->handle,
+            'did' => $this->did,
+            'didDoc' => $this->didDoc,
+            'collections' => $this->collections,
+            'handleIsCorrect' => $this->handleIsCorrect,
+        ];
     }
 }

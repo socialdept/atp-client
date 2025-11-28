@@ -2,9 +2,13 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Chat\Convo;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 
-class GetLogResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetLogResponse implements Arrayable
 {
     /**
      * @param  Collection<int, mixed>  $logs  Collection of log event objects (LogBeginConvo, LogCreateMessage, etc.)
@@ -20,5 +24,13 @@ class GetLogResponse
             logs: collect($data['logs'] ?? []),
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'logs' => $this->logs->all(),
+            'cursor' => $this->cursor,
+        ];
     }
 }

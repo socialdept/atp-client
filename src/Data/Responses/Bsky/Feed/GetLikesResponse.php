@@ -2,10 +2,14 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Bsky\Feed;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\App\Bsky\Feed\GetLikes\Like;
 
-class GetLikesResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetLikesResponse implements Arrayable
 {
     /**
      * @param  Collection<int, Like>  $likes
@@ -27,5 +31,15 @@ class GetLikesResponse
             cid: $data['cid'] ?? null,
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'uri' => $this->uri,
+            'likes' => $this->likes->map(fn (Like $l) => $l->toArray())->all(),
+            'cid' => $this->cid,
+            'cursor' => $this->cursor,
+        ];
     }
 }

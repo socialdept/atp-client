@@ -2,9 +2,13 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Bsky\Graph;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 
-class GetRelationshipsResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetRelationshipsResponse implements Arrayable
 {
     /**
      * @param  Collection<int, mixed>  $relationships  Collection of Relationship or NotFoundActor objects
@@ -20,5 +24,13 @@ class GetRelationshipsResponse
             relationships: collect($data['relationships'] ?? []),
             actor: $data['actor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'relationships' => $this->relationships->all(),
+            'actor' => $this->actor,
+        ];
     }
 }

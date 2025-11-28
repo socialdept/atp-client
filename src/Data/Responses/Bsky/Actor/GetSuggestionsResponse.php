@@ -2,10 +2,14 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Bsky\Actor;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\App\Bsky\Actor\Defs\ProfileView;
 
-class GetSuggestionsResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetSuggestionsResponse implements Arrayable
 {
     /**
      * @param  Collection<int, ProfileView>  $actors
@@ -23,5 +27,13 @@ class GetSuggestionsResponse
             ),
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'actors' => $this->actors->map(fn (ProfileView $a) => $a->toArray())->all(),
+            'cursor' => $this->cursor,
+        ];
     }
 }

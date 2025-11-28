@@ -2,7 +2,12 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Atproto\Sync;
 
-class GetRepoStatusResponse
+use Illuminate\Contracts\Support\Arrayable;
+
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetRepoStatusResponse implements Arrayable
 {
     public function __construct(
         public readonly string $did,
@@ -19,5 +24,15 @@ class GetRepoStatusResponse
             status: $data['status'] ?? null,
             rev: $data['rev'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'did' => $this->did,
+            'active' => $this->active,
+            'status' => $this->status,
+            'rev' => $this->rev,
+        ];
     }
 }

@@ -2,11 +2,15 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Chat\Convo;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\Chat\Bsky\Convo\Defs\DeletedMessageView;
 use SocialDept\AtpSchema\Generated\Chat\Bsky\Convo\Defs\MessageView;
 
-class GetMessagesResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetMessagesResponse implements Arrayable
 {
     /**
      * @param  Collection<int, MessageView|DeletedMessageView>  $messages
@@ -30,5 +34,13 @@ class GetMessagesResponse
             ),
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'messages' => $this->messages->map(fn (MessageView|DeletedMessageView $m) => $m->toArray())->all(),
+            'cursor' => $this->cursor,
+        ];
     }
 }

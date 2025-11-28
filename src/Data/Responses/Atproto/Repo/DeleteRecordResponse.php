@@ -2,9 +2,13 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Atproto\Repo;
 
+use Illuminate\Contracts\Support\Arrayable;
 use SocialDept\AtpSchema\Generated\Com\Atproto\Repo\Defs\CommitMeta;
 
-class DeleteRecordResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class DeleteRecordResponse implements Arrayable
 {
     public function __construct(
         public readonly ?CommitMeta $commit = null,
@@ -15,5 +19,12 @@ class DeleteRecordResponse
         return new self(
             commit: isset($data['commit']) ? CommitMeta::fromArray($data['commit']) : null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'commit' => $this->commit?->toArray(),
+        ];
     }
 }

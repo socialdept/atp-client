@@ -2,7 +2,12 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Atproto\Sync;
 
-class ListBlobsResponse
+use Illuminate\Contracts\Support\Arrayable;
+
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class ListBlobsResponse implements Arrayable
 {
     /**
      * @param  array<string>  $cids
@@ -18,5 +23,13 @@ class ListBlobsResponse
             cids: $data['cids'] ?? [],
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'cids' => $this->cids,
+            'cursor' => $this->cursor,
+        ];
     }
 }

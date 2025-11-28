@@ -2,10 +2,14 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Ozone\Moderation;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\Tools\Ozone\Moderation\Defs\SubjectStatusView;
 
-class QueryStatusesResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class QueryStatusesResponse implements Arrayable
 {
     /**
      * @param  Collection<int, SubjectStatusView>  $subjectStatuses
@@ -23,5 +27,13 @@ class QueryStatusesResponse
             ),
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'subjectStatuses' => $this->subjectStatuses->map(fn (SubjectStatusView $s) => $s->toArray())->all(),
+            'cursor' => $this->cursor,
+        ];
     }
 }

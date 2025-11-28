@@ -2,11 +2,15 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Bsky\Labeler;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\App\Bsky\Labeler\Defs\LabelerView;
 use SocialDept\AtpSchema\Generated\App\Bsky\Labeler\Defs\LabelerViewDetailed;
 
-class GetServicesResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetServicesResponse implements Arrayable
 {
     /**
      * @param  Collection<int, LabelerView|LabelerViewDetailed>  $views
@@ -24,5 +28,12 @@ class GetServicesResponse
                     : LabelerView::fromArray($view)
             ),
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'views' => $this->views->map(fn (LabelerView|LabelerViewDetailed $v) => $v->toArray())->all(),
+        ];
     }
 }

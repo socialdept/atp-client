@@ -2,10 +2,14 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Chat\Convo;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\Chat\Bsky\Convo\Defs\ConvoView;
 
-class ListConvosResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class ListConvosResponse implements Arrayable
 {
     /**
      * @param  Collection<int, ConvoView>  $convos
@@ -23,5 +27,13 @@ class ListConvosResponse
             ),
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'convos' => $this->convos->map(fn (ConvoView $c) => $c->toArray())->all(),
+            'cursor' => $this->cursor,
+        ];
     }
 }

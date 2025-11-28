@@ -2,7 +2,12 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Atproto\Server;
 
-class GetSessionResponse
+use Illuminate\Contracts\Support\Arrayable;
+
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetSessionResponse implements Arrayable
 {
     public function __construct(
         public readonly string $handle,
@@ -27,5 +32,19 @@ class GetSessionResponse
             active: $data['active'] ?? null,
             status: $data['status'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'handle' => $this->handle,
+            'did' => $this->did,
+            'email' => $this->email,
+            'emailConfirmed' => $this->emailConfirmed,
+            'emailAuthFactor' => $this->emailAuthFactor,
+            'didDoc' => $this->didDoc,
+            'active' => $this->active,
+            'status' => $this->status,
+        ];
     }
 }

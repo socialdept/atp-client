@@ -2,7 +2,12 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Chat\Convo;
 
-class LeaveConvoResponse
+use Illuminate\Contracts\Support\Arrayable;
+
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class LeaveConvoResponse implements Arrayable
 {
     public function __construct(
         public readonly string $convoId,
@@ -15,5 +20,13 @@ class LeaveConvoResponse
             convoId: $data['convoId'],
             rev: $data['rev'],
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'convoId' => $this->convoId,
+            'rev' => $this->rev,
+        ];
     }
 }

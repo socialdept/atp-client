@@ -2,10 +2,14 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Bsky\Graph;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\App\Bsky\Actor\Defs\ProfileView;
 
-class GetKnownFollowersResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetKnownFollowersResponse implements Arrayable
 {
     /**
      * @param  Collection<int, ProfileView>  $followers
@@ -25,5 +29,14 @@ class GetKnownFollowersResponse
             ),
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'subject' => $this->subject->toArray(),
+            'followers' => $this->followers->map(fn (ProfileView $p) => $p->toArray())->all(),
+            'cursor' => $this->cursor,
+        ];
     }
 }

@@ -2,7 +2,12 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Atproto\Repo;
 
-class GetRecordResponse
+use Illuminate\Contracts\Support\Arrayable;
+
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class GetRecordResponse implements Arrayable
 {
     public function __construct(
         public readonly string $uri,
@@ -17,5 +22,14 @@ class GetRecordResponse
             value: $data['value'],
             cid: $data['cid'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'uri' => $this->uri,
+            'value' => $this->value,
+            'cid' => $this->cid,
+        ];
     }
 }
