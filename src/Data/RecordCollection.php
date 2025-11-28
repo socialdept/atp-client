@@ -3,6 +3,7 @@
 namespace SocialDept\AtpClient\Data;
 
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Collection;
 
 /**
  * Collection wrapper for paginated AT Protocol records.
@@ -13,10 +14,10 @@ use Illuminate\Contracts\Support\Arrayable;
 class RecordCollection implements Arrayable
 {
     /**
-     * @param  array<Record<T>>  $records
+     * @param  Collection<int, Record<T>>  $records
      */
     public function __construct(
-        public readonly array $records,
+        public readonly Collection $records,
         public readonly ?string $cursor = null,
     ) {}
 
@@ -29,9 +30,8 @@ class RecordCollection implements Arrayable
     public static function fromArray(array $data, callable $transformer): self
     {
         return new self(
-            records: array_map(
-                fn (array $record) => Record::fromArray($record, $transformer),
-                $data['records'] ?? []
+            records: collect($data['records'] ?? [])->map(
+                fn (array $record) => Record::fromArray($record, $transformer)
             ),
             cursor: $data['cursor'] ?? null,
         );
@@ -43,9 +43,8 @@ class RecordCollection implements Arrayable
     public static function fromArrayRaw(array $data): self
     {
         return new self(
-            records: array_map(
-                fn (array $record) => Record::fromArrayRaw($record),
-                $data['records'] ?? []
+            records: collect($data['records'] ?? [])->map(
+                fn (array $record) => Record::fromArrayRaw($record)
             ),
             cursor: $data['cursor'] ?? null,
         );
@@ -54,7 +53,7 @@ class RecordCollection implements Arrayable
     public function toArray(): array
     {
         return [
-            'records' => array_map(fn (Record $r) => $r->toArray(), $this->records),
+            'records' => $this->records->map(fn (Record $r) => $r->toArray())->all(),
             'cursor' => $this->cursor,
         ];
     }
