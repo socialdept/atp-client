@@ -29,7 +29,7 @@ class MakeAtpClientCommand extends Command
             $name .= 'Client';
         }
 
-        $path = $this->getPath($name);
+        $path = $this->getPath($name, $isPublic);
 
         if ($this->files->exists($path) && ! $this->option('force')) {
             $this->components->error("Client [{$name}] already exists!");
@@ -40,7 +40,7 @@ class MakeAtpClientCommand extends Command
         $this->makeDirectory($path);
 
         $stub = $isPublic ? $this->getPublicStub() : $this->getStub();
-        $content = $this->populateStub($stub, $name);
+        $content = $this->populateStub($stub, $name, $isPublic);
 
         $this->files->put($path, $content);
 
@@ -51,9 +51,11 @@ class MakeAtpClientCommand extends Command
         return self::SUCCESS;
     }
 
-    protected function getPath(string $name): string
+    protected function getPath(string $name, bool $isPublic = false): string
     {
-        $basePath = config('client.generators.client_path', 'app/Services/Clients');
+        $basePath = $isPublic
+            ? config('client.generators.client_public_path', 'app/Services/Clients/Public')
+            : config('client.generators.client_path', 'app/Services/Clients');
 
         return base_path($basePath.'/'.$name.'.php');
     }
@@ -65,9 +67,11 @@ class MakeAtpClientCommand extends Command
         }
     }
 
-    protected function getNamespace(): string
+    protected function getNamespace(bool $isPublic = false): string
     {
-        $basePath = config('client.generators.client_path', 'app/Services/Clients');
+        $basePath = $isPublic
+            ? config('client.generators.client_public_path', 'app/Services/Clients/Public')
+            : config('client.generators.client_path', 'app/Services/Clients');
 
         return Str::of($basePath)
             ->replace('/', '\\')
@@ -76,11 +80,11 @@ class MakeAtpClientCommand extends Command
             ->toString();
     }
 
-    protected function populateStub(string $stub, string $name): string
+    protected function populateStub(string $stub, string $name, bool $isPublic = false): string
     {
         return str_replace(
             ['{{ namespace }}', '{{ class }}'],
-            [$this->getNamespace(), $name],
+            [$this->getNamespace($isPublic), $name],
             $stub
         );
     }
@@ -91,7 +95,7 @@ class MakeAtpClientCommand extends Command
         $this->components->info('Register the extension in your AppServiceProvider:');
         $this->newLine();
 
-        $namespace = $this->getNamespace();
+        $namespace = $this->getNamespace($isPublic);
         $extensionName = Str::of($name)->before('Client')->camel()->toString();
         $clientClass = $isPublic ? 'AtpPublicClient' : 'AtpClient';
 
