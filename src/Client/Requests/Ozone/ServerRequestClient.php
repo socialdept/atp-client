@@ -5,6 +5,7 @@ namespace SocialDept\AtpClient\Client\Requests\Ozone;
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Ozone\Server\GetConfigResponse;
+use SocialDept\AtpClient\Enums\Nsid\OzoneServer;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Http\Response;
 
@@ -21,7 +22,7 @@ class ServerRequestClient extends Request
     public function getBlob(string $did, string $cid): Response
     {
         return $this->atp->client->get(
-            endpoint: 'tools.ozone.server.getBlob',
+            endpoint: OzoneServer::GetBlob,
             params: compact('did', 'cid')
         );
     }
@@ -37,7 +38,7 @@ class ServerRequestClient extends Request
     public function getConfig(): GetConfigResponse
     {
         $response = $this->atp->client->get(
-            endpoint: 'tools.ozone.server.getConfig'
+            endpoint: OzoneServer::GetConfig
         );
 
         return GetConfigResponse::fromArray($response->json());

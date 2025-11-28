@@ -5,6 +5,7 @@ namespace SocialDept\AtpClient\Client\Requests\Ozone;
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Ozone\Team\ListMembersResponse;
+use SocialDept\AtpClient\Enums\Nsid\OzoneTeam;
 use SocialDept\AtpClient\Enums\Scope;
 
 class TeamRequestClient extends Request
@@ -22,7 +23,7 @@ class TeamRequestClient extends Request
     public function getTeamMember(string $did): array
     {
         $response = $this->atp->client->get(
-            endpoint: 'tools.ozone.team.getMember',
+            endpoint: OzoneTeam::GetMember,
             params: compact('did')
         );
 
@@ -40,7 +41,7 @@ class TeamRequestClient extends Request
     public function listTeamMembers(int $limit = 50, ?string $cursor = null): ListMembersResponse
     {
         $response = $this->atp->client->get(
-            endpoint: 'tools.ozone.team.listMembers',
+            endpoint: OzoneTeam::ListMembers,
             params: compact('limit', 'cursor')
         );
 
@@ -60,7 +61,7 @@ class TeamRequestClient extends Request
     public function addTeamMember(string $did, string $role): array
     {
         $response = $this->atp->client->post(
-            endpoint: 'tools.ozone.team.addMember',
+            endpoint: OzoneTeam::AddMember,
             body: compact('did', 'role')
         );
 
@@ -83,7 +84,7 @@ class TeamRequestClient extends Request
         ?string $role = null
     ): array {
         $response = $this->atp->client->post(
-            endpoint: 'tools.ozone.team.updateMember',
+            endpoint: OzoneTeam::UpdateMember,
             body: array_filter(
                 compact('did', 'disabled', 'role'),
                 fn ($v) => ! is_null($v)
@@ -104,7 +105,7 @@ class TeamRequestClient extends Request
     public function deleteTeamMember(string $did): void
     {
         $this->atp->client->post(
-            endpoint: 'tools.ozone.team.deleteMember',
+            endpoint: OzoneTeam::DeleteMember,
             body: compact('did')
         );
     }

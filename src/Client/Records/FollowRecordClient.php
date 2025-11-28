@@ -6,6 +6,7 @@ use DateTimeInterface;
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\StrongRef;
+use SocialDept\AtpClient\Enums\Nsid\BskyGraph;
 use SocialDept\AtpClient\Enums\Scope;
 
 class FollowRecordClient extends Request
@@ -22,14 +23,14 @@ class FollowRecordClient extends Request
         ?DateTimeInterface $createdAt = null
     ): StrongRef {
         $record = [
-            '$type' => 'app.bsky.graph.follow',
+            '$type' => BskyGraph::Follow->value,
             'subject' => $subject, // DID
             'createdAt' => ($createdAt ?? now())->format('c'),
         ];
 
         $response = $this->atp->atproto->repo->createRecord(
             repo: $this->atp->client->session()->did(),
-            collection: 'app.bsky.graph.follow',
+            collection: BskyGraph::Follow,
             record: $record
         );
 
@@ -47,7 +48,7 @@ class FollowRecordClient extends Request
     {
         $this->atp->atproto->repo->deleteRecord(
             repo: $this->atp->client->session()->did(),
-            collection: 'app.bsky.graph.follow',
+            collection: BskyGraph::Follow,
             rkey: $rkey
         );
     }
@@ -62,7 +63,7 @@ class FollowRecordClient extends Request
     {
         $response = $this->atp->atproto->repo->getRecord(
             repo: $this->atp->client->session()->did(),
-            collection: 'app.bsky.graph.follow',
+            collection: BskyGraph::Follow,
             rkey: $rkey,
             cid: $cid
         );

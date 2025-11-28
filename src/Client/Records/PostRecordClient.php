@@ -7,6 +7,7 @@ use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Contracts\Recordable;
 use SocialDept\AtpClient\Data\StrongRef;
+use SocialDept\AtpClient\Enums\Nsid\BskyFeed;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\RichText\TextBuilder;
 
@@ -55,12 +56,12 @@ class PostRecordClient extends Request
 
         // Ensure $type is set
         if (! isset($record['$type'])) {
-            $record['$type'] = 'app.bsky.feed.post';
+            $record['$type'] = BskyFeed::Post->value;
         }
 
         $response = $this->atp->atproto->repo->createRecord(
             repo: $this->atp->client->session()->did(),
-            collection: 'app.bsky.feed.post',
+            collection: BskyFeed::Post,
             record: $record
         );
 
@@ -78,12 +79,12 @@ class PostRecordClient extends Request
     {
         // Ensure $type is set
         if (! isset($record['$type'])) {
-            $record['$type'] = 'app.bsky.feed.post';
+            $record['$type'] = BskyFeed::Post->value;
         }
 
         $response = $this->atp->atproto->repo->putRecord(
             repo: $this->atp->client->session()->did(),
-            collection: 'app.bsky.feed.post',
+            collection: BskyFeed::Post,
             rkey: $rkey,
             record: $record
         );
@@ -102,7 +103,7 @@ class PostRecordClient extends Request
     {
         $this->atp->atproto->repo->deleteRecord(
             repo: $this->atp->client->session()->did(),
-            collection: 'app.bsky.feed.post',
+            collection: BskyFeed::Post,
             rkey: $rkey
         );
     }
@@ -117,7 +118,7 @@ class PostRecordClient extends Request
     {
         $response = $this->atp->atproto->repo->getRecord(
             repo: $this->atp->client->session()->did(),
-            collection: 'app.bsky.feed.post',
+            collection: BskyFeed::Post,
             rkey: $rkey,
             cid: $cid
         );

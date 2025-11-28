@@ -6,6 +6,7 @@ use DateTimeInterface;
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\StrongRef;
+use SocialDept\AtpClient\Enums\Nsid\BskyFeed;
 use SocialDept\AtpClient\Enums\Scope;
 
 class LikeRecordClient extends Request
@@ -22,14 +23,14 @@ class LikeRecordClient extends Request
         ?DateTimeInterface $createdAt = null
     ): StrongRef {
         $record = [
-            '$type' => 'app.bsky.feed.like',
+            '$type' => BskyFeed::Like->value,
             'subject' => $subject->toArray(),
             'createdAt' => ($createdAt ?? now())->format('c'),
         ];
 
         $response = $this->atp->atproto->repo->createRecord(
             repo: $this->atp->client->session()->did(),
-            collection: 'app.bsky.feed.like',
+            collection: BskyFeed::Like,
             record: $record
         );
 
@@ -47,7 +48,7 @@ class LikeRecordClient extends Request
     {
         $this->atp->atproto->repo->deleteRecord(
             repo: $this->atp->client->session()->did(),
-            collection: 'app.bsky.feed.like',
+            collection: BskyFeed::Like,
             rkey: $rkey
         );
     }
@@ -62,7 +63,7 @@ class LikeRecordClient extends Request
     {
         $response = $this->atp->atproto->repo->getRecord(
             repo: $this->atp->client->session()->did(),
-            collection: 'app.bsky.feed.like',
+            collection: BskyFeed::Like,
             rkey: $rkey,
             cid: $cid
         );

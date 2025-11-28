@@ -6,6 +6,7 @@ use SocialDept\AtpClient\Client\Public\Requests\PublicRequest;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\DescribeRepoResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\GetRecordResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\ListRecordsResponse;
+use SocialDept\AtpClient\Enums\Nsid\AtprotoRepo;
 
 class RepoPublicRequestClient extends PublicRequest
 {
@@ -21,7 +22,7 @@ class RepoPublicRequestClient extends PublicRequest
         ?string $cid = null
     ): GetRecordResponse {
         $response = $this->atp->client->get(
-            'com.atproto.repo.getRecord',
+            AtprotoRepo::GetRecord,
             compact('repo', 'collection', 'rkey', 'cid')
         );
 
@@ -41,7 +42,7 @@ class RepoPublicRequestClient extends PublicRequest
         bool $reverse = false
     ): ListRecordsResponse {
         $response = $this->atp->client->get(
-            'com.atproto.repo.listRecords',
+            AtprotoRepo::ListRecords,
             compact('repo', 'collection', 'limit', 'cursor', 'reverse')
         );
 
@@ -56,7 +57,7 @@ class RepoPublicRequestClient extends PublicRequest
     public function describeRepo(string $repo): DescribeRepoResponse
     {
         $response = $this->atp->client->get(
-            'com.atproto.repo.describeRepo',
+            AtprotoRepo::DescribeRepo,
             compact('repo')
         );
 

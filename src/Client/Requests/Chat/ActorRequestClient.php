@@ -4,6 +4,7 @@ namespace SocialDept\AtpClient\Client\Requests\Chat;
 
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Enums\Nsid\ChatActor;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Http\Response;
 
@@ -20,7 +21,7 @@ class ActorRequestClient extends Request
     public function getActorMetadata(): Response
     {
         return $this->atp->client->get(
-            endpoint: 'chat.bsky.actor.getActorMetadata'
+            endpoint: ChatActor::GetActorMetadata
         );
     }
 
@@ -35,7 +36,7 @@ class ActorRequestClient extends Request
     public function exportAccountData(): Response
     {
         return $this->atp->client->get(
-            endpoint: 'chat.bsky.actor.exportAccountData'
+            endpoint: ChatActor::ExportAccountData
         );
     }
 
@@ -50,7 +51,7 @@ class ActorRequestClient extends Request
     public function deleteAccount(): void
     {
         $this->atp->client->post(
-            endpoint: 'chat.bsky.actor.deleteAccount'
+            endpoint: ChatActor::DeleteAccount
         );
     }
 }

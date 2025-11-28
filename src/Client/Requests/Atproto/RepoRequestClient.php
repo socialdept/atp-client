@@ -13,6 +13,7 @@ use SocialDept\AtpClient\Data\Responses\Atproto\Repo\DescribeRepoResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\GetRecordResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\ListRecordsResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\PutRecordResponse;
+use SocialDept\AtpClient\Enums\Nsid\AtprotoRepo;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpSchema\Data\BlobReference;
 use SplFileInfo;
@@ -39,7 +40,7 @@ class RepoRequestClient extends Request
         $this->checkCollectionScope($collection, 'create');
 
         $response = $this->atp->client->post(
-            endpoint: 'com.atproto.repo.createRecord',
+            endpoint: AtprotoRepo::CreateRecord,
             body: array_filter(
                 compact('repo', 'collection', 'record', 'rkey', 'validate', 'swapCommit'),
                 fn ($v) => ! is_null($v)
@@ -67,7 +68,7 @@ class RepoRequestClient extends Request
         $this->checkCollectionScope($collection, 'delete');
 
         $response = $this->atp->client->post(
-            endpoint: 'com.atproto.repo.deleteRecord',
+            endpoint: AtprotoRepo::DeleteRecord,
             body: array_filter(
                 compact('repo', 'collection', 'rkey', 'swapRecord', 'swapCommit'),
                 fn ($v) => ! is_null($v)
@@ -97,7 +98,7 @@ class RepoRequestClient extends Request
         $this->checkCollectionScope($collection, 'update');
 
         $response = $this->atp->client->post(
-            endpoint: 'com.atproto.repo.putRecord',
+            endpoint: AtprotoRepo::PutRecord,
             body: array_filter(
                 compact('repo', 'collection', 'rkey', 'record', 'validate', 'swapRecord', 'swapCommit'),
                 fn ($v) => ! is_null($v)
@@ -122,7 +123,7 @@ class RepoRequestClient extends Request
         ?string $cid = null
     ): GetRecordResponse {
         $response = $this->atp->client->get(
-            endpoint: 'com.atproto.repo.getRecord',
+            endpoint: AtprotoRepo::GetRecord,
             params: compact('repo', 'collection', 'rkey', 'cid')
         );
 
@@ -145,7 +146,7 @@ class RepoRequestClient extends Request
         bool $reverse = false
     ): ListRecordsResponse {
         $response = $this->atp->client->get(
-            endpoint: 'com.atproto.repo.listRecords',
+            endpoint: AtprotoRepo::ListRecords,
             params: compact('repo', 'collection', 'limit', 'cursor', 'reverse')
         );
 
@@ -182,7 +183,7 @@ class RepoRequestClient extends Request
         }
 
         $response = $this->atp->client->postBlob(
-            endpoint: 'com.atproto.repo.uploadBlob',
+            endpoint: AtprotoRepo::UploadBlob,
             data: $data,
             mimeType: $mimeType
         );
@@ -201,7 +202,7 @@ class RepoRequestClient extends Request
     public function describeRepo(string $repo): DescribeRepoResponse
     {
         $response = $this->atp->client->get(
-            endpoint: 'com.atproto.repo.describeRepo',
+            endpoint: AtprotoRepo::DescribeRepo,
             params: compact('repo')
         );
 

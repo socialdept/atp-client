@@ -9,6 +9,7 @@ use SocialDept\AtpClient\Data\Responses\Chat\Convo\GetMessagesResponse;
 use SocialDept\AtpClient\Data\Responses\Chat\Convo\LeaveConvoResponse;
 use SocialDept\AtpClient\Data\Responses\Chat\Convo\ListConvosResponse;
 use SocialDept\AtpClient\Data\Responses\Chat\Convo\SendMessageBatchResponse;
+use SocialDept\AtpClient\Enums\Nsid\ChatConvo;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpSchema\Generated\Chat\Bsky\Convo\Defs\ConvoView;
 use SocialDept\AtpSchema\Generated\Chat\Bsky\Convo\Defs\DeletedMessageView;
@@ -27,7 +28,7 @@ class ConvoRequestClient extends Request
     public function getConvo(string $convoId): ConvoView
     {
         $response = $this->atp->client->get(
-            endpoint: 'chat.bsky.convo.getConvo',
+            endpoint: ChatConvo::GetConvo,
             params: compact('convoId')
         );
 
@@ -45,7 +46,7 @@ class ConvoRequestClient extends Request
     public function getConvoForMembers(array $members): ConvoView
     {
         $response = $this->atp->client->get(
-            endpoint: 'chat.bsky.convo.getConvoForMembers',
+            endpoint: ChatConvo::GetConvoForMembers,
             params: compact('members')
         );
 
@@ -63,7 +64,7 @@ class ConvoRequestClient extends Request
     public function listConvos(int $limit = 50, ?string $cursor = null): ListConvosResponse
     {
         $response = $this->atp->client->get(
-            endpoint: 'chat.bsky.convo.listConvos',
+            endpoint: ChatConvo::ListConvos,
             params: compact('limit', 'cursor')
         );
 
@@ -84,7 +85,7 @@ class ConvoRequestClient extends Request
         ?string $cursor = null
     ): GetMessagesResponse {
         $response = $this->atp->client->get(
-            endpoint: 'chat.bsky.convo.getMessages',
+            endpoint: ChatConvo::GetMessages,
             params: compact('convoId', 'limit', 'cursor')
         );
 
@@ -102,7 +103,7 @@ class ConvoRequestClient extends Request
     public function sendMessage(string $convoId, array $message): MessageView
     {
         $response = $this->atp->client->post(
-            endpoint: 'chat.bsky.convo.sendMessage',
+            endpoint: ChatConvo::SendMessage,
             body: compact('convoId', 'message')
         );
 
@@ -120,7 +121,7 @@ class ConvoRequestClient extends Request
     public function sendMessageBatch(array $items): SendMessageBatchResponse
     {
         $response = $this->atp->client->post(
-            endpoint: 'chat.bsky.convo.sendMessageBatch',
+            endpoint: ChatConvo::SendMessageBatch,
             body: compact('items')
         );
 
@@ -138,7 +139,7 @@ class ConvoRequestClient extends Request
     public function deleteMessageForSelf(string $convoId, string $messageId): DeletedMessageView
     {
         $response = $this->atp->client->post(
-            endpoint: 'chat.bsky.convo.deleteMessageForSelf',
+            endpoint: ChatConvo::DeleteMessageForSelf,
             body: compact('convoId', 'messageId')
         );
 
@@ -156,7 +157,7 @@ class ConvoRequestClient extends Request
     public function updateRead(string $convoId, ?string $messageId = null): ConvoView
     {
         $response = $this->atp->client->post(
-            endpoint: 'chat.bsky.convo.updateRead',
+            endpoint: ChatConvo::UpdateRead,
             body: compact('convoId', 'messageId')
         );
 
@@ -174,7 +175,7 @@ class ConvoRequestClient extends Request
     public function muteConvo(string $convoId): ConvoView
     {
         $response = $this->atp->client->post(
-            endpoint: 'chat.bsky.convo.muteConvo',
+            endpoint: ChatConvo::MuteConvo,
             body: compact('convoId')
         );
 
@@ -192,7 +193,7 @@ class ConvoRequestClient extends Request
     public function unmuteConvo(string $convoId): ConvoView
     {
         $response = $this->atp->client->post(
-            endpoint: 'chat.bsky.convo.unmuteConvo',
+            endpoint: ChatConvo::UnmuteConvo,
             body: compact('convoId')
         );
 
@@ -210,7 +211,7 @@ class ConvoRequestClient extends Request
     public function leaveConvo(string $convoId): LeaveConvoResponse
     {
         $response = $this->atp->client->post(
-            endpoint: 'chat.bsky.convo.leaveConvo',
+            endpoint: ChatConvo::LeaveConvo,
             body: compact('convoId')
         );
 
@@ -228,7 +229,7 @@ class ConvoRequestClient extends Request
     public function getLog(?string $cursor = null): GetLogResponse
     {
         $response = $this->atp->client->get(
-            endpoint: 'chat.bsky.convo.getLog',
+            endpoint: ChatConvo::GetLog,
             params: compact('cursor')
         );
 

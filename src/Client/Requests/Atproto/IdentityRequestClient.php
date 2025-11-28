@@ -4,6 +4,7 @@ namespace SocialDept\AtpClient\Client\Requests\Atproto;
 
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Enums\Nsid\AtprotoIdentity;
 use SocialDept\AtpClient\Enums\Scope;
 
 class IdentityRequestClient extends Request
@@ -19,7 +20,7 @@ class IdentityRequestClient extends Request
     public function resolveHandle(string $handle): string
     {
         $response = $this->atp->client->get(
-            endpoint: 'com.atproto.identity.resolveHandle',
+            endpoint: AtprotoIdentity::ResolveHandle,
             params: compact('handle')
         );
 
@@ -37,7 +38,7 @@ class IdentityRequestClient extends Request
     public function updateHandle(string $handle): void
     {
         $this->atp->client->post(
-            endpoint: 'com.atproto.identity.updateHandle',
+            endpoint: AtprotoIdentity::UpdateHandle,
             body: compact('handle')
         );
     }

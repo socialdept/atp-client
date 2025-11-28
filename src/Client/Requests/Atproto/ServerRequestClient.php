@@ -6,6 +6,7 @@ use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Atproto\Server\DescribeServerResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Server\GetSessionResponse;
+use SocialDept\AtpClient\Enums\Nsid\AtprotoServer;
 use SocialDept\AtpClient\Enums\Scope;
 
 class ServerRequestClient extends Request
@@ -21,7 +22,7 @@ class ServerRequestClient extends Request
     public function getSession(): GetSessionResponse
     {
         $response = $this->atp->client->get(
-            endpoint: 'com.atproto.server.getSession'
+            endpoint: AtprotoServer::GetSession
         );
 
         return GetSessionResponse::fromArray($response->json());
@@ -38,7 +39,7 @@ class ServerRequestClient extends Request
     public function describeServer(): DescribeServerResponse
     {
         $response = $this->atp->client->get(
-            endpoint: 'com.atproto.server.describeServer'
+            endpoint: AtprotoServer::DescribeServer
         );
 
         return DescribeServerResponse::fromArray($response->json());

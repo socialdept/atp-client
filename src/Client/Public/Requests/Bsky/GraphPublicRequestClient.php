@@ -3,6 +3,7 @@
 namespace SocialDept\AtpClient\Client\Public\Requests\Bsky;
 
 use SocialDept\AtpClient\Client\Public\Requests\PublicRequest;
+use SocialDept\AtpClient\Enums\Nsid\BskyGraph;
 use SocialDept\AtpClient\Data\Responses\Bsky\Graph\GetFollowersResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Graph\GetFollowsResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Graph\GetKnownFollowersResponse;
@@ -17,63 +18,63 @@ class GraphPublicRequestClient extends PublicRequest
 {
     public function getFollowers(string $actor, int $limit = 50, ?string $cursor = null): GetFollowersResponse
     {
-        $response = $this->atp->client->get('app.bsky.graph.getFollowers', compact('actor', 'limit', 'cursor'));
+        $response = $this->atp->client->get(BskyGraph::GetFollowers, compact('actor', 'limit', 'cursor'));
 
         return GetFollowersResponse::fromArray($response->json());
     }
 
     public function getFollows(string $actor, int $limit = 50, ?string $cursor = null): GetFollowsResponse
     {
-        $response = $this->atp->client->get('app.bsky.graph.getFollows', compact('actor', 'limit', 'cursor'));
+        $response = $this->atp->client->get(BskyGraph::GetFollows, compact('actor', 'limit', 'cursor'));
 
         return GetFollowsResponse::fromArray($response->json());
     }
 
     public function getKnownFollowers(string $actor, int $limit = 50, ?string $cursor = null): GetKnownFollowersResponse
     {
-        $response = $this->atp->client->get('app.bsky.graph.getKnownFollowers', compact('actor', 'limit', 'cursor'));
+        $response = $this->atp->client->get(BskyGraph::GetKnownFollowers, compact('actor', 'limit', 'cursor'));
 
         return GetKnownFollowersResponse::fromArray($response->json());
     }
 
     public function getList(string $list, int $limit = 50, ?string $cursor = null): GetListResponse
     {
-        $response = $this->atp->client->get('app.bsky.graph.getList', compact('list', 'limit', 'cursor'));
+        $response = $this->atp->client->get(BskyGraph::GetList, compact('list', 'limit', 'cursor'));
 
         return GetListResponse::fromArray($response->json());
     }
 
     public function getLists(string $actor, int $limit = 50, ?string $cursor = null): GetListsResponse
     {
-        $response = $this->atp->client->get('app.bsky.graph.getLists', compact('actor', 'limit', 'cursor'));
+        $response = $this->atp->client->get(BskyGraph::GetLists, compact('actor', 'limit', 'cursor'));
 
         return GetListsResponse::fromArray($response->json());
     }
 
     public function getRelationships(string $actor, array $others = []): GetRelationshipsResponse
     {
-        $response = $this->atp->client->get('app.bsky.graph.getRelationships', compact('actor', 'others'));
+        $response = $this->atp->client->get(BskyGraph::GetRelationships, compact('actor', 'others'));
 
         return GetRelationshipsResponse::fromArray($response->json());
     }
 
     public function getStarterPack(string $starterPack): StarterPackView
     {
-        $response = $this->atp->client->get('app.bsky.graph.getStarterPack', compact('starterPack'));
+        $response = $this->atp->client->get(BskyGraph::GetStarterPack, compact('starterPack'));
 
         return StarterPackView::fromArray($response->json()['starterPack']);
     }
 
     public function getStarterPacks(array $uris): GetStarterPacksResponse
     {
-        $response = $this->atp->client->get('app.bsky.graph.getStarterPacks', compact('uris'));
+        $response = $this->atp->client->get(BskyGraph::GetStarterPacks, compact('uris'));
 
         return GetStarterPacksResponse::fromArray($response->json());
     }
 
     public function getSuggestedFollowsByActor(string $actor): GetSuggestedFollowsByActorResponse
     {
-        $response = $this->atp->client->get('app.bsky.graph.getSuggestedFollowsByActor', compact('actor'));
+        $response = $this->atp->client->get(BskyGraph::GetSuggestedFollowsByActor, compact('actor'));
 
         return GetSuggestedFollowsByActorResponse::fromArray($response->json());
     }
