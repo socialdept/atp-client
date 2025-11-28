@@ -2,12 +2,15 @@
 
 namespace SocialDept\AtpClient\Data;
 
+use Illuminate\Contracts\Support\Arrayable;
+
 /**
  * Collection wrapper for paginated AT Protocol records.
  *
  * @template T
+ * @implements Arrayable<string, mixed>
  */
-class RecordCollection
+class RecordCollection implements Arrayable
 {
     /**
      * @param  array<Record<T>>  $records
