@@ -2,7 +2,12 @@
 
 namespace SocialDept\AtpClient\Data;
 
-class StrongRef
+use Illuminate\Contracts\Support\Arrayable;
+
+/**
+ * @implements Arrayable<string, string>
+ */
+class StrongRef implements Arrayable
 {
     public function __construct(
         public readonly string $uri,
