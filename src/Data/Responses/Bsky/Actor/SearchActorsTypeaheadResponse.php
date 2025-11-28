@@ -2,10 +2,14 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Bsky\Actor;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\App\Bsky\Actor\Defs\ProfileViewBasic;
 
-class SearchActorsTypeaheadResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class SearchActorsTypeaheadResponse implements Arrayable
 {
     /**
      * @param  Collection<int, ProfileViewBasic>  $actors
@@ -21,5 +25,12 @@ class SearchActorsTypeaheadResponse
                 fn (array $actor) => ProfileViewBasic::fromArray($actor)
             ),
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'actors' => $this->actors->map(fn (ProfileViewBasic $a) => $a->toArray())->all(),
+        ];
     }
 }
