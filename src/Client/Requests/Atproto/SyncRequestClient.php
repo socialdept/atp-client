@@ -2,6 +2,7 @@
 
 namespace SocialDept\AtpClient\Client\Requests\Atproto;
 
+use BackedEnum;
 use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Atproto\Sync\GetRepoStatusResponse;
@@ -90,8 +91,10 @@ class SyncRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/com-atproto-sync-get-record
      */
     #[RequiresScope(Scope::Atproto, granular: 'rpc:com.atproto.sync.getRecord')]
-    public function getRecord(string $did, string $collection, string $rkey): Response
+    public function getRecord(string $did, string|BackedEnum $collection, string $rkey): Response
     {
+        $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
+
         return $this->atp->client->get(
             endpoint: AtprotoSync::GetRecord,
             params: compact('did', 'collection', 'rkey')

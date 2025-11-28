@@ -2,6 +2,7 @@
 
 namespace SocialDept\AtpClient\Client\Public\Requests\Atproto;
 
+use BackedEnum;
 use SocialDept\AtpClient\Client\Public\Requests\PublicRequest;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\DescribeRepoResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\GetRecordResponse;
@@ -17,10 +18,11 @@ class RepoPublicRequestClient extends PublicRequest
      */
     public function getRecord(
         string $repo,
-        string $collection,
+        string|BackedEnum $collection,
         string $rkey,
         ?string $cid = null
     ): GetRecordResponse {
+        $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $response = $this->atp->client->get(
             endpoint: AtprotoRepo::GetRecord,
             params: compact('repo', 'collection', 'rkey', 'cid')
@@ -36,11 +38,12 @@ class RepoPublicRequestClient extends PublicRequest
      */
     public function listRecords(
         string $repo,
-        string $collection,
+        string|BackedEnum $collection,
         int $limit = 50,
         ?string $cursor = null,
         bool $reverse = false
     ): ListRecordsResponse {
+        $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $response = $this->atp->client->get(
             endpoint: AtprotoRepo::ListRecords,
             params: compact('repo', 'collection', 'limit', 'cursor', 'reverse')

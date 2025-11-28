@@ -2,6 +2,7 @@
 
 namespace SocialDept\AtpClient\Client\Requests\Atproto;
 
+use BackedEnum;
 use Illuminate\Http\UploadedFile;
 use InvalidArgumentException;
 use SocialDept\AtpClient\Attributes\RequiresScope;
@@ -31,12 +32,13 @@ class RepoRequestClient extends Request
     #[RequiresScope(Scope::TransitionGeneric, description: 'Create records in repository')]
     public function createRecord(
         string $repo,
-        string $collection,
+        string|BackedEnum $collection,
         array $record,
         ?string $rkey = null,
         bool $validate = true,
         ?string $swapCommit = null
     ): CreateRecordResponse {
+        $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $this->checkCollectionScope($collection, 'create');
 
         $response = $this->atp->client->post(
@@ -60,11 +62,12 @@ class RepoRequestClient extends Request
     #[RequiresScope(Scope::TransitionGeneric, description: 'Delete records from repository')]
     public function deleteRecord(
         string $repo,
-        string $collection,
+        string|BackedEnum $collection,
         string $rkey,
         ?string $swapRecord = null,
         ?string $swapCommit = null
     ): DeleteRecordResponse {
+        $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $this->checkCollectionScope($collection, 'delete');
 
         $response = $this->atp->client->post(
@@ -88,13 +91,14 @@ class RepoRequestClient extends Request
     #[RequiresScope(Scope::TransitionGeneric, description: 'Update records in repository')]
     public function putRecord(
         string $repo,
-        string $collection,
+        string|BackedEnum $collection,
         string $rkey,
         array $record,
         bool $validate = true,
         ?string $swapRecord = null,
         ?string $swapCommit = null
     ): PutRecordResponse {
+        $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $this->checkCollectionScope($collection, 'update');
 
         $response = $this->atp->client->post(
@@ -118,10 +122,11 @@ class RepoRequestClient extends Request
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
     public function getRecord(
         string $repo,
-        string $collection,
+        string|BackedEnum $collection,
         string $rkey,
         ?string $cid = null
     ): GetRecordResponse {
+        $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $response = $this->atp->client->get(
             endpoint: AtprotoRepo::GetRecord,
             params: compact('repo', 'collection', 'rkey', 'cid')
@@ -140,11 +145,12 @@ class RepoRequestClient extends Request
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.listRecords')]
     public function listRecords(
         string $repo,
-        string $collection,
+        string|BackedEnum $collection,
         int $limit = 50,
         ?string $cursor = null,
         bool $reverse = false
     ): ListRecordsResponse {
+        $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $response = $this->atp->client->get(
             endpoint: AtprotoRepo::ListRecords,
             params: compact('repo', 'collection', 'limit', 'cursor', 'reverse')
