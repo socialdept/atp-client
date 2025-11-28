@@ -10,7 +10,10 @@ class LabelerPublicRequestClient extends PublicRequest
 {
     public function getServices(array $dids, bool $detailed = false): GetServicesResponse
     {
-        $response = $this->atp->client->get(BskyLabeler::GetServices, compact('dids', 'detailed'));
+        $response = $this->atp->client->get(
+            endpoint: BskyLabeler::GetServices,
+            params: compact('dids', 'detailed')
+        );
 
         return GetServicesResponse::fromArray($response->json(), $detailed);
     }

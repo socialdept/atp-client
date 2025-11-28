@@ -14,35 +14,50 @@ class ActorPublicRequestClient extends PublicRequest
 {
     public function getProfile(string $actor): ProfileViewDetailed
     {
-        $response = $this->atp->client->get(BskyActor::GetProfile, compact('actor'));
+        $response = $this->atp->client->get(
+            endpoint: BskyActor::GetProfile,
+            params: compact('actor')
+        );
 
         return ProfileViewDetailed::fromArray($response->json());
     }
 
     public function getProfiles(array $actors): GetProfilesResponse
     {
-        $response = $this->atp->client->get(BskyActor::GetProfiles, compact('actors'));
+        $response = $this->atp->client->get(
+            endpoint: BskyActor::GetProfiles,
+            params: compact('actors')
+        );
 
         return GetProfilesResponse::fromArray($response->json());
     }
 
     public function getSuggestions(int $limit = 50, ?string $cursor = null): GetSuggestionsResponse
     {
-        $response = $this->atp->client->get(BskyActor::GetSuggestions, compact('limit', 'cursor'));
+        $response = $this->atp->client->get(
+            endpoint: BskyActor::GetSuggestions,
+            params: compact('limit', 'cursor')
+        );
 
         return GetSuggestionsResponse::fromArray($response->json());
     }
 
     public function searchActors(string $q, int $limit = 25, ?string $cursor = null): SearchActorsResponse
     {
-        $response = $this->atp->client->get(BskyActor::SearchActors, compact('q', 'limit', 'cursor'));
+        $response = $this->atp->client->get(
+            endpoint: BskyActor::SearchActors,
+            params: compact('q', 'limit', 'cursor')
+        );
 
         return SearchActorsResponse::fromArray($response->json());
     }
 
     public function searchActorsTypeahead(string $q, int $limit = 10): SearchActorsTypeaheadResponse
     {
-        $response = $this->atp->client->get(BskyActor::SearchActorsTypeahead, compact('q', 'limit'));
+        $response = $this->atp->client->get(
+            endpoint: BskyActor::SearchActorsTypeahead,
+            params: compact('q', 'limit')
+        );
 
         return SearchActorsTypeaheadResponse::fromArray($response->json());
     }

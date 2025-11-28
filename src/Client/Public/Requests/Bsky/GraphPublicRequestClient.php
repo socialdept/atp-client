@@ -18,63 +18,90 @@ class GraphPublicRequestClient extends PublicRequest
 {
     public function getFollowers(string $actor, int $limit = 50, ?string $cursor = null): GetFollowersResponse
     {
-        $response = $this->atp->client->get(BskyGraph::GetFollowers, compact('actor', 'limit', 'cursor'));
+        $response = $this->atp->client->get(
+            endpoint: BskyGraph::GetFollowers,
+            params: compact('actor', 'limit', 'cursor')
+        );
 
         return GetFollowersResponse::fromArray($response->json());
     }
 
     public function getFollows(string $actor, int $limit = 50, ?string $cursor = null): GetFollowsResponse
     {
-        $response = $this->atp->client->get(BskyGraph::GetFollows, compact('actor', 'limit', 'cursor'));
+        $response = $this->atp->client->get(
+            endpoint: BskyGraph::GetFollows,
+            params: compact('actor', 'limit', 'cursor')
+        );
 
         return GetFollowsResponse::fromArray($response->json());
     }
 
     public function getKnownFollowers(string $actor, int $limit = 50, ?string $cursor = null): GetKnownFollowersResponse
     {
-        $response = $this->atp->client->get(BskyGraph::GetKnownFollowers, compact('actor', 'limit', 'cursor'));
+        $response = $this->atp->client->get(
+            endpoint: BskyGraph::GetKnownFollowers,
+            params: compact('actor', 'limit', 'cursor')
+        );
 
         return GetKnownFollowersResponse::fromArray($response->json());
     }
 
     public function getList(string $list, int $limit = 50, ?string $cursor = null): GetListResponse
     {
-        $response = $this->atp->client->get(BskyGraph::GetList, compact('list', 'limit', 'cursor'));
+        $response = $this->atp->client->get(
+            endpoint: BskyGraph::GetList,
+            params: compact('list', 'limit', 'cursor')
+        );
 
         return GetListResponse::fromArray($response->json());
     }
 
     public function getLists(string $actor, int $limit = 50, ?string $cursor = null): GetListsResponse
     {
-        $response = $this->atp->client->get(BskyGraph::GetLists, compact('actor', 'limit', 'cursor'));
+        $response = $this->atp->client->get(
+            endpoint: BskyGraph::GetLists,
+            params: compact('actor', 'limit', 'cursor')
+        );
 
         return GetListsResponse::fromArray($response->json());
     }
 
     public function getRelationships(string $actor, array $others = []): GetRelationshipsResponse
     {
-        $response = $this->atp->client->get(BskyGraph::GetRelationships, compact('actor', 'others'));
+        $response = $this->atp->client->get(
+            endpoint: BskyGraph::GetRelationships,
+            params: compact('actor', 'others')
+        );
 
         return GetRelationshipsResponse::fromArray($response->json());
     }
 
     public function getStarterPack(string $starterPack): StarterPackView
     {
-        $response = $this->atp->client->get(BskyGraph::GetStarterPack, compact('starterPack'));
+        $response = $this->atp->client->get(
+            endpoint: BskyGraph::GetStarterPack,
+            params: compact('starterPack')
+        );
 
         return StarterPackView::fromArray($response->json()['starterPack']);
     }
 
     public function getStarterPacks(array $uris): GetStarterPacksResponse
     {
-        $response = $this->atp->client->get(BskyGraph::GetStarterPacks, compact('uris'));
+        $response = $this->atp->client->get(
+            endpoint: BskyGraph::GetStarterPacks,
+            params: compact('uris')
+        );
 
         return GetStarterPacksResponse::fromArray($response->json());
     }
 
     public function getSuggestedFollowsByActor(string $actor): GetSuggestedFollowsByActorResponse
     {
-        $response = $this->atp->client->get(BskyGraph::GetSuggestedFollowsByActor, compact('actor'));
+        $response = $this->atp->client->get(
+            endpoint: BskyGraph::GetSuggestedFollowsByActor,
+            params: compact('actor')
+        );
 
         return GetSuggestedFollowsByActorResponse::fromArray($response->json());
     }

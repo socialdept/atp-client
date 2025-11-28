@@ -22,8 +22,8 @@ class RepoPublicRequestClient extends PublicRequest
         ?string $cid = null
     ): GetRecordResponse {
         $response = $this->atp->client->get(
-            AtprotoRepo::GetRecord,
-            compact('repo', 'collection', 'rkey', 'cid')
+            endpoint: AtprotoRepo::GetRecord,
+            params: compact('repo', 'collection', 'rkey', 'cid')
         );
 
         return GetRecordResponse::fromArray($response->json());
@@ -42,8 +42,8 @@ class RepoPublicRequestClient extends PublicRequest
         bool $reverse = false
     ): ListRecordsResponse {
         $response = $this->atp->client->get(
-            AtprotoRepo::ListRecords,
-            compact('repo', 'collection', 'limit', 'cursor', 'reverse')
+            endpoint: AtprotoRepo::ListRecords,
+            params: compact('repo', 'collection', 'limit', 'cursor', 'reverse')
         );
 
         return ListRecordsResponse::fromArray($response->json());
@@ -57,8 +57,8 @@ class RepoPublicRequestClient extends PublicRequest
     public function describeRepo(string $repo): DescribeRepoResponse
     {
         $response = $this->atp->client->get(
-            AtprotoRepo::DescribeRepo,
-            compact('repo')
+            endpoint: AtprotoRepo::DescribeRepo,
+            params: compact('repo')
         );
 
         return DescribeRepoResponse::fromArray($response->json());

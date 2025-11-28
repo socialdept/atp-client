@@ -9,7 +9,10 @@ class IdentityPublicRequestClient extends PublicRequest
 {
     public function resolveHandle(string $handle): string
     {
-        $response = $this->atp->client->get(AtprotoIdentity::ResolveHandle, compact('handle'));
+        $response = $this->atp->client->get(
+            endpoint: AtprotoIdentity::ResolveHandle,
+            params: compact('handle')
+        );
 
         return $response->json()['did'];
     }
