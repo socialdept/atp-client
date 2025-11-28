@@ -2,20 +2,22 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Bsky\Graph;
 
+use Illuminate\Support\Collection;
+
 class GetRelationshipsResponse
 {
     /**
-     * @param  array<mixed>  $relationships  Array of Relationship or NotFoundActor objects
+     * @param  Collection<int, mixed>  $relationships  Collection of Relationship or NotFoundActor objects
      */
     public function __construct(
-        public readonly array $relationships,
+        public readonly Collection $relationships,
         public readonly ?string $actor = null,
     ) {}
 
     public static function fromArray(array $data): self
     {
         return new self(
-            relationships: $data['relationships'] ?? [],
+            relationships: collect($data['relationships'] ?? []),
             actor: $data['actor'] ?? null,
         );
     }
