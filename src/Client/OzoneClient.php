@@ -46,4 +46,9 @@ class OzoneClient
     {
         return AtpClient::class;
     }
+
+    public function root(): AtpClient
+    {
+        return $this->atp;
+    }
 }

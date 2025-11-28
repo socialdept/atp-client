@@ -10,6 +10,6 @@ class PublicRequest
 
     public function __construct($parent)
     {
-        $this->atp = $parent->atp;
+        $this->atp = $parent->root();
     }
 }

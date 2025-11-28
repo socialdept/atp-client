@@ -30,4 +30,9 @@ class AtprotoPublicClient
     {
         return AtpPublicClient::class;
     }
+
+    public function root(): AtpPublicClient
+    {
+        return $this->atp;
+    }
 }

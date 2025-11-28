@@ -40,4 +40,9 @@ class ChatClient
     {
         return AtpClient::class;
     }
+
+    public function root(): AtpClient
+    {
+        return $this->atp;
+    }
 }

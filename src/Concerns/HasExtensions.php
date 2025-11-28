@@ -110,4 +110,15 @@ trait HasExtensions
     {
         return static::hasExtension($name);
     }
+
+    /**
+     * Get the root client instance.
+     *
+     * For root clients, this returns itself.
+     * Domain clients override this to return their parent.
+     */
+    public function root(): static
+    {
+        return $this;
+    }
 }
