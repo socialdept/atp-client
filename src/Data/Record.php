@@ -8,8 +8,9 @@ use Illuminate\Contracts\Support\Arrayable;
  * Generic wrapper for AT Protocol records.
  *
  * @template T
+ * @implements Arrayable<string, mixed>
  */
-class Record
+class Record implements Arrayable
 {
     /**
      * @param  T  $value
