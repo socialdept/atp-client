@@ -2,9 +2,13 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Atproto\Repo;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 
-class ListRecordsResponse
+/**
+ * @implements Arrayable<string, mixed>
+ */
+class ListRecordsResponse implements Arrayable
 {
     /**
      * @param  Collection<int, array{uri: string, cid: string, value: mixed}>  $records
@@ -20,5 +24,13 @@ class ListRecordsResponse
             records: collect($data['records'] ?? []),
             cursor: $data['cursor'] ?? null,
         );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'records' => $this->records->all(),
+            'cursor' => $this->cursor,
+        ];
     }
 }
