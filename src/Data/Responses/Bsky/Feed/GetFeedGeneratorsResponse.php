@@ -2,23 +2,23 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Bsky\Feed;
 
+use Illuminate\Support\Collection;
 use SocialDept\AtpSchema\Generated\App\Bsky\Feed\Defs\GeneratorView;
 
 class GetFeedGeneratorsResponse
 {
     /**
-     * @param  array<GeneratorView>  $feeds
+     * @param  Collection<int, GeneratorView>  $feeds
      */
     public function __construct(
-        public readonly array $feeds,
+        public readonly Collection $feeds,
     ) {}
 
     public static function fromArray(array $data): self
     {
         return new self(
-            feeds: array_map(
-                fn (array $feed) => GeneratorView::fromArray($feed),
-                $data['feeds'] ?? []
+            feeds: collect($data['feeds'] ?? [])->map(
+                fn (array $feed) => GeneratorView::fromArray($feed)
             ),
         );
     }

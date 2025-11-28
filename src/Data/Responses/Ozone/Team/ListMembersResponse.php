@@ -2,20 +2,22 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Ozone\Team;
 
+use Illuminate\Support\Collection;
+
 class ListMembersResponse
 {
     /**
-     * @param  array<array<string, mixed>>  $members  Array of team member objects
+     * @param  Collection<int, array<string, mixed>>  $members  Collection of team member objects
      */
     public function __construct(
-        public readonly array $members,
+        public readonly Collection $members,
         public readonly ?string $cursor = null,
     ) {}
 
     public static function fromArray(array $data): self
     {
         return new self(
-            members: $data['members'] ?? [],
+            members: collect($data['members'] ?? []),
             cursor: $data['cursor'] ?? null,
         );
     }

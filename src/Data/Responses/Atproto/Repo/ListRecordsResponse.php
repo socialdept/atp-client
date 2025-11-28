@@ -2,20 +2,22 @@
 
 namespace SocialDept\AtpClient\Data\Responses\Atproto\Repo;
 
+use Illuminate\Support\Collection;
+
 class ListRecordsResponse
 {
     /**
-     * @param  array<array{uri: string, cid: string, value: mixed}>  $records
+     * @param  Collection<int, array{uri: string, cid: string, value: mixed}>  $records
      */
     public function __construct(
-        public readonly array $records,
+        public readonly Collection $records,
         public readonly ?string $cursor = null,
     ) {}
 
     public static function fromArray(array $data): self
     {
         return new self(
-            records: $data['records'] ?? [],
+            records: collect($data['records'] ?? []),
             cursor: $data['cursor'] ?? null,
         );
     }
