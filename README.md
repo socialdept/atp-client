@@ -946,11 +946,46 @@ ATP_SCOPE_FAILURE_ACTION=abort
 ATP_SCOPE_REDIRECT=/login
 ```
 
+## Extending the Client
+
+Add custom functionality to AtpClient by registering your own domain clients or request clients. Extensions are lazily instantiated on first access.
+
+### Register Extensions
+
+Register extensions in your service provider's `boot()` method:
+
+```php
+use SocialDept\AtpClient\AtpClient;
+
+// Add a new domain client: $client->analytics
+AtpClient::extend('analytics', fn(AtpClient $atp) => new AnalyticsClient($atp));
+
+// Add to an existing domain: $client->bsky->metrics
+AtpClient::extendDomain('bsky', 'metrics', fn($bsky) => new MetricsClient($bsky));
+```
+
+### Usage
+
+```php
+$client = Atp::as('user.bsky.social');
+
+$client->analytics->trackEvent('post_created');
+$client->bsky->metrics->getEngagement();
+```
+
+For complete documentation including creating custom clients, testing, and advanced patterns, see [docs/extensions.md](docs/extensions.md).
+
 ## Available Commands
 
 ```bash
 # Generate OAuth private key
 php artisan atp-client:generate-key
+
+# Create a domain client extension
+php artisan make:atp-client AnalyticsClient
+
+# Create a request client extension for an existing domain
+php artisan make:atp-request MetricsClient --domain=bsky
 ```
 
 ## Requirements
@@ -971,6 +1006,7 @@ composer test
 - [AT Protocol Documentation](https://atproto.com/)
 - [Bluesky API Docs](https://docs.bsky.app/)
 - [CRYPTO.md](CRYPTO.md) - Cryptographic implementation details
+- [docs/extensions.md](docs/extensions.md) - Client extensions guide
 
 ## Support & Contributing
 

@@ -16,6 +16,8 @@ use SocialDept\AtpClient\Auth\TokenRefresher;
 use SocialDept\AtpClient\Enums\ScopeEnforcementLevel;
 use SocialDept\AtpClient\Http\Middleware\RequiresScopeMiddleware;
 use SocialDept\AtpClient\Console\GenerateOAuthKeyCommand;
+use SocialDept\AtpClient\Console\MakeAtpClientCommand;
+use SocialDept\AtpClient\Console\MakeAtpRequestCommand;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Http\Controllers\ClientMetadataController;
@@ -140,6 +142,8 @@ class AtpClientServiceProvider extends ServiceProvider
 
             $this->commands([
                 GenerateOAuthKeyCommand::class,
+                MakeAtpClientCommand::class,
+                MakeAtpRequestCommand::class,
             ]);
         }
 
