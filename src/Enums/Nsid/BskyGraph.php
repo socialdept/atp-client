@@ -2,8 +2,11 @@
 
 namespace SocialDept\AtpClient\Enums\Nsid;
 
+use SocialDept\AtpClient\Enums\Nsid\Concerns\HasScopeHelpers;
+
 enum BskyGraph: string
 {
+    use HasScopeHelpers;
     case GetFollowers = 'app.bsky.graph.getFollowers';
     case GetFollows = 'app.bsky.graph.getFollows';
     case GetKnownFollowers = 'app.bsky.graph.getKnownFollowers';

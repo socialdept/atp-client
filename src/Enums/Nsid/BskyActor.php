@@ -2,8 +2,11 @@
 
 namespace SocialDept\AtpClient\Enums\Nsid;
 
+use SocialDept\AtpClient\Enums\Nsid\Concerns\HasScopeHelpers;
+
 enum BskyActor: string
 {
+    use HasScopeHelpers;
     case GetProfile = 'app.bsky.actor.getProfile';
     case GetProfiles = 'app.bsky.actor.getProfiles';
     case GetSuggestions = 'app.bsky.actor.getSuggestions';

@@ -2,8 +2,11 @@
 
 namespace SocialDept\AtpClient\Enums\Nsid;
 
+use SocialDept\AtpClient\Enums\Nsid\Concerns\HasScopeHelpers;
+
 enum BskyFeed: string
 {
+    use HasScopeHelpers;
     case DescribeFeedGenerator = 'app.bsky.feed.describeFeedGenerator';
     case GetAuthorFeed = 'app.bsky.feed.getAuthorFeed';
     case GetActorFeeds = 'app.bsky.feed.getActorFeeds';

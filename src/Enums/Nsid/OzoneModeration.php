@@ -2,8 +2,11 @@
 
 namespace SocialDept\AtpClient\Enums\Nsid;
 
+use SocialDept\AtpClient\Enums\Nsid\Concerns\HasScopeHelpers;
+
 enum OzoneModeration: string
 {
+    use HasScopeHelpers;
     case GetEvent = 'tools.ozone.moderation.getEvent';
     case GetEvents = 'tools.ozone.moderation.getEvents';
     case GetRecord = 'tools.ozone.moderation.getRecord';

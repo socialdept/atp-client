@@ -2,8 +2,11 @@
 
 namespace SocialDept\AtpClient\Enums\Nsid;
 
+use SocialDept\AtpClient\Enums\Nsid\Concerns\HasScopeHelpers;
+
 enum ChatConvo: string
 {
+    use HasScopeHelpers;
     case GetConvo = 'chat.bsky.convo.getConvo';
     case GetConvoForMembers = 'chat.bsky.convo.getConvoForMembers';
     case ListConvos = 'chat.bsky.convo.listConvos';

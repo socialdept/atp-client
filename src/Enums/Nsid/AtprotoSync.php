@@ -2,8 +2,11 @@
 
 namespace SocialDept\AtpClient\Enums\Nsid;
 
+use SocialDept\AtpClient\Enums\Nsid\Concerns\HasScopeHelpers;
+
 enum AtprotoSync: string
 {
+    use HasScopeHelpers;
     case GetBlob = 'com.atproto.sync.getBlob';
     case GetRepo = 'com.atproto.sync.getRepo';
     case ListRepos = 'com.atproto.sync.listRepos';
