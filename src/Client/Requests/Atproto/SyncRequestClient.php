@@ -7,6 +7,7 @@ use SocialDept\AtpClient\Attributes\RequiresScope;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Atproto\Sync\GetRepoStatusResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Sync\ListBlobsResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Sync\ListReposByCollectionResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Sync\ListReposResponse;
 use SocialDept\AtpClient\Enums\Nsid\AtprotoSync;
 use SocialDept\AtpClient\Enums\Scope;
@@ -63,6 +64,29 @@ class SyncRequestClient extends Request
         );
 
         return ListReposResponse::fromArray($response->json());
+    }
+
+    /**
+     * Enumerates all the DIDs with records in a specific collection
+     *
+     * @requires atproto (rpc:com.atproto.sync.listReposByCollection)
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-sync-list-repos-by-collection
+     */
+    #[RequiresScope(Scope::Atproto, granular: 'rpc:com.atproto.sync.listReposByCollection')]
+    public function listReposByCollection(
+        string|BackedEnum $collection,
+        int $limit = 500,
+        ?string $cursor = null
+    ): ListReposByCollectionResponse {
+        $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
+
+        $response = $this->atp->client->get(
+            endpoint: AtprotoSync::ListReposByCollection,
+            params: compact('collection', 'limit', 'cursor')
+        );
+
+        return ListReposByCollectionResponse::fromArray($response->json());
     }
 
     /**
