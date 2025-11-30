@@ -14,8 +14,6 @@ AtpClient provides an extension system that allows you to add custom functionali
 | `AtpClient::hasDomainExtension($domain, $name)` | Check if a request client extension is registered |
 | `AtpClient::flushExtensions()` | Clear all extensions (useful for testing) |
 
-The same methods are available on `AtpPublicClient` for unauthenticated extensions.
-
 ### Extension Types
 
 | Type | Access Pattern | Use Case |
@@ -31,14 +29,8 @@ Quickly scaffold extension classes using artisan commands:
 # Create a domain client extension
 php artisan make:atp-client AnalyticsClient
 
-# Create a public domain client extension
-php artisan make:atp-client DiscoverClient --public
-
 # Create a request client extension for an existing domain
 php artisan make:atp-request MetricsClient --domain=bsky
-
-# Create a public request client extension
-php artisan make:atp-request TrendingClient --domain=bsky --public
 ```
 
 The generated files are placed in configurable directories. You can customize these paths in `config/client.php`:
@@ -46,9 +38,7 @@ The generated files are placed in configurable directories. You can customize th
 ```php
 'generators' => [
     'client_path' => 'app/Services/Clients',
-    'client_public_path' => 'app/Services/Clients/Public',
     'request_path' => 'app/Services/Clients/Requests',
-    'request_public_path' => 'app/Services/Clients/Public/Requests',
 ],
 ```
 
@@ -225,37 +215,21 @@ $engagement = $client->bsky->metrics->getPostEngagement('at://did:plc:.../app.bs
 $authorMetrics = $client->bsky->metrics->getAuthorMetrics('someone.bsky.social');
 ```
 
-## Public Client Extensions
+## Public vs Authenticated Mode
 
-The `AtpPublicClient` supports the same extension system for unauthenticated API access:
-
-```php
-use SocialDept\AtpClient\Client\Public\AtpPublicClient;
-
-// Domain client extension
-AtpPublicClient::extend('discover', fn($atp) => new DiscoverClient($atp));
-
-// Request client extension on existing domain
-AtpPublicClient::extendDomain('bsky', 'trending', fn($bsky) => new TrendingClient($bsky));
-```
-
-For public request clients, extend `PublicRequest` instead of `Request`:
+The `AtpClient` class works in both public and authenticated modes. Both `Atp::public()` and `Atp::as()` return the same `AtpClient` class:
 
 ```php
-<?php
+// Public mode - no authentication
+$publicClient = Atp::public('https://public.api.bsky.app');
+$publicClient->bsky->actor->getProfile('someone.bsky.social');
 
-namespace App\Atp;
-
-use SocialDept\AtpClient\Client\Public\Requests\PublicRequest;
-
-class TrendingPublicClient extends PublicRequest
-{
-    public function getPopularFeeds(int $limit = 10): array
-    {
-        return $this->atp->bsky->feed->getPopularFeedGenerators($limit)->feeds;
-    }
-}
+// Authenticated mode - with session
+$authClient = Atp::as('did:plc:xxx');
+$authClient->bsky->actor->getProfile('someone.bsky.social');
 ```
+
+Extensions registered on `AtpClient` work in both modes. The underlying HTTP layer automatically handles authentication based on whether a session is present.
 
 ## Registering Multiple Extensions
 
@@ -272,9 +246,6 @@ public function boot(): void
     AtpClient::extendDomain('bsky', 'metrics', fn($bsky) => new BskyMetricsClient($bsky));
     AtpClient::extendDomain('bsky', 'lists', fn($bsky) => new BskyListsClient($bsky));
     AtpClient::extendDomain('atproto', 'backup', fn($atproto) => new RepoBackupClient($atproto));
-
-    // Public client extensions
-    AtpPublicClient::extend('discover', fn($atp) => new DiscoverClient($atp));
 }
 ```
 
@@ -451,6 +422,35 @@ class DashboardClient
     }
 }
 ```
+
+### Documenting Scope Requirements
+
+Use the `#[RequiresScope]` attribute to document which OAuth scopes your extension methods require. This helps with documentation and enables scope checking in authenticated mode:
+
+```php
+use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Enums\Scope;
+
+class BskyMetricsClient extends Request
+{
+    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:app.bsky.feed.getTimeline')]
+    public function getTimelineMetrics(): array
+    {
+        $timeline = $this->atp->bsky->feed->getTimeline();
+        // Process and return metrics...
+    }
+
+    // Methods without #[RequiresScope] work in both public and authenticated modes
+    public function getPublicPostMetrics(string $uri): array
+    {
+        $thread = $this->atp->bsky->feed->getPostThread($uri);
+        // Process and return metrics...
+    }
+}
+```
+
+Methods with `#[RequiresScope]` indicate they require authentication, while methods without it can work in public mode. See [scopes.md](scopes.md) for full documentation on scope handling.
 
 ## Available Domains
 
