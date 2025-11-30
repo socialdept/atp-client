@@ -136,10 +136,7 @@ class PostRecordClient extends Request
             cid: $cid
         );
 
-        return Record::fromArray(
-            data: $response->toArray(),
-            transformer: fn($value) => PostView::fromArray($response->value)
-        );
+        return Record::fromArrayRaw($response->toArray());
     }
 
 }
