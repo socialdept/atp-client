@@ -13,6 +13,7 @@ use SocialDept\AtpClient\Concerns\HasDomainExtensions;
 class BskyClient
 {
     use HasDomainExtensions;
+
     /**
      * The parent AtpClient instance
      */
@@ -27,6 +28,16 @@ class BskyClient
      * Actor operations (app.bsky.actor.*)
      */
     public Bsky\ActorRequestClient $actor;
+
+    /**
+     * Graph operations (app.bsky.graph.*)
+     */
+    public Bsky\GraphRequestClient $graph;
+
+    /**
+     * Labeler operations (app.bsky.labeler.*)
+     */
+    public Bsky\LabelerRequestClient $labeler;
 
     /**
      * Post record client
@@ -53,6 +64,8 @@ class BskyClient
         $this->atp = $parent;
         $this->feed = new Bsky\FeedRequestClient($this);
         $this->actor = new Bsky\ActorRequestClient($this);
+        $this->graph = new Bsky\GraphRequestClient($this);
+        $this->labeler = new Bsky\LabelerRequestClient($this);
         $this->post = new PostRecordClient($this);
         $this->profile = new ProfileRecordClient($this);
         $this->like = new LikeRecordClient($this);
