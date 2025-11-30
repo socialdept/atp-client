@@ -77,7 +77,6 @@ class PostRecordClient extends Request
         }
 
         return $this->atp->atproto->repo->createRecord(
-            repo: $this->atp->client->session()->did(),
             collection: BskyFeed::Post,
             record: $record
         );
@@ -98,7 +97,6 @@ class PostRecordClient extends Request
         }
 
         return $this->atp->atproto->repo->putRecord(
-            repo: $this->atp->client->session()->did(),
             collection: BskyFeed::Post,
             rkey: $rkey,
             record: $record
@@ -115,7 +113,6 @@ class PostRecordClient extends Request
     public function delete(string $rkey): DeleteRecordResponse
     {
         return $this->atp->atproto->repo->deleteRecord(
-            repo: $this->atp->client->session()->did(),
             collection: BskyFeed::Post,
             rkey: $rkey
         );

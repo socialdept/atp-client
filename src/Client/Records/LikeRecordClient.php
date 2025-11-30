@@ -32,7 +32,6 @@ class LikeRecordClient extends Request
         ];
 
         return $this->atp->atproto->repo->createRecord(
-            repo: $this->atp->client->session()->did(),
             collection: BskyFeed::Like,
             record: $record
         );
@@ -48,7 +47,6 @@ class LikeRecordClient extends Request
     public function delete(string $rkey): DeleteRecordResponse
     {
         return $this->atp->atproto->repo->deleteRecord(
-            repo: $this->atp->client->session()->did(),
             collection: BskyFeed::Like,
             rkey: $rkey
         );

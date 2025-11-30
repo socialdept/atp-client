@@ -31,7 +31,6 @@ class FollowRecordClient extends Request
         ];
 
         return $this->atp->atproto->repo->createRecord(
-            repo: $this->atp->client->session()->did(),
             collection: BskyGraph::Follow,
             record: $record
         );
@@ -47,7 +46,6 @@ class FollowRecordClient extends Request
     public function delete(string $rkey): DeleteRecordResponse
     {
         return $this->atp->atproto->repo->deleteRecord(
-            repo: $this->atp->client->session()->did(),
             collection: BskyGraph::Follow,
             rkey: $rkey
         );

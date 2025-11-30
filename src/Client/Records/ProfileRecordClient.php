@@ -26,7 +26,6 @@ class ProfileRecordClient extends Request
         }
 
         return $this->atp->atproto->repo->putRecord(
-            repo: $this->atp->client->session()->did(),
             collection: BskyActor::Profile,
             rkey: 'self', // Profile records always use 'self' as rkey
             record: $profile
