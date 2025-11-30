@@ -45,8 +45,8 @@
         }
     },
     "scripts": {
-        "test": "vendor/bin/pest",
-        "test-coverage": "vendor/bin/pest --coverage",
+        "test": "vendor/bin/phpunit",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage",
         "format": "vendor/bin/php-cs-fixer fix"
     },
     "extra": {
@@ -62,8 +62,6 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "config": {
-        "allow-plugins": {
-            "pestphp/pest-plugin": false
-        }
+        "sort-packages": true
     }
 }
