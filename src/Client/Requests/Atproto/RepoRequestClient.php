@@ -32,13 +32,13 @@ class RepoRequestClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, description: 'Create records in repository')]
     public function createRecord(
-        string $repo,
         string|BackedEnum $collection,
         array $record,
         ?string $rkey = null,
         bool $validate = true,
         ?string $swapCommit = null
     ): CreateRecordResponse {
+        $repo = $this->atp->client->session()->did();
         $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $this->checkCollectionScope($collection, 'create');
 
@@ -62,12 +62,12 @@ class RepoRequestClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, description: 'Delete records from repository')]
     public function deleteRecord(
-        string $repo,
         string|BackedEnum $collection,
         string $rkey,
         ?string $swapRecord = null,
         ?string $swapCommit = null
     ): DeleteRecordResponse {
+        $repo = $this->atp->client->session()->did();
         $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $this->checkCollectionScope($collection, 'delete');
 
@@ -91,7 +91,6 @@ class RepoRequestClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, description: 'Update records in repository')]
     public function putRecord(
-        string $repo,
         string|BackedEnum $collection,
         string $rkey,
         array $record,
@@ -99,6 +98,7 @@ class RepoRequestClient extends Request
         ?string $swapRecord = null,
         ?string $swapCommit = null
     ): PutRecordResponse {
+        $repo = $this->atp->client->session()->did();
         $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $this->checkCollectionScope($collection, 'update');
 
