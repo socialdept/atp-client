@@ -16,11 +16,11 @@ use SocialDept\AtpSchema\Facades\Schema;
 
 trait HasHttp
 {
-    protected SessionManager $sessions;
+    protected ?SessionManager $sessions = null;
 
-    protected string $did;
+    protected ?string $did = null;
 
-    protected DPoPClient $dpopClient;
+    protected ?DPoPClient $dpopClient = null;
 
     protected ?ScopeChecker $scopeChecker = null;
 
