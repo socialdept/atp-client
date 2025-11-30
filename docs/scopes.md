@@ -1,6 +1,8 @@
 # OAuth Scopes
 
-The AT Protocol uses OAuth scopes to control what actions an application can perform on behalf of a user. AtpClient provides tools for documenting, checking, and enforcing scope requirements.
+The AT Protocol uses OAuth scopes to control what actions an application can perform on behalf of a user. AtpClient provides attributes for documenting scope requirements on endpoints.
+
+> **Note:** The `#[ScopedEndpoint]` and `#[PublicEndpoint]` attributes currently serve as documentation only. Runtime scope validation and enforcement will be implemented in a future release. Using these attributes correctly now ensures forward compatibility.
 
 ## Quick Reference
 
@@ -75,7 +77,7 @@ The AT Protocol is moving toward granular scopes that provide fine-grained acces
 
 ## The ScopedEndpoint Attribute
 
-The `#[ScopedEndpoint]` attribute documents and optionally enforces scope requirements on methods.
+The `#[ScopedEndpoint]` attribute documents scope requirements on methods that require authentication.
 
 ### Basic Usage
 
@@ -154,7 +156,9 @@ public function getProfile(string $actor): ProfileViewDetailed
 }
 ```
 
-## Scope Enforcement
+## Scope Enforcement (Planned)
+
+> **Coming Soon:** Runtime scope enforcement is not yet implemented. The following documentation describes planned functionality for a future release.
 
 ### Configuration
 
@@ -220,7 +224,9 @@ $checker->matchesGranular($session, 'blob:image/*');
 $checker->matchesGranular($session, 'repo:*');
 ```
 
-## Route Middleware
+## Route Middleware (Planned)
+
+> **Coming Soon:** Route middleware is not yet implemented. The following documentation describes planned functionality for a future release.
 
 Protect Laravel routes based on ATP session scopes:
 
@@ -286,25 +292,27 @@ class User extends Authenticatable implements HasAtpSession
 
 ## Public Mode and Scopes
 
-When using `Atp::public()`, no scope checking occurs because there's no authenticated session:
+Methods marked with `#[PublicEndpoint]` can be called without authentication using `Atp::public()`:
 
 ```php
-// Public mode - no authentication, no scopes
+// Public mode - no authentication required
 $client = Atp::public('https://public.api.bsky.app');
-$client->bsky->actor->getProfile('someone.bsky.social');  // Works without scopes
+$client->bsky->actor->getProfile('someone.bsky.social');  // Works without auth
 
-// Authenticated mode - scopes are checked
+// Authenticated mode - for endpoints requiring scopes
 $client = Atp::as($did);
 $client->bsky->feed->getTimeline();  // Requires transition:generic scope
 ```
 
-Methods that work in public mode typically don't have `#[ScopedEndpoint]` attributes, while authenticated-only methods do.
+Methods with `#[PublicEndpoint]` work in both modes, while methods with `#[ScopedEndpoint]` require authentication.
 
-## Exception Handling
+## Exception Handling (Planned)
+
+> **Coming Soon:** These exceptions will be thrown when scope enforcement is implemented in a future release.
 
 ### MissingScopeException
 
-Thrown when required scopes are missing and enforcement is strict:
+Will be thrown when required scopes are missing and enforcement is strict:
 
 ```php
 use SocialDept\AtpClient\Exceptions\MissingScopeException;
@@ -321,7 +329,7 @@ try {
 
 ### ScopeAuthorizationException
 
-Thrown by middleware when route access is denied:
+Will be thrown by middleware when route access is denied:
 
 ```php
 use SocialDept\AtpClient\Exceptions\ScopeAuthorizationException;
