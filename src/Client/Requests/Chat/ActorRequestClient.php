@@ -4,6 +4,7 @@ namespace SocialDept\AtpClient\Client\Requests\Chat;
 
 use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Data\Responses\EmptyResponse;
 use SocialDept\AtpClient\Enums\Nsid\ChatActor;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Http\Response;
@@ -48,10 +49,12 @@ class ActorRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/chat-bsky-actor-delete-account
      */
     #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.actor.deleteAccount')]
-    public function deleteAccount(): void
+    public function deleteAccount(): EmptyResponse
     {
         $this->atp->client->post(
             endpoint: ChatActor::DeleteAccount
         );
+
+        return new EmptyResponse;
     }
 }
