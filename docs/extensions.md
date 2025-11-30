@@ -425,23 +425,23 @@ class DashboardClient
 
 ### Documenting Scope Requirements
 
-Use the `#[RequiresScope]` attribute to document which OAuth scopes your extension methods require. This helps with documentation and enables scope checking in authenticated mode:
+Use the `#[ScopedEndpoint]` attribute to document which OAuth scopes your extension methods require. This helps with documentation and enables scope checking in authenticated mode:
 
 ```php
-use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Enums\Scope;
 
 class BskyMetricsClient extends Request
 {
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:app.bsky.feed.getTimeline')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:app.bsky.feed.getTimeline')]
     public function getTimelineMetrics(): array
     {
         $timeline = $this->atp->bsky->feed->getTimeline();
         // Process and return metrics...
     }
 
-    // Methods without #[RequiresScope] work in both public and authenticated modes
+    // Methods without #[ScopedEndpoint] work in both public and authenticated modes
     public function getPublicPostMetrics(string $uri): array
     {
         $thread = $this->atp->bsky->feed->getPostThread($uri);
@@ -450,7 +450,7 @@ class BskyMetricsClient extends Request
 }
 ```
 
-Methods with `#[RequiresScope]` indicate they require authentication, while methods without it can work in public mode. See [scopes.md](scopes.md) for full documentation on scope handling.
+Methods with `#[ScopedEndpoint]` indicate they require authentication, while methods without it can work in public mode. See [scopes.md](scopes.md) for full documentation on scope handling.
 
 ## Available Domains
 

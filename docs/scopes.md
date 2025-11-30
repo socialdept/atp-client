@@ -23,13 +23,13 @@ Scope::account('email')                                   // Account attribute a
 Scope::identity('handle')                                 // Identity attribute access
 ```
 
-### RequiresScope Attribute
+### ScopedEndpoint Attribute
 
 ```php
-use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Enums\Scope;
 
-#[RequiresScope(Scope::TransitionGeneric)]
+#[ScopedEndpoint(Scope::TransitionGeneric)]
 public function getTimeline(): GetTimelineResponse
 {
     // Method implementation
@@ -73,9 +73,9 @@ The AT Protocol is moving toward granular scopes that provide fine-grained acces
 'identity:handle'                              // Manage handle
 ```
 
-## The RequiresScope Attribute
+## The ScopedEndpoint Attribute
 
-The `#[RequiresScope]` attribute documents and optionally enforces scope requirements on methods.
+The `#[ScopedEndpoint]` attribute documents and optionally enforces scope requirements on methods.
 
 ### Basic Usage
 
@@ -84,13 +84,13 @@ The `#[RequiresScope]` attribute documents and optionally enforces scope require
 
 namespace App\Atp;
 
-use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Enums\Scope;
 
 class CustomClient extends Request
 {
-    #[RequiresScope(Scope::TransitionGeneric)]
+    #[ScopedEndpoint(Scope::TransitionGeneric)]
     public function getTimeline(): array
     {
         return $this->atp->client->get('app.bsky.feed.getTimeline')->json();
@@ -103,7 +103,7 @@ class CustomClient extends Request
 Document the future granular scope that will replace the transition scope:
 
 ```php
-#[RequiresScope(
+#[ScopedEndpoint(
     Scope::TransitionGeneric,
     granular: 'rpc:app.bsky.feed.getTimeline'
 )]
@@ -118,7 +118,7 @@ public function getTimeline(): GetTimelineResponse
 Add a human-readable description for documentation:
 
 ```php
-#[RequiresScope(
+#[ScopedEndpoint(
     Scope::TransitionGeneric,
     granular: 'rpc:app.bsky.feed.getTimeline',
     description: 'Access to the user\'s home timeline'
@@ -134,7 +134,7 @@ public function getTimeline(): GetTimelineResponse
 When a method requires multiple scopes, all must be present:
 
 ```php
-#[RequiresScope([Scope::TransitionGeneric, Scope::TransitionEmail])]
+#[ScopedEndpoint([Scope::TransitionGeneric, Scope::TransitionEmail])]
 public function getEmailPreferences(): array
 {
     // Requires BOTH scopes
@@ -146,8 +146,8 @@ public function getEmailPreferences(): array
 Use multiple attributes for alternative scope requirements:
 
 ```php
-#[RequiresScope(Scope::Atproto)]
-#[RequiresScope(Scope::TransitionGeneric)]
+#[ScopedEndpoint(Scope::Atproto)]
+#[ScopedEndpoint(Scope::TransitionGeneric)]
 public function getProfile(string $actor): ProfileViewDetailed
 {
     // Either scope satisfies the requirement
@@ -298,7 +298,7 @@ $client = Atp::as($did);
 $client->bsky->feed->getTimeline();  // Requires transition:generic scope
 ```
 
-Methods that work in public mode typically don't have `#[RequiresScope]` attributes, while authenticated-only methods do.
+Methods that work in public mode typically don't have `#[ScopedEndpoint]` attributes, while authenticated-only methods do.
 
 ## Exception Handling
 
@@ -339,10 +339,10 @@ try {
 
 ### 1. Document All Scope Requirements
 
-Always add `#[RequiresScope]` to methods that require authentication:
+Always add `#[ScopedEndpoint]` to methods that require authentication:
 
 ```php
-#[RequiresScope(
+#[ScopedEndpoint(
     Scope::TransitionGeneric,
     granular: 'rpc:app.bsky.feed.getTimeline',
     description: 'Fetches the authenticated user\'s home timeline'
@@ -356,10 +356,10 @@ Prefer the `Scope` enum over string literals for type safety:
 
 ```php
 // Good
-#[RequiresScope(Scope::TransitionGeneric)]
+#[ScopedEndpoint(Scope::TransitionGeneric)]
 
 // Avoid
-#[RequiresScope('transition:generic')]
+#[ScopedEndpoint('transition:generic')]
 ```
 
 ### 3. Request Minimal Scopes
