@@ -10,6 +10,7 @@ use SocialDept\AtpClient\Data\StrongRef;
 use SocialDept\AtpClient\Enums\Nsid\BskyFeed;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\RichText\TextBuilder;
+use SocialDept\AtpSchema\Generated\App\Bsky\Feed\Defs\PostView;
 
 class PostRecordClient extends Request
 {
@@ -89,7 +90,7 @@ class PostRecordClient extends Request
             record: $record
         );
 
-        return StrongRef::fromResponse($response->json());
+        return StrongRef::fromResponse($response->toArray());
     }
 
     /**
@@ -114,7 +115,7 @@ class PostRecordClient extends Request
      * @requires transition:generic (rpc:com.atproto.repo.getRecord)
      */
     #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
-    public function get(string $rkey, ?string $cid = null): array
+    public function get(string $rkey, ?string $cid = null): PostView
     {
         $response = $this->atp->atproto->repo->getRecord(
             repo: $this->atp->client->session()->did(),
@@ -123,7 +124,7 @@ class PostRecordClient extends Request
             cid: $cid
         );
 
-        return $response->json('value');
+        return PostView::fromArray($response->value);
     }
 
     /**
