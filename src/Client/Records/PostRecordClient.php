@@ -7,6 +7,10 @@ use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Builders\PostBuilder;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Contracts\Recordable;
+use SocialDept\AtpClient\Data\Record;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\CreateRecordResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\DeleteRecordResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\PutRecordResponse;
 use SocialDept\AtpClient\Data\StrongRef;
 use SocialDept\AtpClient\Enums\Nsid\BskyFeed;
 use SocialDept\AtpClient\Enums\Scope;
@@ -37,7 +41,7 @@ class PostRecordClient extends Request
         ?array $reply = null,
         ?array $langs = null,
         ?DateTimeInterface $createdAt = null
-    ): StrongRef {
+    ): CreateRecordResponse {
         // Handle different input types
         if (is_string($content)) {
             $record = [
@@ -72,13 +76,11 @@ class PostRecordClient extends Request
             $record['$type'] = BskyFeed::Post->value;
         }
 
-        $response = $this->atp->atproto->repo->createRecord(
+        return $this->atp->atproto->repo->createRecord(
             repo: $this->atp->client->session()->did(),
             collection: BskyFeed::Post,
             record: $record
         );
-
-        return StrongRef::fromResponse($response->json());
     }
 
     /**
@@ -88,21 +90,19 @@ class PostRecordClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=update')]
-    public function update(string $rkey, array $record): StrongRef
+    public function update(string $rkey, array $record): PutRecordResponse
     {
         // Ensure $type is set
         if (! isset($record['$type'])) {
             $record['$type'] = BskyFeed::Post->value;
         }
 
-        $response = $this->atp->atproto->repo->putRecord(
+        return $this->atp->atproto->repo->putRecord(
             repo: $this->atp->client->session()->did(),
             collection: BskyFeed::Post,
             rkey: $rkey,
             record: $record
         );
-
-        return StrongRef::fromResponse($response->toArray());
     }
 
     /**
@@ -112,9 +112,9 @@ class PostRecordClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.deleteRecord')]
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=delete')]
-    public function delete(string $rkey): void
+    public function delete(string $rkey): DeleteRecordResponse
     {
-        $this->atp->atproto->repo->deleteRecord(
+        return $this->atp->atproto->repo->deleteRecord(
             repo: $this->atp->client->session()->did(),
             collection: BskyFeed::Post,
             rkey: $rkey
@@ -127,7 +127,7 @@ class PostRecordClient extends Request
      * @requires transition:generic (rpc:com.atproto.repo.getRecord)
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
-    public function get(string $rkey, ?string $cid = null): PostView
+    public function get(string $rkey, ?string $cid = null): Record
     {
         $response = $this->atp->atproto->repo->getRecord(
             repo: $this->atp->client->session()->did(),
@@ -136,7 +136,10 @@ class PostRecordClient extends Request
             cid: $cid
         );
 
-        return PostView::fromArray($response->value);
+        return Record::fromArray(
+            data: $response->toArray(),
+            transformer: fn($value) => PostView::fromArray($response->value)
+        );
     }
 
 }
