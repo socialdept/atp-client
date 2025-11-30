@@ -4,7 +4,8 @@ namespace SocialDept\AtpClient\Client\Records;
 
 use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
-use SocialDept\AtpClient\Data\StrongRef;
+use SocialDept\AtpClient\Data\Record;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\PutRecordResponse;
 use SocialDept\AtpClient\Enums\Nsid\BskyActor;
 use SocialDept\AtpClient\Enums\Scope;
 
@@ -17,21 +18,18 @@ class ProfileRecordClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
-    public function update(array $profile): StrongRef
+    public function update(array $profile): PutRecordResponse
     {
         // Ensure $type is set
         if (! isset($profile['$type'])) {
             $profile['$type'] = BskyActor::Profile->value;
         }
 
-        $response = $this->atp->atproto->repo->putRecord(
-            repo: $this->atp->client->session()->did(),
+        return $this->atp->atproto->repo->putRecord(
             collection: BskyActor::Profile,
             rkey: 'self', // Profile records always use 'self' as rkey
             record: $profile
         );
-
-        return StrongRef::fromResponse($response->json());
     }
 
     /**
@@ -40,7 +38,7 @@ class ProfileRecordClient extends Request
      * @requires transition:generic (rpc:com.atproto.repo.getRecord)
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
-    public function get(): array
+    public function get(): Record
     {
         $response = $this->atp->atproto->repo->getRecord(
             repo: $this->atp->client->session()->did(),
@@ -48,7 +46,7 @@ class ProfileRecordClient extends Request
             rkey: 'self'
         );
 
-        return $response->json('value');
+        return Record::fromArrayRaw($response->toArray());
     }
 
     /**
@@ -58,7 +56,7 @@ class ProfileRecordClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
-    public function updateDisplayName(string $displayName): StrongRef
+    public function updateDisplayName(string $displayName): PutRecordResponse
     {
         $profile = $this->getOrCreateProfile();
         $profile['displayName'] = $displayName;
@@ -73,7 +71,7 @@ class ProfileRecordClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
-    public function updateDescription(string $description): StrongRef
+    public function updateDescription(string $description): PutRecordResponse
     {
         $profile = $this->getOrCreateProfile();
         $profile['description'] = $description;
@@ -88,7 +86,7 @@ class ProfileRecordClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
-    public function updateAvatar(array $avatarBlob): StrongRef
+    public function updateAvatar(array $avatarBlob): PutRecordResponse
     {
         $profile = $this->getOrCreateProfile();
         $profile['avatar'] = $avatarBlob;
@@ -103,7 +101,7 @@ class ProfileRecordClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
-    public function updateBanner(array $bannerBlob): StrongRef
+    public function updateBanner(array $bannerBlob): PutRecordResponse
     {
         $profile = $this->getOrCreateProfile();
         $profile['banner'] = $bannerBlob;
@@ -117,7 +115,7 @@ class ProfileRecordClient extends Request
     protected function getOrCreateProfile(): array
     {
         try {
-            return $this->get();
+            return $this->get()->value;
         } catch (\Exception $e) {
             // Profile doesn't exist, return empty structure
             return [

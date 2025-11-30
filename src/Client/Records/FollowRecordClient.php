@@ -5,7 +5,9 @@ namespace SocialDept\AtpClient\Client\Records;
 use DateTimeInterface;
 use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
-use SocialDept\AtpClient\Data\StrongRef;
+use SocialDept\AtpClient\Data\Record;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\CreateRecordResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\DeleteRecordResponse;
 use SocialDept\AtpClient\Enums\Nsid\BskyGraph;
 use SocialDept\AtpClient\Enums\Scope;
 
@@ -21,20 +23,17 @@ class FollowRecordClient extends Request
     public function create(
         string $subject,
         ?DateTimeInterface $createdAt = null
-    ): StrongRef {
+    ): CreateRecordResponse {
         $record = [
             '$type' => BskyGraph::Follow->value,
             'subject' => $subject, // DID
             'createdAt' => ($createdAt ?? now())->format('c'),
         ];
 
-        $response = $this->atp->atproto->repo->createRecord(
-            repo: $this->atp->client->session()->did(),
+        return $this->atp->atproto->repo->createRecord(
             collection: BskyGraph::Follow,
             record: $record
         );
-
-        return StrongRef::fromResponse($response->json());
     }
 
     /**
@@ -44,10 +43,9 @@ class FollowRecordClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.deleteRecord')]
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.graph.follow?action=delete')]
-    public function delete(string $rkey): void
+    public function delete(string $rkey): DeleteRecordResponse
     {
-        $this->atp->atproto->repo->deleteRecord(
-            repo: $this->atp->client->session()->did(),
+        return $this->atp->atproto->repo->deleteRecord(
             collection: BskyGraph::Follow,
             rkey: $rkey
         );
@@ -59,7 +57,7 @@ class FollowRecordClient extends Request
      * @requires transition:generic (rpc:com.atproto.repo.getRecord)
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
-    public function get(string $rkey, ?string $cid = null): array
+    public function get(string $rkey, ?string $cid = null): Record
     {
         $response = $this->atp->atproto->repo->getRecord(
             repo: $this->atp->client->session()->did(),
@@ -68,6 +66,6 @@ class FollowRecordClient extends Request
             cid: $cid
         );
 
-        return $response->json('value');
+        return Record::fromArrayRaw($response->toArray());
     }
 }

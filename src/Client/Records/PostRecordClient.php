@@ -4,8 +4,13 @@ namespace SocialDept\AtpClient\Client\Records;
 
 use DateTimeInterface;
 use SocialDept\AtpClient\Attributes\ScopedEndpoint;
+use SocialDept\AtpClient\Builders\PostBuilder;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Contracts\Recordable;
+use SocialDept\AtpClient\Data\Record;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\CreateRecordResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\DeleteRecordResponse;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\PutRecordResponse;
 use SocialDept\AtpClient\Data\StrongRef;
 use SocialDept\AtpClient\Enums\Nsid\BskyFeed;
 use SocialDept\AtpClient\Enums\Scope;
@@ -14,6 +19,14 @@ use SocialDept\AtpSchema\Generated\App\Bsky\Feed\Defs\PostView;
 
 class PostRecordClient extends Request
 {
+    /**
+     * Create a new post builder bound to this client
+     */
+    public function build(): PostBuilder
+    {
+        return PostBuilder::make()->for($this);
+    }
+
     /**
      * Create a post
      *
@@ -28,7 +41,7 @@ class PostRecordClient extends Request
         ?array $reply = null,
         ?array $langs = null,
         ?DateTimeInterface $createdAt = null
-    ): StrongRef {
+    ): CreateRecordResponse {
         // Handle different input types
         if (is_string($content)) {
             $record = [
@@ -41,16 +54,19 @@ class PostRecordClient extends Request
             $record = $content;
         }
 
-        // Add optional fields
-        if ($embed) {
-            $record['embed'] = $embed;
+        // Add optional fields (only for non-Recordable inputs)
+        if (! ($content instanceof Recordable)) {
+            if ($embed) {
+                $record['embed'] = $embed;
+            }
+            if ($reply) {
+                $record['reply'] = $reply;
+            }
+            if ($langs) {
+                $record['langs'] = $langs;
+            }
         }
-        if ($reply) {
-            $record['reply'] = $reply;
-        }
-        if ($langs) {
-            $record['langs'] = $langs;
-        }
+
         if (! isset($record['createdAt'])) {
             $record['createdAt'] = ($createdAt ?? now())->format('c');
         }
@@ -60,13 +76,10 @@ class PostRecordClient extends Request
             $record['$type'] = BskyFeed::Post->value;
         }
 
-        $response = $this->atp->atproto->repo->createRecord(
-            repo: $this->atp->client->session()->did(),
+        return $this->atp->atproto->repo->createRecord(
             collection: BskyFeed::Post,
             record: $record
         );
-
-        return StrongRef::fromResponse($response->json());
     }
 
     /**
@@ -76,21 +89,18 @@ class PostRecordClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=update')]
-    public function update(string $rkey, array $record): StrongRef
+    public function update(string $rkey, array $record): PutRecordResponse
     {
         // Ensure $type is set
         if (! isset($record['$type'])) {
             $record['$type'] = BskyFeed::Post->value;
         }
 
-        $response = $this->atp->atproto->repo->putRecord(
-            repo: $this->atp->client->session()->did(),
+        return $this->atp->atproto->repo->putRecord(
             collection: BskyFeed::Post,
             rkey: $rkey,
             record: $record
         );
-
-        return StrongRef::fromResponse($response->toArray());
     }
 
     /**
@@ -100,10 +110,9 @@ class PostRecordClient extends Request
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.deleteRecord')]
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=delete')]
-    public function delete(string $rkey): void
+    public function delete(string $rkey): DeleteRecordResponse
     {
-        $this->atp->atproto->repo->deleteRecord(
-            repo: $this->atp->client->session()->did(),
+        return $this->atp->atproto->repo->deleteRecord(
             collection: BskyFeed::Post,
             rkey: $rkey
         );
@@ -115,7 +124,7 @@ class PostRecordClient extends Request
      * @requires transition:generic (rpc:com.atproto.repo.getRecord)
      */
     #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
-    public function get(string $rkey, ?string $cid = null): PostView
+    public function get(string $rkey, ?string $cid = null): Record
     {
         $response = $this->atp->atproto->repo->getRecord(
             repo: $this->atp->client->session()->did(),
@@ -124,134 +133,7 @@ class PostRecordClient extends Request
             cid: $cid
         );
 
-        return PostView::fromArray($response->value);
+        return Record::fromArrayRaw($response->toArray());
     }
 
-    /**
-     * Create a reply to another post
-     *
-     * @requires transition:generic OR (rpc:com.atproto.repo.createRecord AND repo:app.bsky.feed.post?action=create)
-     */
-    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.createRecord')]
-    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=create')]
-    public function reply(
-        StrongRef $parent,
-        StrongRef $root,
-        string|array|Recordable $content,
-        ?array $facets = null,
-        ?array $embed = null,
-        ?array $langs = null,
-        ?DateTimeInterface $createdAt = null
-    ): StrongRef {
-        $reply = [
-            'parent' => $parent->toArray(),
-            'root' => $root->toArray(),
-        ];
-
-        return $this->create(
-            content: $content,
-            facets: $facets,
-            embed: $embed,
-            reply: $reply,
-            langs: $langs,
-            createdAt: $createdAt
-        );
-    }
-
-    /**
-     * Create a quote post (post with embedded post)
-     *
-     * @requires transition:generic OR (rpc:com.atproto.repo.createRecord AND repo:app.bsky.feed.post?action=create)
-     */
-    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.createRecord')]
-    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=create')]
-    public function quote(
-        StrongRef $quotedPost,
-        string|array|Recordable $content,
-        ?array $facets = null,
-        ?array $langs = null,
-        ?DateTimeInterface $createdAt = null
-    ): StrongRef {
-        $embed = [
-            '$type' => 'app.bsky.embed.record',
-            'record' => $quotedPost->toArray(),
-        ];
-
-        return $this->create(
-            content: $content,
-            facets: $facets,
-            embed: $embed,
-            langs: $langs,
-            createdAt: $createdAt
-        );
-    }
-
-    /**
-     * Create a post with images
-     *
-     * @requires transition:generic OR (rpc:com.atproto.repo.createRecord AND repo:app.bsky.feed.post?action=create)
-     */
-    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.createRecord')]
-    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=create')]
-    public function withImages(
-        string|array|Recordable $content,
-        array $images,
-        ?array $facets = null,
-        ?array $langs = null,
-        ?DateTimeInterface $createdAt = null
-    ): StrongRef {
-        $embed = [
-            '$type' => 'app.bsky.embed.images',
-            'images' => $images,
-        ];
-
-        return $this->create(
-            content: $content,
-            facets: $facets,
-            embed: $embed,
-            langs: $langs,
-            createdAt: $createdAt
-        );
-    }
-
-    /**
-     * Create a post with external link embed
-     *
-     * @requires transition:generic OR (rpc:com.atproto.repo.createRecord AND repo:app.bsky.feed.post?action=create)
-     */
-    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.createRecord')]
-    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.feed.post?action=create')]
-    public function withLink(
-        string|array|Recordable $content,
-        string $uri,
-        string $title,
-        string $description,
-        ?string $thumbBlob = null,
-        ?array $facets = null,
-        ?array $langs = null,
-        ?DateTimeInterface $createdAt = null
-    ): StrongRef {
-        $external = [
-            'uri' => $uri,
-            'title' => $title,
-            'description' => $description,
-        ];
-
-        if ($thumbBlob) {
-            $external['thumb'] = $thumbBlob;
-        }
-
-        $embed = [
-            '$type' => 'app.bsky.embed.external',
-            'external' => $external,
-        ];
-
-        return $this->create(
-            content: $content,
-            facets: $facets,
-            embed: $embed,
-            langs: $langs,
-            createdAt: $createdAt
-        );
-    }
 }
