@@ -2,6 +2,7 @@
 
 namespace SocialDept\AtpClient\Client\Requests\Bsky;
 
+use SocialDept\AtpClient\Attributes\PublicEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Bsky\Actor\GetProfilesResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Actor\GetSuggestionsResponse;
@@ -17,6 +18,7 @@ class ActorRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-actor-get-profile
      */
+    #[PublicEndpoint]
     public function getProfile(string $actor): ProfileViewDetailed
     {
         $response = $this->atp->client->get(
@@ -32,6 +34,7 @@ class ActorRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-actor-get-profiles
      */
+    #[PublicEndpoint]
     public function getProfiles(array $actors): GetProfilesResponse
     {
         $response = $this->atp->client->get(
@@ -47,6 +50,7 @@ class ActorRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-actor-get-suggestions
      */
+    #[PublicEndpoint]
     public function getSuggestions(int $limit = 50, ?string $cursor = null): GetSuggestionsResponse
     {
         $response = $this->atp->client->get(
@@ -62,6 +66,7 @@ class ActorRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-actor-search-actors
      */
+    #[PublicEndpoint]
     public function searchActors(string $q, int $limit = 25, ?string $cursor = null): SearchActorsResponse
     {
         $response = $this->atp->client->get(
@@ -77,6 +82,7 @@ class ActorRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-actor-search-actors-typeahead
      */
+    #[PublicEndpoint]
     public function searchActorsTypeahead(string $q, int $limit = 10): SearchActorsTypeaheadResponse
     {
         $response = $this->atp->client->get(

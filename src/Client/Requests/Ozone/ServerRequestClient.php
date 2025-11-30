@@ -2,7 +2,7 @@
 
 namespace SocialDept\AtpClient\Client\Requests\Ozone;
 
-use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Ozone\Server\GetConfigResponse;
 use SocialDept\AtpClient\Enums\Nsid\OzoneServer;
@@ -18,7 +18,7 @@ class ServerRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/tools-ozone-server-get-config
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.server.getBlob')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.server.getBlob')]
     public function getBlob(string $did, string $cid): Response
     {
         return $this->atp->client->get(
@@ -34,7 +34,7 @@ class ServerRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/tools-ozone-server-get-config
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.server.getConfig')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.server.getConfig')]
     public function getConfig(): GetConfigResponse
     {
         $response = $this->atp->client->get(

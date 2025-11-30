@@ -2,7 +2,7 @@
 
 namespace SocialDept\AtpClient\Client\Requests\Chat;
 
-use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Chat\Convo\GetLogResponse;
 use SocialDept\AtpClient\Data\Responses\Chat\Convo\GetMessagesResponse;
@@ -24,7 +24,7 @@ class ConvoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-get-convo
      */
-    #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.getConvo')]
+    #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.getConvo')]
     public function getConvo(string $convoId): ConvoView
     {
         $response = $this->atp->client->get(
@@ -42,7 +42,7 @@ class ConvoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-get-convo-for-members
      */
-    #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.getConvoForMembers')]
+    #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.getConvoForMembers')]
     public function getConvoForMembers(array $members): ConvoView
     {
         $response = $this->atp->client->get(
@@ -60,7 +60,7 @@ class ConvoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-list-convos
      */
-    #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.listConvos')]
+    #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.listConvos')]
     public function listConvos(int $limit = 50, ?string $cursor = null): ListConvosResponse
     {
         $response = $this->atp->client->get(
@@ -78,7 +78,7 @@ class ConvoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-get-messages
      */
-    #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.getMessages')]
+    #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.getMessages')]
     public function getMessages(
         string $convoId,
         int $limit = 50,
@@ -99,7 +99,7 @@ class ConvoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-send-message
      */
-    #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.sendMessage')]
+    #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.sendMessage')]
     public function sendMessage(string $convoId, array $message): MessageView
     {
         $response = $this->atp->client->post(
@@ -117,7 +117,7 @@ class ConvoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-send-message-batch
      */
-    #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.sendMessageBatch')]
+    #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.sendMessageBatch')]
     public function sendMessageBatch(array $items): SendMessageBatchResponse
     {
         $response = $this->atp->client->post(
@@ -135,7 +135,7 @@ class ConvoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-delete-message-for-self
      */
-    #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.deleteMessageForSelf')]
+    #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.deleteMessageForSelf')]
     public function deleteMessageForSelf(string $convoId, string $messageId): DeletedMessageView
     {
         $response = $this->atp->client->post(
@@ -153,7 +153,7 @@ class ConvoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-update-read
      */
-    #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.updateRead')]
+    #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.updateRead')]
     public function updateRead(string $convoId, ?string $messageId = null): ConvoView
     {
         $response = $this->atp->client->post(
@@ -171,7 +171,7 @@ class ConvoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-mute-convo
      */
-    #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.muteConvo')]
+    #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.muteConvo')]
     public function muteConvo(string $convoId): ConvoView
     {
         $response = $this->atp->client->post(
@@ -189,7 +189,7 @@ class ConvoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-unmute-convo
      */
-    #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.unmuteConvo')]
+    #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.unmuteConvo')]
     public function unmuteConvo(string $convoId): ConvoView
     {
         $response = $this->atp->client->post(
@@ -207,7 +207,7 @@ class ConvoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-leave-convo
      */
-    #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.leaveConvo')]
+    #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.leaveConvo')]
     public function leaveConvo(string $convoId): LeaveConvoResponse
     {
         $response = $this->atp->client->post(
@@ -225,7 +225,7 @@ class ConvoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/chat-bsky-convo-get-log
      */
-    #[RequiresScope(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.getLog')]
+    #[ScopedEndpoint(Scope::TransitionChat, granular: 'rpc:chat.bsky.convo.getLog')]
     public function getLog(?string $cursor = null): GetLogResponse
     {
         $response = $this->atp->client->get(

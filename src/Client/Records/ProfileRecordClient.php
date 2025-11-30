@@ -2,7 +2,7 @@
 
 namespace SocialDept\AtpClient\Client\Records;
 
-use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\StrongRef;
 use SocialDept\AtpClient\Enums\Nsid\BskyActor;
@@ -15,8 +15,8 @@ class ProfileRecordClient extends Request
      *
      * @requires transition:generic OR (rpc:com.atproto.repo.putRecord AND repo:app.bsky.actor.profile?action=update)
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
     public function update(array $profile): StrongRef
     {
         // Ensure $type is set
@@ -39,7 +39,7 @@ class ProfileRecordClient extends Request
      *
      * @requires transition:generic (rpc:com.atproto.repo.getRecord)
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
     public function get(): array
     {
         $response = $this->atp->atproto->repo->getRecord(
@@ -56,8 +56,8 @@ class ProfileRecordClient extends Request
      *
      * @requires transition:generic OR (rpc:com.atproto.repo.putRecord AND repo:app.bsky.actor.profile?action=update)
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
     public function updateDisplayName(string $displayName): StrongRef
     {
         $profile = $this->getOrCreateProfile();
@@ -71,8 +71,8 @@ class ProfileRecordClient extends Request
      *
      * @requires transition:generic OR (rpc:com.atproto.repo.putRecord AND repo:app.bsky.actor.profile?action=update)
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
     public function updateDescription(string $description): StrongRef
     {
         $profile = $this->getOrCreateProfile();
@@ -86,8 +86,8 @@ class ProfileRecordClient extends Request
      *
      * @requires transition:generic OR (rpc:com.atproto.repo.putRecord AND repo:app.bsky.actor.profile?action=update)
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
     public function updateAvatar(array $avatarBlob): StrongRef
     {
         $profile = $this->getOrCreateProfile();
@@ -101,8 +101,8 @@ class ProfileRecordClient extends Request
      *
      * @requires transition:generic OR (rpc:com.atproto.repo.putRecord AND repo:app.bsky.actor.profile?action=update)
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.putRecord')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.actor.profile?action=update')]
     public function updateBanner(array $bannerBlob): StrongRef
     {
         $profile = $this->getOrCreateProfile();

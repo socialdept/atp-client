@@ -2,7 +2,8 @@
 
 namespace SocialDept\AtpClient\Client\Requests\Bsky;
 
-use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Attributes\PublicEndpoint;
+use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Bsky\Feed\DescribeFeedGeneratorResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Feed\GetActorFeedsResponse;
@@ -29,6 +30,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-describe-feed-generator
      */
+    #[PublicEndpoint]
     public function describeFeedGenerator(): DescribeFeedGeneratorResponse
     {
         $response = $this->atp->client->get(
@@ -43,7 +45,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-timeline
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:app.bsky.feed.getTimeline')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:app.bsky.feed.getTimeline')]
     public function getTimeline(int $limit = 50, ?string $cursor = null): GetTimelineResponse
     {
         $response = $this->atp->client->get(
@@ -59,6 +61,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-author-feed
      */
+    #[PublicEndpoint]
     public function getAuthorFeed(
         string $actor,
         int $limit = 50,
@@ -78,6 +81,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-actor-feeds
      */
+    #[PublicEndpoint]
     public function getActorFeeds(string $actor, int $limit = 50, ?string $cursor = null): GetActorFeedsResponse
     {
         $response = $this->atp->client->get(
@@ -93,6 +97,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-actor-likes
      */
+    #[PublicEndpoint]
     public function getActorLikes(string $actor, int $limit = 50, ?string $cursor = null): GetActorLikesResponse
     {
         $response = $this->atp->client->get(
@@ -108,6 +113,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-feed
      */
+    #[PublicEndpoint]
     public function getFeed(string $feed, int $limit = 50, ?string $cursor = null): GetFeedResponse
     {
         $response = $this->atp->client->get(
@@ -123,6 +129,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-feed-generator
      */
+    #[PublicEndpoint]
     public function getFeedGenerator(string $feed): GetFeedGeneratorResponse
     {
         $response = $this->atp->client->get(
@@ -138,6 +145,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-feed-generators
      */
+    #[PublicEndpoint]
     public function getFeedGenerators(array $feeds): GetFeedGeneratorsResponse
     {
         $response = $this->atp->client->get(
@@ -153,6 +161,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-post-thread
      */
+    #[PublicEndpoint]
     public function getPostThread(string $uri, int $depth = 6, int $parentHeight = 80): GetPostThreadResponse
     {
         $response = $this->atp->client->get(
@@ -168,6 +177,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-posts
      */
+    #[PublicEndpoint]
     public function getPosts(array $uris): GetPostsResponse
     {
         $response = $this->atp->client->get(
@@ -183,6 +193,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-likes
      */
+    #[PublicEndpoint]
     public function getLikes(
         string $uri,
         int $limit = 50,
@@ -202,6 +213,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-quotes
      */
+    #[PublicEndpoint]
     public function getQuotes(
         string $uri,
         int $limit = 50,
@@ -221,6 +233,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-reposted-by
      */
+    #[PublicEndpoint]
     public function getRepostedBy(
         string $uri,
         int $limit = 50,
@@ -240,6 +253,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-get-suggested-feeds
      */
+    #[PublicEndpoint]
     public function getSuggestedFeeds(int $limit = 50, ?string $cursor = null): GetSuggestedFeedsResponse
     {
         $response = $this->atp->client->get(
@@ -255,6 +269,7 @@ class FeedRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/app-bsky-feed-search-posts
      */
+    #[PublicEndpoint]
     public function searchPosts(
         string $q,
         int $limit = 25,

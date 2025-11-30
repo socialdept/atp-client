@@ -3,7 +3,7 @@
 namespace SocialDept\AtpClient\Client\Records;
 
 use DateTimeInterface;
-use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\StrongRef;
 use SocialDept\AtpClient\Enums\Nsid\BskyGraph;
@@ -16,8 +16,8 @@ class FollowRecordClient extends Request
      *
      * @requires transition:generic OR (rpc:com.atproto.repo.createRecord AND repo:app.bsky.graph.follow?action=create)
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.createRecord')]
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.graph.follow?action=create')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.createRecord')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.graph.follow?action=create')]
     public function create(
         string $subject,
         ?DateTimeInterface $createdAt = null
@@ -42,8 +42,8 @@ class FollowRecordClient extends Request
      *
      * @requires transition:generic OR (rpc:com.atproto.repo.deleteRecord AND repo:app.bsky.graph.follow?action=delete)
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.deleteRecord')]
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'repo:app.bsky.graph.follow?action=delete')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.deleteRecord')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'repo:app.bsky.graph.follow?action=delete')]
     public function delete(string $rkey): void
     {
         $this->atp->atproto->repo->deleteRecord(
@@ -58,7 +58,7 @@ class FollowRecordClient extends Request
      *
      * @requires transition:generic (rpc:com.atproto.repo.getRecord)
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
     public function get(string $rkey, ?string $cid = null): array
     {
         $response = $this->atp->atproto->repo->getRecord(
