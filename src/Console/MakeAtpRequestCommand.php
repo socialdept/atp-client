@@ -11,7 +11,6 @@ class MakeAtpRequestCommand extends Command
     protected $signature = 'make:atp-request
                             {name : The name of the request client class}
                             {--domain=bsky : The domain to extend (bsky, atproto, chat, ozone)}
-                            {--public : Generate a public request client instead of authenticated}
                             {--force : Overwrite existing file}';
 
     protected $description = 'Create a new ATP request client extension for an existing domain';
@@ -27,7 +26,6 @@ class MakeAtpRequestCommand extends Command
     {
         $name = $this->argument('name');
         $domain = $this->option('domain');
-        $isPublic = $this->option('public');
 
         if (! in_array($domain, $this->validDomains)) {
             $this->components->error("Invalid domain [{$domain}]. Valid domains: ".implode(', ', $this->validDomains));
@@ -39,7 +37,7 @@ class MakeAtpRequestCommand extends Command
             $name .= 'Client';
         }
 
-        $path = $this->getPath($name, $isPublic);
+        $path = $this->getPath($name);
 
         if ($this->files->exists($path) && ! $this->option('force')) {
             $this->components->error("Request client [{$name}] already exists!");
@@ -49,23 +47,20 @@ class MakeAtpRequestCommand extends Command
 
         $this->makeDirectory($path);
 
-        $stub = $isPublic ? $this->getPublicStub() : $this->getStub();
-        $content = $this->populateStub($stub, $name, $isPublic);
+        $content = $this->populateStub($this->getStub(), $name);
 
         $this->files->put($path, $content);
 
         $this->components->info("Request client [{$path}] created successfully.");
 
-        $this->outputRegistrationHint($name, $domain, $isPublic);
+        $this->outputRegistrationHint($name, $domain);
 
         return self::SUCCESS;
     }
 
-    protected function getPath(string $name, bool $isPublic = false): string
+    protected function getPath(string $name): string
     {
-        $basePath = $isPublic
-            ? config('client.generators.request_public_path', 'app/Services/Clients/Public/Requests')
-            : config('client.generators.request_path', 'app/Services/Clients/Requests');
+        $basePath = config('client.generators.request_path', 'app/Services/Clients/Requests');
 
         return base_path($basePath.'/'.$name.'.php');
     }
@@ -77,11 +72,9 @@ class MakeAtpRequestCommand extends Command
         }
     }
 
-    protected function getNamespace(bool $isPublic = false): string
+    protected function getNamespace(): string
     {
-        $basePath = $isPublic
-            ? config('client.generators.request_public_path', 'app/Services/Clients/Public/Requests')
-            : config('client.generators.request_path', 'app/Services/Clients/Requests');
+        $basePath = config('client.generators.request_path', 'app/Services/Clients/Requests');
 
         return Str::of($basePath)
             ->replace('/', '\\')
@@ -90,30 +83,29 @@ class MakeAtpRequestCommand extends Command
             ->toString();
     }
 
-    protected function populateStub(string $stub, string $name, bool $isPublic = false): string
+    protected function populateStub(string $stub, string $name): string
     {
         return str_replace(
             ['{{ namespace }}', '{{ class }}'],
-            [$this->getNamespace($isPublic), $name],
+            [$this->getNamespace(), $name],
             $stub
         );
     }
 
-    protected function outputRegistrationHint(string $name, string $domain, bool $isPublic): void
+    protected function outputRegistrationHint(string $name, string $domain): void
     {
         $this->newLine();
         $this->components->info('Register the extension in your AppServiceProvider:');
         $this->newLine();
 
-        $namespace = $this->getNamespace($isPublic);
+        $namespace = $this->getNamespace();
         $extensionName = Str::of($name)->before('Client')->camel()->toString();
-        $clientClass = $isPublic ? 'AtpPublicClient' : 'AtpClient';
 
         $this->line("use {$namespace}\\{$name};");
-        $this->line("use SocialDept\\AtpClient\\".($isPublic ? 'Client\\Public\\' : '').$clientClass.';');
+        $this->line("use SocialDept\\AtpClient\\AtpClient;");
         $this->newLine();
         $this->line("// In boot() method:");
-        $this->line("{$clientClass}::extendDomain('{$domain}', '{$extensionName}', fn(\$domain) => new {$name}(\$domain));");
+        $this->line("AtpClient::extendDomain('{$domain}', '{$extensionName}', fn(\$domain) => new {$name}(\$domain));");
     }
 
     protected function getStub(): string
@@ -126,22 +118,6 @@ namespace {{ namespace }};
 use SocialDept\AtpClient\Client\Requests\Request;
 
 class {{ class }} extends Request
-{
-    //
-}
-STUB;
-    }
-
-    protected function getPublicStub(): string
-    {
-        return <<<'STUB'
-<?php
-
-namespace {{ namespace }};
-
-use SocialDept\AtpClient\Client\Public\Requests\PublicRequest;
-
-class {{ class }} extends PublicRequest
 {
     //
 }
