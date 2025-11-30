@@ -13,6 +13,7 @@ use SocialDept\AtpClient\Session\SessionManager;
 class AtpClient
 {
     use HasExtensions;
+
     /**
      * Raw API communication/networking class
      */
@@ -39,16 +40,25 @@ class AtpClient
     public OzoneClient $ozone;
 
     public function __construct(
-        SessionManager $sessions,
-        string $did,
+        ?SessionManager $sessions = null,
+        ?string $did = null,
+        ?string $serviceUrl = null,
     ) {
-        // Load the network client
-        $this->client = new Client($this, $sessions, $did);
+        // Load the network client (supports both public and authenticated modes)
+        $this->client = new Client($this, $sessions, $did, $serviceUrl);
 
         // Load all function collections
         $this->bsky = new BskyClient($this);
         $this->atproto = new AtprotoClient($this);
         $this->chat = new ChatClient($this);
         $this->ozone = new OzoneClient($this);
+    }
+
+    /**
+     * Check if client is in public mode (no authentication).
+     */
+    public function isPublicMode(): bool
+    {
+        return $this->client->isPublicMode();
     }
 }

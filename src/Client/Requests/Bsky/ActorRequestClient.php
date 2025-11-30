@@ -2,10 +2,13 @@
 
 namespace SocialDept\AtpClient\Client\Requests\Bsky;
 
-use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Attributes\PublicEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Data\Responses\Bsky\Actor\GetProfilesResponse;
+use SocialDept\AtpClient\Data\Responses\Bsky\Actor\GetSuggestionsResponse;
+use SocialDept\AtpClient\Data\Responses\Bsky\Actor\SearchActorsResponse;
+use SocialDept\AtpClient\Data\Responses\Bsky\Actor\SearchActorsTypeaheadResponse;
 use SocialDept\AtpClient\Enums\Nsid\BskyActor;
-use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpSchema\Generated\App\Bsky\Actor\Defs\ProfileViewDetailed;
 
 class ActorRequestClient extends Request
@@ -13,11 +16,9 @@ class ActorRequestClient extends Request
     /**
      * Get actor profile
      *
-     * @requires transition:generic (rpc:app.bsky.actor.getProfile)
-     *
      * @see https://docs.bsky.app/docs/api/app-bsky-actor-get-profile
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:app.bsky.actor.getProfile')]
+    #[PublicEndpoint]
     public function getProfile(string $actor): ProfileViewDetailed
     {
         $response = $this->atp->client->get(
@@ -26,5 +27,69 @@ class ActorRequestClient extends Request
         );
 
         return ProfileViewDetailed::fromArray($response->json());
+    }
+
+    /**
+     * Get multiple actor profiles
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-actor-get-profiles
+     */
+    #[PublicEndpoint]
+    public function getProfiles(array $actors): GetProfilesResponse
+    {
+        $response = $this->atp->client->get(
+            endpoint: BskyActor::GetProfiles,
+            params: compact('actors')
+        );
+
+        return GetProfilesResponse::fromArray($response->json());
+    }
+
+    /**
+     * Get suggestions for actors to follow
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-actor-get-suggestions
+     */
+    #[PublicEndpoint]
+    public function getSuggestions(int $limit = 50, ?string $cursor = null): GetSuggestionsResponse
+    {
+        $response = $this->atp->client->get(
+            endpoint: BskyActor::GetSuggestions,
+            params: compact('limit', 'cursor')
+        );
+
+        return GetSuggestionsResponse::fromArray($response->json());
+    }
+
+    /**
+     * Search for actors
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-actor-search-actors
+     */
+    #[PublicEndpoint]
+    public function searchActors(string $q, int $limit = 25, ?string $cursor = null): SearchActorsResponse
+    {
+        $response = $this->atp->client->get(
+            endpoint: BskyActor::SearchActors,
+            params: compact('q', 'limit', 'cursor')
+        );
+
+        return SearchActorsResponse::fromArray($response->json());
+    }
+
+    /**
+     * Search for actors matching a prefix (typeahead/autocomplete)
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-actor-search-actors-typeahead
+     */
+    #[PublicEndpoint]
+    public function searchActorsTypeahead(string $q, int $limit = 10): SearchActorsTypeaheadResponse
+    {
+        $response = $this->atp->client->get(
+            endpoint: BskyActor::SearchActorsTypeahead,
+            params: compact('q', 'limit')
+        );
+
+        return SearchActorsTypeaheadResponse::fromArray($response->json());
     }
 }

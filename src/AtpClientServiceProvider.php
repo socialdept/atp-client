@@ -25,7 +25,6 @@ use SocialDept\AtpClient\Http\Controllers\JwksController;
 use SocialDept\AtpClient\Http\DPoPClient;
 use SocialDept\AtpClient\Session\SessionManager;
 use SocialDept\AtpClient\Storage\EncryptedFileKeyStore;
-use SocialDept\AtpClient\Client\Public\AtpPublicClient;
 
 class AtpClientServiceProvider extends ServiceProvider
 {
@@ -120,10 +119,12 @@ class AtpClientServiceProvider extends ServiceProvider
                     $this->app->instance(CredentialProvider::class, $provider);
                 }
 
-                public function public(?string $service = null): AtpPublicClient
+                public function public(?string $service = null): AtpClient
                 {
-                    return new AtpPublicClient(
-                        $service ?? config('atp-client.public.service_url', 'https://public.api.bsky.app')
+                    return new AtpClient(
+                        sessions: null,
+                        did: null,
+                        serviceUrl: $service ?? config('atp-client.public.service_url', 'https://public.api.bsky.app')
                     );
                 }
             };

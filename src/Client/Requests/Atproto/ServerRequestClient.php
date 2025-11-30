@@ -2,7 +2,8 @@
 
 namespace SocialDept\AtpClient\Client\Requests\Atproto;
 
-use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Attributes\PublicEndpoint;
+use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Atproto\Server\DescribeServerResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Server\GetSessionResponse;
@@ -18,7 +19,7 @@ class ServerRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/com-atproto-server-get-session
      */
-    #[RequiresScope(Scope::Atproto, granular: 'rpc:com.atproto.server.getSession')]
+    #[ScopedEndpoint(Scope::Atproto, granular: 'rpc:com.atproto.server.getSession')]
     public function getSession(): GetSessionResponse
     {
         $response = $this->atp->client->get(
@@ -31,11 +32,9 @@ class ServerRequestClient extends Request
     /**
      * Describe server
      *
-     * @requires atproto (rpc:com.atproto.server.describeServer)
-     *
      * @see https://docs.bsky.app/docs/api/com-atproto-server-describe-server
      */
-    #[RequiresScope(Scope::Atproto, granular: 'rpc:com.atproto.server.describeServer')]
+    #[PublicEndpoint]
     public function describeServer(): DescribeServerResponse
     {
         $response = $this->atp->client->get(

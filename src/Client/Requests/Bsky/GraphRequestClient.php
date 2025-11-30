@@ -1,9 +1,9 @@
 <?php
 
-namespace SocialDept\AtpClient\Client\Public\Requests\Bsky;
+namespace SocialDept\AtpClient\Client\Requests\Bsky;
 
-use SocialDept\AtpClient\Client\Public\Requests\PublicRequest;
-use SocialDept\AtpClient\Enums\Nsid\BskyGraph;
+use SocialDept\AtpClient\Attributes\PublicEndpoint;
+use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Bsky\Graph\GetFollowersResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Graph\GetFollowsResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Graph\GetKnownFollowersResponse;
@@ -12,10 +12,17 @@ use SocialDept\AtpClient\Data\Responses\Bsky\Graph\GetListsResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Graph\GetRelationshipsResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Graph\GetStarterPacksResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Graph\GetSuggestedFollowsByActorResponse;
+use SocialDept\AtpClient\Enums\Nsid\BskyGraph;
 use SocialDept\AtpSchema\Generated\App\Bsky\Graph\Defs\StarterPackView;
 
-class GraphPublicRequestClient extends PublicRequest
+class GraphRequestClient extends Request
 {
+    /**
+     * Get followers of an actor
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-graph-get-followers
+     */
+    #[PublicEndpoint]
     public function getFollowers(string $actor, int $limit = 50, ?string $cursor = null): GetFollowersResponse
     {
         $response = $this->atp->client->get(
@@ -26,6 +33,12 @@ class GraphPublicRequestClient extends PublicRequest
         return GetFollowersResponse::fromArray($response->json());
     }
 
+    /**
+     * Get accounts that an actor follows
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-graph-get-follows
+     */
+    #[PublicEndpoint]
     public function getFollows(string $actor, int $limit = 50, ?string $cursor = null): GetFollowsResponse
     {
         $response = $this->atp->client->get(
@@ -36,6 +49,12 @@ class GraphPublicRequestClient extends PublicRequest
         return GetFollowsResponse::fromArray($response->json());
     }
 
+    /**
+     * Get followers of an actor that you also follow
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-graph-get-known-followers
+     */
+    #[PublicEndpoint]
     public function getKnownFollowers(string $actor, int $limit = 50, ?string $cursor = null): GetKnownFollowersResponse
     {
         $response = $this->atp->client->get(
@@ -46,6 +65,12 @@ class GraphPublicRequestClient extends PublicRequest
         return GetKnownFollowersResponse::fromArray($response->json());
     }
 
+    /**
+     * Get a list by URI
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-graph-get-list
+     */
+    #[PublicEndpoint]
     public function getList(string $list, int $limit = 50, ?string $cursor = null): GetListResponse
     {
         $response = $this->atp->client->get(
@@ -56,6 +81,12 @@ class GraphPublicRequestClient extends PublicRequest
         return GetListResponse::fromArray($response->json());
     }
 
+    /**
+     * Get lists created by an actor
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-graph-get-lists
+     */
+    #[PublicEndpoint]
     public function getLists(string $actor, int $limit = 50, ?string $cursor = null): GetListsResponse
     {
         $response = $this->atp->client->get(
@@ -66,6 +97,12 @@ class GraphPublicRequestClient extends PublicRequest
         return GetListsResponse::fromArray($response->json());
     }
 
+    /**
+     * Get relationships between actors
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-graph-get-relationships
+     */
+    #[PublicEndpoint]
     public function getRelationships(string $actor, array $others = []): GetRelationshipsResponse
     {
         $response = $this->atp->client->get(
@@ -76,6 +113,12 @@ class GraphPublicRequestClient extends PublicRequest
         return GetRelationshipsResponse::fromArray($response->json());
     }
 
+    /**
+     * Get a starter pack by URI
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-graph-get-starter-pack
+     */
+    #[PublicEndpoint]
     public function getStarterPack(string $starterPack): StarterPackView
     {
         $response = $this->atp->client->get(
@@ -86,6 +129,12 @@ class GraphPublicRequestClient extends PublicRequest
         return StarterPackView::fromArray($response->json()['starterPack']);
     }
 
+    /**
+     * Get multiple starter packs
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-graph-get-starter-packs
+     */
+    #[PublicEndpoint]
     public function getStarterPacks(array $uris): GetStarterPacksResponse
     {
         $response = $this->atp->client->get(
@@ -96,6 +145,12 @@ class GraphPublicRequestClient extends PublicRequest
         return GetStarterPacksResponse::fromArray($response->json());
     }
 
+    /**
+     * Get suggested follows based on an actor
+     *
+     * @see https://docs.bsky.app/docs/api/app-bsky-graph-get-suggested-follows-by-actor
+     */
+    #[PublicEndpoint]
     public function getSuggestedFollowsByActor(string $actor): GetSuggestedFollowsByActorResponse
     {
         $response = $this->atp->client->get(

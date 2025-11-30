@@ -2,7 +2,7 @@
 
 namespace SocialDept\AtpClient\Client\Requests\Ozone;
 
-use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Ozone\Team\ListMembersResponse;
 use SocialDept\AtpClient\Enums\Nsid\OzoneTeam;
@@ -19,7 +19,7 @@ class TeamRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/tools-ozone-team-list-members
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.getMember')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.getMember')]
     public function getTeamMember(string $did): array
     {
         $response = $this->atp->client->get(
@@ -37,7 +37,7 @@ class TeamRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/tools-ozone-team-list-members
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.listMembers')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.listMembers')]
     public function listTeamMembers(int $limit = 50, ?string $cursor = null): ListMembersResponse
     {
         $response = $this->atp->client->get(
@@ -57,7 +57,7 @@ class TeamRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/tools-ozone-team-add-member
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.addMember')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.addMember')]
     public function addTeamMember(string $did, string $role): array
     {
         $response = $this->atp->client->post(
@@ -77,7 +77,7 @@ class TeamRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/tools-ozone-team-update-member
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.updateMember')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.updateMember')]
     public function updateTeamMember(
         string $did,
         ?bool $disabled = null,
@@ -101,7 +101,7 @@ class TeamRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/tools-ozone-team-delete-member
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.deleteMember')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'rpc:tools.ozone.team.deleteMember')]
     public function deleteTeamMember(string $did): void
     {
         $this->atp->client->post(

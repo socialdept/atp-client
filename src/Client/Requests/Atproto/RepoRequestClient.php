@@ -5,7 +5,8 @@ namespace SocialDept\AtpClient\Client\Requests\Atproto;
 use BackedEnum;
 use Illuminate\Http\UploadedFile;
 use InvalidArgumentException;
-use SocialDept\AtpClient\Attributes\RequiresScope;
+use SocialDept\AtpClient\Attributes\PublicEndpoint;
+use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Auth\ScopeChecker;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\CreateRecordResponse;
@@ -29,7 +30,7 @@ class RepoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/com-atproto-repo-create-record
      */
-    #[RequiresScope(Scope::TransitionGeneric, description: 'Create records in repository')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, description: 'Create records in repository')]
     public function createRecord(
         string $repo,
         string|BackedEnum $collection,
@@ -59,7 +60,7 @@ class RepoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/com-atproto-repo-delete-record
      */
-    #[RequiresScope(Scope::TransitionGeneric, description: 'Delete records from repository')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, description: 'Delete records from repository')]
     public function deleteRecord(
         string $repo,
         string|BackedEnum $collection,
@@ -88,7 +89,7 @@ class RepoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/com-atproto-repo-put-record
      */
-    #[RequiresScope(Scope::TransitionGeneric, description: 'Update records in repository')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, description: 'Update records in repository')]
     public function putRecord(
         string $repo,
         string|BackedEnum $collection,
@@ -115,11 +116,9 @@ class RepoRequestClient extends Request
     /**
      * Get a record
      *
-     * @requires transition:generic (rpc:com.atproto.repo.getRecord)
-     *
      * @see https://docs.bsky.app/docs/api/com-atproto-repo-get-record
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.getRecord')]
+    #[PublicEndpoint]
     public function getRecord(
         string $repo,
         string|BackedEnum $collection,
@@ -138,11 +137,9 @@ class RepoRequestClient extends Request
     /**
      * List records in a collection
      *
-     * @requires transition:generic (rpc:com.atproto.repo.listRecords)
-     *
      * @see https://docs.bsky.app/docs/api/com-atproto-repo-list-records
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.listRecords')]
+    #[PublicEndpoint]
     public function listRecords(
         string $repo,
         string|BackedEnum $collection,
@@ -173,7 +170,7 @@ class RepoRequestClient extends Request
      *
      * @see https://docs.bsky.app/docs/api/com-atproto-repo-upload-blob
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'blob:*/*')]
+    #[ScopedEndpoint(Scope::TransitionGeneric, granular: 'blob:*/*')]
     public function uploadBlob(UploadedFile|SplFileInfo|string $file, ?string $mimeType = null): BlobReference
     {
         // Handle different input types
@@ -200,11 +197,9 @@ class RepoRequestClient extends Request
     /**
      * Describe the repository
      *
-     * @requires transition:generic (rpc:com.atproto.repo.describeRepo)
-     *
      * @see https://docs.bsky.app/docs/api/com-atproto-repo-describe-repo
      */
-    #[RequiresScope(Scope::TransitionGeneric, granular: 'rpc:com.atproto.repo.describeRepo')]
+    #[PublicEndpoint]
     public function describeRepo(string $repo): DescribeRepoResponse
     {
         $response = $this->atp->client->get(
