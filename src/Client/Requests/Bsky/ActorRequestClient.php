@@ -4,7 +4,6 @@ namespace SocialDept\AtpClient\Client\Requests\Bsky;
 
 use SocialDept\AtpClient\Attributes\PublicEndpoint;
 use SocialDept\AtpClient\Client\Requests\Request;
-use SocialDept\AtpClient\Data\Record;
 use SocialDept\AtpClient\Data\Responses\Bsky\Actor\GetProfilesResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Actor\GetSuggestionsResponse;
 use SocialDept\AtpClient\Data\Responses\Bsky\Actor\SearchActorsResponse;
@@ -20,17 +19,14 @@ class ActorRequestClient extends Request
      * @see https://docs.bsky.app/docs/api/app-bsky-actor-get-profile
      */
     #[PublicEndpoint]
-    public function getProfile(string $actor): Record
+    public function getProfile(string $actor): ProfileViewDetailed
     {
         $response = $this->atp->client->get(
             endpoint: BskyActor::GetProfile,
             params: compact('actor')
         );
 
-        return Record::fromArray(
-            data: $response->toArray(),
-            transformer: fn($value) => ProfileViewDetailed::fromArray($response->json('value'))
-        );
+        return ProfileViewDetailed::fromArray($response->toArray());
     }
 
     /**
