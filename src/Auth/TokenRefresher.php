@@ -7,6 +7,7 @@ use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\DPoPKey;
 use SocialDept\AtpClient\Enums\AuthType;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
+use SocialDept\AtpClient\Exceptions\OAuthSessionInvalidException;
 use SocialDept\AtpClient\Http\DPoPClient;
 
 class TokenRefresher
@@ -19,6 +20,9 @@ class TokenRefresher
     /**
      * Refresh access token using refresh token.
      * NOTE: Refresh tokens are single-use!
+     *
+     * @throws OAuthSessionInvalidException When refresh token is missing or empty
+     * @throws AuthenticationException When token refresh API call fails
      */
     public function refresh(
         string $refreshToken,
@@ -27,6 +31,10 @@ class TokenRefresher
         ?string $handle = null,
         AuthType $authType = AuthType::OAuth,
     ): AccessToken {
+        if (empty($refreshToken)) {
+            throw OAuthSessionInvalidException::missingRefreshToken();
+        }
+
         return $authType === AuthType::Legacy
             ? $this->refreshLegacy($refreshToken, $pdsEndpoint, $handle)
             : $this->refreshOAuth($refreshToken, $pdsEndpoint, $dpopKey, $handle);
