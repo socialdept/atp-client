@@ -2,7 +2,9 @@
 
 namespace SocialDept\AtpClient\Data;
 
-class AuthorizationRequest
+use Illuminate\Contracts\Support\Arrayable;
+
+class AuthorizationRequest implements Arrayable
 {
     public function __construct(
         public readonly string $url,
@@ -13,4 +15,30 @@ class AuthorizationRequest
         public readonly string $pdsEndpoint,
         public readonly ?string $handle = null,
     ) {}
+
+    public function toArray(): array
+    {
+        return [
+            'url' => $this->url,
+            'state' => $this->state,
+            'codeVerifier' => $this->codeVerifier,
+            'dpopKey' => $this->dpopKey->toArray(),
+            'requestUri' => $this->requestUri,
+            'pdsEndpoint' => $this->pdsEndpoint,
+            'handle' => $this->handle,
+        ];
+    }
+
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            url: $data['url'],
+            state: $data['state'],
+            codeVerifier: $data['codeVerifier'],
+            dpopKey: DPoPKey::fromArray($data['dpopKey']),
+            requestUri: $data['requestUri'],
+            pdsEndpoint: $data['pdsEndpoint'],
+            handle: $data['handle'] ?? null,
+        );
+    }
 }

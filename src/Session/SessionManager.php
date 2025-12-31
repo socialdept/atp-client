@@ -9,13 +9,16 @@ use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Events\SessionAuthenticated;
+use SocialDept\AtpClient\Events\SessionRefreshFailed;
 use SocialDept\AtpClient\Events\SessionRefreshing;
 use SocialDept\AtpClient\Events\SessionUpdated;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\HandleResolutionException;
+use SocialDept\AtpClient\Exceptions\OAuthSessionInvalidException;
 use SocialDept\AtpClient\Exceptions\SessionExpiredException;
 use SocialDept\AtpResolver\Facades\Resolver;
 use SocialDept\AtpResolver\Support\Identity;
+use Throwable;
 
 class SessionManager
 {
@@ -136,6 +139,9 @@ class SessionManager
 
     /**
      * Refresh session tokens
+     *
+     * @throws OAuthSessionInvalidException When refresh token is missing or refresh fails due to auth issues
+     * @throws AuthenticationException When token refresh fails for other reasons
      */
     protected function refreshSession(Session $session): Session
     {
@@ -144,13 +150,20 @@ class SessionManager
         // Fire event before refresh (allows developers to invalidate old token)
         event(new SessionRefreshing($session));
 
-        $newToken = $this->refresher->refresh(
-            refreshToken: $session->refreshToken(),
-            pdsEndpoint: $session->pdsEndpoint(),
-            dpopKey: $session->dpopKey(),
-            handle: $session->handle(),
-            authType: $session->authType(),
-        );
+        try {
+            $newToken = $this->refresher->refresh(
+                refreshToken: $session->refreshToken(),
+                pdsEndpoint: $session->pdsEndpoint(),
+                dpopKey: $session->dpopKey(),
+                handle: $session->handle(),
+                authType: $session->authType(),
+            );
+        } catch (Throwable $e) {
+            $reason = $this->categorizeRefreshError($e);
+            event(new SessionRefreshFailed($session, $e, $reason));
+
+            throw $e;
+        }
 
         // Update credentials (CRITICAL: refresh tokens are single-use)
         $this->credentials->updateCredentials($did, $newToken);
@@ -166,5 +179,42 @@ class SessionManager
         $this->sessions[$did] = $newSession;
 
         return $newSession;
+    }
+
+    /**
+     * Categorize a refresh error into a reason string.
+     */
+    protected function categorizeRefreshError(Throwable $e): string
+    {
+        if ($e instanceof OAuthSessionInvalidException) {
+            if (str_contains($e->getMessage(), 'missing')) {
+                return 'missing';
+            }
+            if (str_contains($e->getMessage(), 'expired')) {
+                return 'expired';
+            }
+
+            return 'invalid';
+        }
+
+        $message = strtolower($e->getMessage());
+
+        if (str_contains($message, 'expired') || str_contains($message, 'ExpiredToken')) {
+            return 'expired';
+        }
+
+        if (str_contains($message, 'revoked') || str_contains($message, 'RevokedToken')) {
+            return 'revoked';
+        }
+
+        if (str_contains($message, 'invalid') || str_contains($message, 'InvalidToken')) {
+            return 'invalid';
+        }
+
+        if ($e instanceof AuthenticationException) {
+            return 'auth_failed';
+        }
+
+        return 'unknown';
     }
 }

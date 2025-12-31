@@ -2,11 +2,12 @@
 
 namespace SocialDept\AtpClient\Data;
 
+use Illuminate\Contracts\Support\Arrayable;
 use phpseclib3\Crypt\Common\PrivateKey;
 use phpseclib3\Crypt\Common\PublicKey;
 use phpseclib3\Crypt\PublicKeyLoader;
 
-class DPoPKey
+class DPoPKey implements Arrayable
 {
     protected string $privateKeyPem;
 
@@ -74,5 +75,23 @@ class DPoPKey
     public function toPEM(): string
     {
         return $this->privateKeyPem;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'privateKeyPem' => $this->privateKeyPem,
+            'publicKeyPem' => $this->publicKeyPem,
+            'keyId' => $this->keyId,
+        ];
+    }
+
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            privateKey: $data['privateKeyPem'],
+            publicKey: $data['publicKeyPem'],
+            keyId: $data['keyId'],
+        );
     }
 }
