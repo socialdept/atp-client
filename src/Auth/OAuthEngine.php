@@ -119,12 +119,14 @@ class OAuthEngine
     }
 
     /**
-     * Initiate re-authentication for an existing user.
+     * Initiate OAuth authorization for re-authentication.
      *
-     * Unlike authorize(), this stores the request keyed by DID and embeds
-     * the DID in the state parameter for retrieval during callback.
-     * This is useful for popup-based reauth flows where session state
-     * cannot be shared between windows.
+     * Unlike regular authorize(), this caches the request keyed by the original
+     * state parameter, allowing the callback to identify this as a reauth flow
+     * and retrieve the associated DID.
+     *
+     * This approach works with PAR (Pushed Authorization Request) where the
+     * state parameter cannot be modified in the URL.
      */
     public function authorizeForReauth(
         string $did,
@@ -136,117 +138,44 @@ class OAuthEngine
         $identifier = $hint ?? $did;
         $request = $this->authorize($identifier, $scopes, $pdsEndpoint);
 
-        // Create a new request with the DID embedded in the state
-        $reauthState = $this->encodeReauthState($did, $request->state);
-
-        $reauthRequest = new AuthorizationRequest(
-            url: str_replace(
-                'state='.$request->state,
-                'state='.$reauthState,
-                $request->url
-            ),
-            state: $reauthState,
-            codeVerifier: $request->codeVerifier,
-            dpopKey: $request->dpopKey,
-            requestUri: $request->requestUri,
-            pdsEndpoint: $request->pdsEndpoint,
-            handle: $request->handle,
-        );
-
-        // Store keyed by DID, not session
+        // Store keyed by original state (works with PAR)
+        // The callback will look up by the state it receives
         Cache::put(
-            "atp_reauth:{$did}",
-            $reauthRequest->toArray(),
+            "atp_reauth_state:{$request->state}",
+            [
+                'did' => $did,
+                'request' => $request->toArray(),
+            ],
             now()->addMinutes($ttlMinutes)
         );
 
-        return $reauthRequest;
+        return $request;
     }
 
     /**
      * Handle callback for re-authentication.
      *
-     * Extracts DID from state and validates against cached request.
+     * Looks up the cached reauth data by state and completes the OAuth flow.
+     * Returns the access token with the associated DID.
+     *
+     * @throws OAuthSessionInvalidException When reauth session has expired
+     * @throws AuthenticationException When callback fails
      */
     public function callbackForReauth(string $code, string $state): AccessToken
     {
-        $decoded = $this->decodeReauthState($state);
-
-        if (! $decoded) {
-            throw new AuthenticationException('Invalid reauth state: could not decode');
-        }
-
-        $did = $decoded['did'];
-        $originalState = $decoded['state'];
-
-        $cached = Cache::pull("atp_reauth:{$did}");
+        // Look up by the original state (which is what the server returns)
+        $cached = Cache::pull("atp_reauth_state:{$state}");
 
         if (! $cached) {
+            // No cached reauth data for this state - either expired or not a reauth flow
             throw OAuthSessionInvalidException::expiredRefreshToken();
         }
 
-        $request = AuthorizationRequest::fromArray($cached);
+        $request = AuthorizationRequest::fromArray($cached['request']);
 
-        // Validate the original state matches
-        if ($originalState !== $this->extractOriginalState($request->state)) {
-            throw new AuthenticationException('State mismatch in reauth callback');
-        }
-
-        // Complete the callback using the original request's data
-        // but with a reconstructed request that has the original state
-        $originalRequest = new AuthorizationRequest(
-            url: $request->url,
-            state: $originalState,
-            codeVerifier: $request->codeVerifier,
-            dpopKey: $request->dpopKey,
-            requestUri: $request->requestUri,
-            pdsEndpoint: $request->pdsEndpoint,
-            handle: $request->handle,
-        );
-
-        return $this->callback($code, $originalState, $originalRequest);
-    }
-
-    /**
-     * Encode DID into state for reauth flow.
-     */
-    protected function encodeReauthState(string $did, string $originalState): string
-    {
-        return rtrim(strtr(base64_encode(json_encode([
-            'did' => $did,
-            'state' => $originalState,
-        ])), '+/', '-_'), '=');
-    }
-
-    /**
-     * Decode reauth state to extract DID and original state.
-     *
-     * @return array{did: string, state: string}|null
-     */
-    protected function decodeReauthState(string $state): ?array
-    {
-        try {
-            $padded = str_pad(strtr($state, '-_', '+/'), strlen($state) % 4, '=');
-            $decoded = json_decode(base64_decode($padded), true);
-
-            if (! isset($decoded['did'], $decoded['state'])) {
-                return null;
-            }
-
-            return $decoded;
-        } catch (\Throwable) {
-            return null;
-        }
-    }
-
-    /**
-     * Extract the original state from a potentially encoded reauth state.
-     */
-    protected function extractOriginalState(string $state): string
-    {
-        $decoded = $this->decodeReauthState($state);
-
-        return $decoded['state'] ?? $state;
+        // Complete the callback and return the token
+        // The token will have the DID from the OAuth response
+        return $this->callback($code, $state, $request);
     }
 
     /**
