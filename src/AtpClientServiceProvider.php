@@ -5,6 +5,7 @@ namespace SocialDept\AtpClient;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use SocialDept\AtpClient\Auth\AuthorizationServerDiscovery;
 use SocialDept\AtpClient\Auth\ClientAssertionManager;
 use SocialDept\AtpClient\Auth\ClientMetadataManager;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
@@ -54,6 +55,7 @@ class AtpClientServiceProvider extends ServiceProvider
         $this->app->singleton(DPoPKeyManager::class);
         $this->app->singleton(DPoPNonceManager::class);
         $this->app->singleton(DPoPClient::class);
+        $this->app->singleton(AuthorizationServerDiscovery::class);
         $this->app->singleton(TokenRefresher::class);
         $this->app->singleton(SessionManager::class, function ($app) {
             return new SessionManager(

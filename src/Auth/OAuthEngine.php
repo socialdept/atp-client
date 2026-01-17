@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\AuthorizationRequest;
+use SocialDept\AtpClient\Data\AuthorizationServerMetadata;
 use SocialDept\AtpClient\Data\DPoPKey;
 use SocialDept\AtpClient\Events\SessionAuthenticated;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
@@ -22,6 +23,7 @@ class OAuthEngine
         protected DPoPClient $dpopClient,
         protected ClientAssertionManager $clientAssertion,
         protected KeyStore $keyStore,
+        protected AuthorizationServerDiscovery $discovery,
     ) {}
 
     /**
@@ -40,6 +42,9 @@ class OAuthEngine
             $pdsEndpoint = Resolver::resolvePds($identifier);
         }
 
+        // Discover authorization server (handles mushroom PDSes and self-hosted)
+        $authServer = $this->discovery->discover($pdsEndpoint);
+
         // Generate PKCE challenge
         $codeVerifier = Str::random(128);
         $codeChallenge = $this->generatePkceChallenge($codeVerifier);
@@ -50,17 +55,17 @@ class OAuthEngine
         // Generate DPoP key for this flow
         $dpopKey = $this->dpopManager->generateKey('oauth_'.$state);
 
-        // Build PAR request
+        // Build PAR request using discovered endpoints
         $parResponse = $this->pushAuthorizationRequest(
-            $pdsEndpoint,
+            $authServer,
             $scopes,
             $codeChallenge,
             $state,
             $dpopKey
         );
 
-        // Build authorization URL
-        $authUrl = $pdsEndpoint.'/oauth/authorize?'.http_build_query([
+        // Build authorization URL using discovered endpoint
+        $authUrl = $authServer->authorizationEndpoint.'?'.http_build_query([
             'request_uri' => $parResponse['request_uri'],
             'client_id' => $this->metadata->getClientId(),
         ]);
@@ -73,6 +78,8 @@ class OAuthEngine
             requestUri: $parResponse['request_uri'],
             pdsEndpoint: $pdsEndpoint,
             handle: $identifier,
+            authServerIssuer: $authServer->issuer,
+            tokenEndpoint: $authServer->tokenEndpoint,
         );
     }
 
@@ -88,12 +95,15 @@ class OAuthEngine
             throw new AuthenticationException('State mismatch');
         }
 
-        $tokenUrl = $request->pdsEndpoint.'/oauth/token';
+        // Use the stored token endpoint from discovery (handles mushroom PDSes)
+        // Fall back to PDS endpoint for backwards compatibility with cached requests
+        $authServerIssuer = $request->authServerIssuer ?? $request->pdsEndpoint;
+        $tokenUrl = $request->tokenEndpoint ?? $request->pdsEndpoint.'/oauth/token';
 
-        $response = $this->dpopClient->request($request->pdsEndpoint, $tokenUrl, 'POST', $request->dpopKey)
+        $response = $this->dpopClient->request($authServerIssuer, $tokenUrl, 'POST', $request->dpopKey)
             ->asForm()
             ->post($tokenUrl, array_merge(
-                $this->clientAssertion->getAuthParams($request->pdsEndpoint),
+                $this->clientAssertion->getAuthParams($authServerIssuer),
                 [
                     'grant_type' => 'authorization_code',
                     'code' => $code,
@@ -106,7 +116,8 @@ class OAuthEngine
             throw new AuthenticationException('Token exchange failed: '.$response->body());
         }
 
-        $token = AccessToken::fromResponse($response->json(), $request->handle, $request->pdsEndpoint);
+        // Store auth server issuer for token refresh operations
+        $token = AccessToken::fromResponse($response->json(), $request->handle, $authServerIssuer);
 
         // Store the DPoP key with the session ID so future requests can use it
         // The token is bound to this key's thumbprint (cnf.jkt claim)
@@ -182,18 +193,18 @@ class OAuthEngine
      * Push authorization request (PAR)
      */
     protected function pushAuthorizationRequest(
-        string $pdsEndpoint,
+        AuthorizationServerMetadata $authServer,
         array $scopes,
         string $codeChallenge,
         string $state,
         DPoPKey $dpopKey
     ): array {
-        $parUrl = $pdsEndpoint.'/oauth/par';
+        $parUrl = $authServer->parEndpoint;
 
-        $response = $this->dpopClient->request($pdsEndpoint, $parUrl, 'POST', $dpopKey)
+        $response = $this->dpopClient->request($authServer->issuer, $parUrl, 'POST', $dpopKey)
             ->asForm()
             ->post($parUrl, array_merge(
-                $this->clientAssertion->getAuthParams($pdsEndpoint),
+                $this->clientAssertion->getAuthParams($authServer->issuer),
                 [
                     'redirect_uri' => $this->metadata->getRedirectUris()[0] ?? null,
                     'response_type' => 'code',

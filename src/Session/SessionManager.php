@@ -131,8 +131,9 @@ class SessionManager
             $dpopKey = $this->dpopManager->generateKey($sessionId);
         }
 
-        // Use stored issuer if available, otherwise resolve PDS endpoint
-        $pdsEndpoint = $creds->issuer ?? Resolver::resolvePds($creds->did);
+        // Always resolve PDS endpoint for API calls (not the auth server)
+        // The auth server issuer is stored in credentials.issuer and accessed via Session::authServer()
+        $pdsEndpoint = Resolver::resolvePds($creds->did);
 
         return new Session($creds, $dpopKey, $pdsEndpoint);
     }
@@ -153,7 +154,7 @@ class SessionManager
         try {
             $newToken = $this->refresher->refresh(
                 refreshToken: $session->refreshToken(),
-                pdsEndpoint: $session->pdsEndpoint(),
+                pdsEndpoint: $session->authServer(),
                 dpopKey: $session->dpopKey(),
                 handle: $session->handle(),
                 authType: $session->authType(),

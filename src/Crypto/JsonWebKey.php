@@ -73,7 +73,11 @@ class JsonWebKey implements Arrayable, Jsonable, Stringable
      */
     public function toArray(): array
     {
-        $jwk = $this->key->getPublicKey()->toString('JWK');
+        $publicKey = $this->key instanceof PrivateKey
+            ? $this->key->getPublicKey()
+            : $this->key;
+
+        $jwk = $publicKey->toString('JWK');
 
         return array_merge(
             json_decode($jwk, true),

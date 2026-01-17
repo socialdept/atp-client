@@ -14,6 +14,8 @@ class AuthorizationRequest implements Arrayable
         public readonly string $requestUri,
         public readonly string $pdsEndpoint,
         public readonly ?string $handle = null,
+        public readonly ?string $authServerIssuer = null,
+        public readonly ?string $tokenEndpoint = null,
     ) {}
 
     public function toArray(): array
@@ -26,6 +28,8 @@ class AuthorizationRequest implements Arrayable
             'requestUri' => $this->requestUri,
             'pdsEndpoint' => $this->pdsEndpoint,
             'handle' => $this->handle,
+            'authServerIssuer' => $this->authServerIssuer,
+            'tokenEndpoint' => $this->tokenEndpoint,
         ];
     }
 
@@ -39,6 +43,8 @@ class AuthorizationRequest implements Arrayable
             requestUri: $data['requestUri'],
             pdsEndpoint: $data['pdsEndpoint'],
             handle: $data['handle'] ?? null,
+            authServerIssuer: $data['authServerIssuer'] ?? null,
+            tokenEndpoint: $data['tokenEndpoint'] ?? null,
         );
     }
 }
