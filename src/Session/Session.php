@@ -45,6 +45,17 @@ class Session
         return $this->pdsEndpoint;
     }
 
+    /**
+     * Get the authorization server for OAuth operations.
+     *
+     * For OAuth sessions, this returns the stored issuer (e.g., bsky.social).
+     * For legacy sessions, this returns the PDS endpoint.
+     */
+    public function authServer(): string
+    {
+        return $this->credentials->issuer ?? $this->pdsEndpoint;
+    }
+
     public function isExpired(): bool
     {
         return $this->credentials->isExpired();
