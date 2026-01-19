@@ -77,10 +77,12 @@ class JsonWebKey implements Arrayable, Jsonable, Stringable
             ? $this->key->getPublicKey()
             : $this->key;
 
-        $jwk = $publicKey->toString('JWK');
+        // phpseclib returns JWKS format (with 'keys' array), we need just the first key
+        $jwks = json_decode($publicKey->toString('JWK'), true);
+        $jwk = $jwks['keys'][0] ?? $jwks;
 
         return array_merge(
-            json_decode($jwk, true),
+            $jwk,
             [
                 'alg' => P256::ALG,
                 'use' => 'sig',
