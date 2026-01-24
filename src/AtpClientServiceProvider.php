@@ -166,6 +166,12 @@ class AtpClientServiceProvider extends ServiceProvider
 
     /**
      * Register OAuth metadata routes
+     *
+     * By default, registers the AT Protocol recommended endpoints:
+     * - GET /oauth-client-metadata.json (client metadata / client_id)
+     * - GET /oauth-jwks.json (JSON Web Key Set)
+     *
+     * @see https://atproto.com/guides/oauth#clients
      */
     protected function registerRoutes(): void
     {
@@ -173,19 +179,14 @@ class AtpClientServiceProvider extends ServiceProvider
             return;
         }
 
-        $prefix = config('client.oauth.prefix', '/atp/oauth/');
+        $clientMetadataPath = config('client.oauth.client_metadata_path', '/oauth-client-metadata.json');
+        $jwksPath = config('client.oauth.jwks_path', '/oauth-jwks.json');
 
-        Route::prefix($prefix)->group(function () {
-            Route::get('client-metadata.json', ClientMetadataController::class)
-                ->name('atp.oauth.client-metadata');
+        Route::get($clientMetadataPath, ClientMetadataController::class)
+            ->name('atp.oauth.client-metadata');
 
-            Route::get('jwks.json', JwksController::class)
-                ->name('atp.oauth.jwks');
-        });
-
-        // Register recommended client id convention (see: https://atproto.com/guides/oauth#clients)
-        Route::get('oauth-client-metadata.json', ClientMetadataController::class)
-            ->name('atp.oauth.json');
+        Route::get($jwksPath, JwksController::class)
+            ->name('atp.oauth.jwks');
     }
 
     /**

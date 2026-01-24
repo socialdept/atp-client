@@ -78,14 +78,26 @@ return [
     | php artisan atp-client:generate-key
     |
     | The metadata endpoints are automatically available at:
-    | - GET /atp/oauth/client-metadata.json
-    | - GET /atp/oauth/jwks.json
-    | - GET /.well-known/oauth-client-metadata
+    | - GET /oauth-client-metadata.json (client metadata / client_id)
+    | - GET /oauth-jwks.json (JSON Web Key Set)
+    |
+    | @see https://atproto.com/guides/oauth#clients
     |
     */
     'oauth' => [
         'disabled' => env('ATP_OAUTH_DISABLED', false),
-        'prefix' => env('ATP_OAUTH_PREFIX', '/atp/oauth/'),
+
+        // Path to the client metadata endpoint (this URL becomes the client_id)
+        // AT Protocol recommends: /oauth-client-metadata.json
+        'client_metadata_path' => env('ATP_OAUTH_CLIENT_METADATA_PATH', '/oauth-client-metadata.json'),
+
+        // Path to the JWKS endpoint
+        'jwks_path' => env('ATP_OAUTH_JWKS_PATH', '/oauth-jwks.json'),
+
+        // Override the JWKS URI (useful for external OAuth brokers)
+        // If not set, uses the route-generated URL
+        'jwks_uri' => env('ATP_CLIENT_JWKS_URI'),
+
         'private_key' => env('ATP_OAUTH_PRIVATE_KEY'),
         'kid' => env('ATP_OAUTH_KID', 'atp-client-key'),
         'scope' => env('ATP_OAUTH_SCOPE', 'atproto transition:generic'),

@@ -31,10 +31,14 @@ class OAuthMetadata
             $stored = config('client.oauth.client_metadata', []);
         }
 
+        // Use configured client_id/jwks_uri if set, otherwise generate from routes
+        $clientId = config('client.client.client_id') ?: route('atp.oauth.client-metadata');
+        $jwksUri = config('client.oauth.jwks_uri') ?: route('atp.oauth.jwks');
+
         // Base metadata that should always be present
         $base = [
-            'client_id' => route('atp.oauth.client-metadata'),
-            'jwks_uri' => route('atp.oauth.jwks'),
+            'client_id' => $clientId,
+            'jwks_uri' => $jwksUri,
             'redirect_uris' => config('client.client.redirect_uris', []),
             'scope' => config('client.oauth.scope', 'atproto transition:generic'),
             'grant_types' => ['authorization_code', 'refresh_token'],

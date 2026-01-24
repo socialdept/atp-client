@@ -451,7 +451,8 @@ return [
     // OAuth settings
     'oauth' => [
         'disabled' => false,
-        'prefix' => '/atp/oauth/',
+        'client_metadata_path' => '/oauth-client-metadata.json', // AT Protocol standard
+        'jwks_path' => '/oauth-jwks.json',
         'private_key' => env('ATP_OAUTH_PRIVATE_KEY'),
         'kid' => env('ATP_OAUTH_KID', 'atp-client-key'),
     ],
@@ -477,9 +478,19 @@ ATP_OAUTH_PRIVATE_KEY="base64-encoded-private-key"
 ATP_OAUTH_KID="atp-client-key"
 ATP_REFRESH_THRESHOLD=300
 ATP_HTTP_TIMEOUT=30
+
+# Optional: Override client_id and jwks_uri for external OAuth brokers
+ATP_CLIENT_ID="https://broker.example.com/clients/your-client-id"
+ATP_CLIENT_JWKS_URI="https://broker.example.com/clients/your-client-id/jwks"
+
+# Optional: Customize endpoint paths (defaults to AT Protocol standard)
+ATP_OAUTH_CLIENT_METADATA_PATH="/oauth-client-metadata.json"
+ATP_OAUTH_JWKS_PATH="/oauth-jwks.json"
 ```
 
 The `ATP_OAUTH_KID` is the Key ID used in your JWKS endpoint. Some developers may require this to match a specific value. The default is `atp-client-key`.
+
+When using an external OAuth broker, set `ATP_CLIENT_ID` and `ATP_CLIENT_JWKS_URI` to override the auto-generated URLs.
 
 ## Credential Storage
 
