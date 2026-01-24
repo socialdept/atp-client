@@ -128,9 +128,9 @@ class ClientMetadataManager
         }
 
         // Production: point to client metadata endpoint
-        $prefix = config('client.oauth.prefix', '/atp/oauth/');
+        $path = config('client.oauth.client_metadata_path', '/oauth-client-metadata.json');
 
-        return rtrim($appUrl, '/').rtrim($prefix, '/').'/client-metadata.json';
+        return rtrim($appUrl, '/').'/'.ltrim($path, '/');
     }
 
     /**
