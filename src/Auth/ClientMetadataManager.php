@@ -26,7 +26,7 @@ class ClientMetadataManager
      */
     public function getClientId(): string
     {
-        $clientId = config('client.client.client_id');
+        $clientId = config('atp-client.client.client_id');
 
         if ($clientId) {
             return $clientId;
@@ -54,7 +54,7 @@ class ClientMetadataManager
      */
     public function getRedirectUris(): array
     {
-        $uris = config('client.client.redirect_uris', []);
+        $uris = config('atp-client.client.redirect_uris', []);
 
         if (! empty($uris)) {
             return $uris;
@@ -67,7 +67,7 @@ class ClientMetadataManager
         }
 
         // For production, use app URL
-        return [config('client.client.url').'/auth/atp/callback'];
+        return [config('atp-client.client.url').'/auth/atp/callback'];
     }
 
     /**
@@ -77,7 +77,7 @@ class ClientMetadataManager
      */
     public function getScopes(): array
     {
-        return config('client.client.scopes', ['atproto', 'transition:generic']);
+        return config('atp-client.client.scopes', ['atproto', 'transition:generic']);
     }
 
     /**
@@ -91,8 +91,8 @@ class ClientMetadataManager
     {
         return [
             'client_id' => $this->getClientId(),
-            'client_name' => config('client.client.name'),
-            'client_uri' => config('client.client.url'),
+            'client_name' => config('atp-client.client.name'),
+            'client_uri' => config('atp-client.client.url'),
             'redirect_uris' => $this->getRedirectUris(),
             'scope' => implode(' ', $this->getScopes()),
             'grant_types' => [
@@ -119,7 +119,7 @@ class ClientMetadataManager
      */
     protected function generateClientId(): string
     {
-        $appUrl = config('client.client.url') ?? config('app.url');
+        $appUrl = config('atp-client.client.url') ?? config('app.url');
         $host = parse_url($appUrl, PHP_URL_HOST);
 
         // Detect local development environments
@@ -128,7 +128,7 @@ class ClientMetadataManager
         }
 
         // Production: point to client metadata endpoint
-        $path = config('client.oauth.client_metadata_path', '/oauth-client-metadata.json');
+        $path = config('atp-client.oauth.client_metadata_path', '/oauth-client-metadata.json');
 
         return rtrim($appUrl, '/').'/'.ltrim($path, '/');
     }
@@ -145,7 +145,7 @@ class ClientMetadataManager
         $params = [];
 
         // Add redirect URI
-        $redirectUris = config('client.client.redirect_uris', []);
+        $redirectUris = config('atp-client.client.redirect_uris', []);
         if (! empty($redirectUris)) {
             $params['redirect_uri'] = $redirectUris[0];
         } else {
@@ -153,7 +153,7 @@ class ClientMetadataManager
         }
 
         // Add scopes
-        $scopes = config('client.client.scopes', ['atproto']);
+        $scopes = config('atp-client.client.scopes', ['atproto']);
         $params['scope'] = implode(' ', $scopes);
 
         return 'http://localhost?'.http_build_query($params);

@@ -34,11 +34,11 @@ class AtpClientServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/client.php', 'atp-client');
+        $this->mergeConfigFrom(__DIR__.'/../config/atp-client.php', 'atp-client');
 
         // Register contracts
         $this->app->singleton(CredentialProvider::class, function ($app) {
-            $provider = config('client.credential_provider');
+            $provider = config('atp-client.credential_provider');
 
             return new $provider();
         });
@@ -63,7 +63,7 @@ class AtpClientServiceProvider extends ServiceProvider
                 refresher: $app->make(TokenRefresher::class),
                 dpopManager: $app->make(DPoPKeyManager::class),
                 keyStore: $app->make(KeyStore::class),
-                refreshThreshold: config('client.session.refresh_threshold', 300),
+                refreshThreshold: config('atp-client.session.refresh_threshold', 300),
             );
         });
         $this->app->singleton(OAuthEngine::class);
@@ -126,7 +126,7 @@ class AtpClientServiceProvider extends ServiceProvider
                     return new AtpClient(
                         sessions: null,
                         did: null,
-                        serviceUrl: $service ?? config('atp-client.public.service_url', 'https://public.api.bsky.app')
+                        serviceUrl: $service ?? config('atp-support.public_api', 'https://public.api.bsky.app')
                     );
                 }
             };
@@ -140,7 +140,7 @@ class AtpClientServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../config/client.php' => config_path('client.php'),
+                __DIR__.'/../config/atp-client.php' => config_path('atp-client.php'),
             ], 'atp-client-config');
 
             $this->commands([
@@ -175,12 +175,12 @@ class AtpClientServiceProvider extends ServiceProvider
      */
     protected function registerRoutes(): void
     {
-        if (config('client.oauth.disabled')) {
+        if (config('atp-client.oauth.disabled')) {
             return;
         }
 
-        $clientMetadataPath = config('client.oauth.client_metadata_path', '/oauth-client-metadata.json');
-        $jwksPath = config('client.oauth.jwks_path', '/oauth-jwks.json');
+        $clientMetadataPath = config('atp-client.oauth.client_metadata_path', '/oauth-client-metadata.json');
+        $jwksPath = config('atp-client.oauth.jwks_path', '/oauth-jwks.json');
 
         Route::get($clientMetadataPath, ClientMetadataController::class)
             ->name('atp.oauth.client-metadata');

@@ -12,7 +12,7 @@ class OAuthKey extends P256
      */
     public static function load(?string $private = null): static
     {
-        $private ??= config('client.oauth.private_key');
+        $private ??= config('atp-client.oauth.private_key');
 
         throw_if(empty($private), InvalidArgumentException::class, 'OAuth private key not configured. Run: php artisan atp-client:generate-key');
 

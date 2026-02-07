@@ -2,7 +2,7 @@
 
 namespace SocialDept\AtpClient\RichText;
 
-use SocialDept\AtpResolver\Facades\Resolver;
+use SocialDept\AtpSupport\Facades\Resolver;
 
 class FacetDetector
 {

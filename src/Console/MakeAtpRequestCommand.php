@@ -60,7 +60,7 @@ class MakeAtpRequestCommand extends Command
 
     protected function getPath(string $name): string
     {
-        $basePath = config('client.generators.request_path', 'app/Services/Clients/Requests');
+        $basePath = config('atp-client.generators.request_path', 'app/Services/Clients/Requests');
 
         return base_path($basePath.'/'.$name.'.php');
     }
@@ -74,7 +74,7 @@ class MakeAtpRequestCommand extends Command
 
     protected function getNamespace(): string
     {
-        $basePath = config('client.generators.request_path', 'app/Services/Clients/Requests');
+        $basePath = config('atp-client.generators.request_path', 'app/Services/Clients/Requests');
 
         return Str::of($basePath)
             ->replace('/', '\\')
