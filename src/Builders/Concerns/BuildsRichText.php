@@ -3,7 +3,7 @@
 namespace SocialDept\AtpClient\Builders\Concerns;
 
 use SocialDept\AtpClient\RichText\FacetDetector;
-use SocialDept\AtpResolver\Facades\Resolver;
+use SocialDept\AtpSupport\Facades\Resolver;
 
 trait BuildsRichText
 {

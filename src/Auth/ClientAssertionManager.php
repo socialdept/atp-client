@@ -15,7 +15,7 @@ class ClientAssertionManager
      */
     public function isRequired(): bool
     {
-        return ! empty(config('client.oauth.private_key'));
+        return ! empty(config('atp-client.oauth.private_key'));
     }
 
     /**
@@ -37,7 +37,7 @@ class ClientAssertionManager
 
         $header = [
             'alg' => 'ES256',
-            'kid' => config('client.oauth.kid', 'atp-client-key'),
+            'kid' => config('atp-client.oauth.kid', 'atp-client-key'),
             'typ' => 'JWT',
         ];
 

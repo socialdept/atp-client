@@ -13,7 +13,7 @@ use SocialDept\AtpClient\Events\SessionAuthenticated;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\OAuthSessionInvalidException;
 use SocialDept\AtpClient\Http\DPoPClient;
-use SocialDept\AtpResolver\Facades\Resolver;
+use SocialDept\AtpSupport\Facades\Resolver;
 
 class OAuthEngine
 {

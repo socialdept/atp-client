@@ -13,11 +13,11 @@ use SocialDept\AtpClient\Events\SessionRefreshFailed;
 use SocialDept\AtpClient\Events\SessionRefreshing;
 use SocialDept\AtpClient\Events\SessionUpdated;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
-use SocialDept\AtpClient\Exceptions\HandleResolutionException;
 use SocialDept\AtpClient\Exceptions\OAuthSessionInvalidException;
 use SocialDept\AtpClient\Exceptions\SessionExpiredException;
-use SocialDept\AtpResolver\Facades\Resolver;
-use SocialDept\AtpResolver\Support\Identity;
+use SocialDept\AtpSupport\Exceptions\HandleResolutionException;
+use SocialDept\AtpSupport\Facades\Resolver;
+use SocialDept\AtpSupport\Identity;
 use Throwable;
 
 class SessionManager
@@ -48,7 +48,7 @@ class SessionManager
         $did = Resolver::handleToDid($actor);
 
         if (! $did) {
-            throw new HandleResolutionException($actor);
+            throw HandleResolutionException::resolutionFailed($actor);
         }
 
         return $did;
