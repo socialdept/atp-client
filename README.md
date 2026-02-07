@@ -1023,7 +1023,7 @@ composer test
 
 Found a bug or have a feature request? [Open an issue](https://github.com/socialdept/atp-client/issues).
 
-Want to contribute? Check out the [contribution guidelines](contributing.md).
+Want to contribute? Check out the [contribution guidelines](CONTRIBUTING.md).
 
 ## Changelog
 
@@ -1040,4 +1040,4 @@ AtpClient is open-source software licensed under the [MIT license](license.md).
 
 ---
 
-**Built for the Federation** - By Social Dept.
+**Built for the Atmosphere** - By Social Dept.
