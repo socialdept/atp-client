@@ -130,6 +130,80 @@ class OAuthEngine
     }
 
     /**
+     * Prepare authorization parameters for client-side PAR.
+     *
+     * Resolves the user's PDS, discovers the authorization server,
+     * generates PKCE + state, and returns the metadata the caller
+     * needs to perform PAR themselves (e.g. client-side with a
+     * non-extractable DPoP key).
+     */
+    public function prepareAuthorization(
+        string $identifier,
+        ?array $scopes = null,
+        ?string $pdsEndpoint = null,
+    ): array {
+        $scopes = $scopes ?? $this->metadata->getScopes();
+
+        if (! $pdsEndpoint) {
+            $pdsEndpoint = Resolver::resolvePds($identifier);
+        }
+
+        $authServer = $this->discovery->discover($pdsEndpoint);
+
+        $codeVerifier = Str::random(128);
+        $codeChallenge = $this->generatePkceChallenge($codeVerifier);
+        $state = Str::random(32);
+
+        return [
+            'state' => $state,
+            'codeVerifier' => $codeVerifier,
+            'codeChallenge' => $codeChallenge,
+            'codeChallengeMethod' => 'S256',
+            'scopes' => implode(' ', $scopes),
+            'parEndpoint' => $authServer->parEndpoint,
+            'authorizationEndpoint' => $authServer->authorizationEndpoint,
+            'issuer' => $authServer->issuer,
+            'tokenEndpoint' => $authServer->tokenEndpoint,
+            'redirectUri' => $this->metadata->getRedirectUris()[0] ?? null,
+            'clientId' => $this->metadata->getClientId(),
+            'pdsEndpoint' => $pdsEndpoint,
+            'handle' => $identifier,
+        ];
+    }
+
+    /**
+     * Validate the OAuth callback but return the authorization code
+     * and metadata without exchanging it for tokens.
+     *
+     * This allows the caller to perform the token exchange themselves
+     * (e.g. client-side with a non-extractable DPoP key).
+     *
+     * @return array{code: string, codeVerifier: string, redirectUri: string|null, issuer: string, tokenEndpoint: string, pdsEndpoint: string, handle: string|null}
+     */
+    public function callbackWithoutExchange(
+        string $code,
+        string $state,
+        AuthorizationRequest $request,
+    ): array {
+        if ($state !== $request->state) {
+            throw new AuthenticationException('State mismatch');
+        }
+
+        $authServerIssuer = $request->authServerIssuer ?? $request->pdsEndpoint;
+        $tokenEndpoint = $request->tokenEndpoint ?? $authServerIssuer.'/oauth/token';
+
+        return [
+            'code' => $code,
+            'codeVerifier' => $request->codeVerifier,
+            'redirectUri' => $this->metadata->getRedirectUris()[0] ?? null,
+            'issuer' => $authServerIssuer,
+            'tokenEndpoint' => $tokenEndpoint,
+            'pdsEndpoint' => $request->pdsEndpoint,
+            'handle' => $request->handle,
+        ];
+    }
+
+    /**
      * Initiate OAuth authorization for re-authentication.
      *
      * Unlike regular authorize(), this caches the request keyed by the original
