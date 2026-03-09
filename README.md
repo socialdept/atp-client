@@ -986,6 +986,103 @@ $client->bsky->metrics->getEngagement();
 
 For complete documentation including creating custom clients, testing, and advanced patterns, see [docs/extensions.md](docs/extensions.md).
 
+## Testing
+
+AtpClient ships with a first-party fake that replaces all HTTP calls with in-memory stubs — no network requests, no tokens, no PDS needed.
+
+### Basic Usage
+
+```php
+use SocialDept\AtpClient\Facades\Atp;
+use SocialDept\AtpClient\Enums\Nsid\BskyActor;
+use SocialDept\AtpClient\Testing\FakeResponse;
+
+it('fetches a profile', function () {
+    $fake = Atp::fake();
+    $fake->stub(BskyActor::GetProfile, FakeResponse::profile([
+        'handle' => 'alice.bsky.social',
+        'displayName' => 'Alice',
+    ]));
+
+    $profile = Atp::public()->bsky->actor->getProfile('alice.bsky.social');
+
+    expect($profile->handle)->toBe('alice.bsky.social');
+    $fake->assertCalled(BskyActor::GetProfile);
+});
+```
+
+### Stubbing with Enums
+
+Use the NSID enum classes for autocomplete and type safety. All `stub()`, `sequence()`, and assertion methods accept enums:
+
+```php
+use SocialDept\AtpClient\Enums\Nsid\BskyFeed;
+use SocialDept\AtpClient\Enums\Nsid\AtprotoRepo;
+
+$fake = Atp::fake();
+$fake->stub(BskyFeed::GetTimeline, FakeResponse::timeline(5));
+$fake->stub(AtprotoRepo::CreateRecord, FakeResponse::createRecord());
+
+// Assertions with enums
+$fake->assertCalled(BskyFeed::GetTimeline);
+$fake->assertCalledTimes(AtprotoRepo::CreateRecord, 1);
+```
+
+### Response Factories
+
+`FakeResponse` provides factories for all common AT Protocol response shapes — profiles, feeds, posts, records, sessions, graph, and notifications — plus composable builders for any endpoint:
+
+```php
+// Named factories
+FakeResponse::profile(['handle' => 'alice.bsky.social']);
+FakeResponse::timeline(5, cursor: 'abc');
+FakeResponse::createRecord();
+FakeResponse::getPostThread();
+
+// Composable builders for uncovered endpoints
+FakeResponse::feedList(10, cursor: 'next');
+FakeResponse::profileList(5, key: 'followers');
+FakeResponse::postList(3, key: 'quotes');
+
+// Error responses
+FakeResponse::expiredToken();
+FakeResponse::rateLimited(60);
+FakeResponse::invalidSwap();
+```
+
+### Assertions
+
+```php
+$fake->assertCalled(BskyActor::GetProfile);
+$fake->assertNotCalled(BskyFeed::GetTimeline);
+$fake->assertCalledTimes(AtprotoRepo::CreateRecord, 2);
+$fake->assertCalledPublicly(BskyActor::GetProfile);
+$fake->assertCalledAuthenticated(BskyFeed::GetTimeline, 'did:plc:test123');
+$fake->assertNothingCalled();
+
+// With callback inspection
+$fake->assertCalledWith(BskyActor::GetProfile, function ($request) {
+    return $request->hasParam('actor', 'alice.bsky.social');
+});
+```
+
+### Sequences, Errors, and More
+
+```php
+// Response sequences
+$fake->sequence(BskyActor::GetProfile)
+    ->push(FakeResponse::ok(FakeResponse::profile(['handle' => 'first'])))
+    ->push(FakeResponse::ok(FakeResponse::profile(['handle' => 'second'])));
+
+// Simulate errors
+$fake->stub(AtprotoRepo::CreateRecord, FakeResponse::invalidSwap());
+
+// Prevent unstubbed requests
+$fake->preventStrayRequests();
+```
+
+For the complete testing guide including authenticated mode, OAuth faking, wildcard stubs, callable stubs, and all available factories, see [docs/testing.md](docs/testing.md).
+
 ## Available Commands
 
 ```bash
@@ -1006,7 +1103,7 @@ php artisan make:atp-request MetricsClient --domain=bsky
 - [socialdept/atp-schema](https://github.com/socialdept/atp-schema) ^0.2
 - [socialdept/atp-resolver](https://github.com/socialdept/atp-resolver) ^1.0
 
-## Testing
+## Running Tests
 
 ```bash
 composer test
@@ -1018,6 +1115,7 @@ composer test
 - [Bluesky API Docs](https://docs.bsky.app/)
 - [CRYPTO.md](CRYPTO.md) - Cryptographic implementation details
 - [docs/extensions.md](docs/extensions.md) - Client extensions guide
+- [docs/testing.md](docs/testing.md) - Testing guide
 
 ## Support & Contributing
 
