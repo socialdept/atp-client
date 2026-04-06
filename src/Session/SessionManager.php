@@ -15,6 +15,7 @@ use SocialDept\AtpClient\Events\SessionUpdated;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\OAuthSessionInvalidException;
 use SocialDept\AtpClient\Exceptions\SessionExpiredException;
+use SocialDept\AtpClient\Exceptions\TransientAuthFailureException;
 use SocialDept\AtpSupport\Exceptions\HandleResolutionException;
 use SocialDept\AtpSupport\Facades\Resolver;
 use SocialDept\AtpSupport\Identity;
@@ -154,7 +155,7 @@ class SessionManager
         try {
             $newToken = $this->refresher->refresh(
                 refreshToken: $session->refreshToken(),
-                pdsEndpoint: $session->authServer(),
+                pdsEndpoint: $session->pdsEndpoint(),
                 dpopKey: $session->dpopKey(),
                 handle: $session->handle(),
                 authType: $session->authType(),
@@ -187,6 +188,10 @@ class SessionManager
      */
     protected function categorizeRefreshError(Throwable $e): string
     {
+        if ($e instanceof TransientAuthFailureException) {
+            return 'transient';
+        }
+
         if ($e instanceof OAuthSessionInvalidException) {
             if (str_contains($e->getMessage(), 'missing')) {
                 return 'missing';
