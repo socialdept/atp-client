@@ -101,6 +101,7 @@ class OAuthEngine
         $tokenUrl = $request->tokenEndpoint ?? $request->pdsEndpoint.'/oauth/token';
 
         $response = $this->dpopClient->request($authServerIssuer, $tokenUrl, 'POST', $request->dpopKey)
+            ->withRequestMiddleware($this->clientAssertion->refreshAssertionMiddleware($authServerIssuer))
             ->asForm()
             ->post($tokenUrl, array_merge(
                 $this->clientAssertion->getAuthParams($authServerIssuer),
@@ -276,6 +277,7 @@ class OAuthEngine
         $parUrl = $authServer->parEndpoint;
 
         $response = $this->dpopClient->request($authServer->issuer, $parUrl, 'POST', $dpopKey)
+            ->withRequestMiddleware($this->clientAssertion->refreshAssertionMiddleware($authServer->issuer))
             ->asForm()
             ->post($parUrl, array_merge(
                 $this->clientAssertion->getAuthParams($authServer->issuer),
