@@ -2,7 +2,10 @@
 
 namespace SocialDept\AtpClient\Auth;
 
+use Closure;
 use Firebase\JWT\JWT;
+use GuzzleHttp\Psr7\Utils;
+use Psr\Http\Message\RequestInterface;
 
 class ClientAssertionManager
 {
@@ -73,5 +76,35 @@ class ClientAssertionManager
             'client_assertion_type' => $this->getAssertionType(),
             'client_assertion' => $this->createAssertion($audience),
         ];
+    }
+
+    /**
+     * Build a Http request middleware that swaps the `client_assertion` form
+     * parameter with a freshly minted JWT on every attempt.
+     *
+     * The DPoP layer wraps requests in `Http::retry()`, so the same outgoing
+     * request can be sent multiple times (e.g. after a DPoP-Nonce challenge).
+     * Without this middleware the same assertion JWT — including its `jti` —
+     * is replayed, which authorization servers reject as `private_key_jwt jti
+     * reused`.
+     */
+    public function refreshAssertionMiddleware(string $audience): Closure
+    {
+        return function (RequestInterface $request) use ($audience): RequestInterface {
+            if (! $this->isRequired()) {
+                return $request;
+            }
+
+            $body = (string) $request->getBody();
+            parse_str($body, $params);
+
+            if (! isset($params['client_assertion'])) {
+                return $request;
+            }
+
+            $params['client_assertion'] = $this->createAssertion($audience);
+
+            return $request->withBody(Utils::streamFor(http_build_query($params)));
+        };
     }
 }

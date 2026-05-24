@@ -66,6 +66,7 @@ class TokenRefresher
 
         for ($attempt = 0; $attempt <= $this->maxRetries; $attempt++) {
             $response = $this->dpopClient->request($issuer, $tokenUrl, 'POST', $dpopKey)
+                ->withRequestMiddleware($this->clientAssertion->refreshAssertionMiddleware($issuer))
                 ->asForm()
                 ->post($tokenUrl, array_merge(
                     $this->clientAssertion->getAuthParams($issuer),

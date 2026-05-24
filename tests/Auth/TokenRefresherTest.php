@@ -178,6 +178,7 @@ class TokenRefresherTest extends TestCase
             'client_assertion_type' => 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
             'client_assertion' => 'test-assertion',
         ]);
+        $clientAssertion->shouldReceive('refreshAssertionMiddleware')->andReturn(fn ($request) => $request);
 
         $discovery = Mockery::mock(AuthorizationServerDiscovery::class);
         $discovery->shouldReceive('discover')->andReturn(new AuthorizationServerMetadata(
