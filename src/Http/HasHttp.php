@@ -42,9 +42,9 @@ trait HasHttp
         $request = $this->buildAuthenticatedRequest($session, $url, $method);
 
         $response = match ($method) {
-            'GET' => $request->get($url, $params),
+            'GET' => $request->get($url, $this->encodeQueryParams($params)),
             'POST' => $request->post($url, $body ?? $params),
-            'DELETE' => $request->delete($url, $params),
+            'DELETE' => $request->delete($url, $this->encodeQueryParams($params)),
             default => throw new InvalidArgumentException("Unsupported method: {$method}"),
         };
 
@@ -57,6 +57,24 @@ trait HasHttp
         }
 
         return new Response($response);
+    }
+
+    /**
+     * Encode query parameters for AT Protocol XRPC requests.
+     *
+     * XRPC serializes boolean query parameters as the literal strings "true"
+     * and "false". PHP's HTTP client would otherwise cast false to "0", which
+     * the server rejects with "Expected boolean value type (got \"0\")".
+     *
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    protected function encodeQueryParams(array $params): array
+    {
+        return array_map(
+            fn ($value) => is_bool($value) ? ($value ? 'true' : 'false') : $value,
+            $params,
+        );
     }
 
     /**
