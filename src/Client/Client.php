@@ -99,9 +99,9 @@ class Client
         $params = array_filter($params ?? [], fn ($v) => ! is_null($v));
 
         $response = match ($method) {
-            'GET' => Http::get($url, $params),
+            'GET' => Http::get($url, $this->encodeQueryParams($params)),
             'POST' => Http::post($url, $body ?? $params),
-            'DELETE' => Http::delete($url, $params),
+            'DELETE' => Http::delete($url, $this->encodeQueryParams($params)),
             default => throw new \InvalidArgumentException("Unsupported method: {$method}"),
         };
 
