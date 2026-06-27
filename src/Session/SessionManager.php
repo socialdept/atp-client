@@ -2,6 +2,8 @@
 
 namespace SocialDept\AtpClient\Session;
 
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\TokenRefresher;
@@ -31,7 +33,11 @@ class SessionManager
         protected DPoPKeyManager $dpopManager,
         protected KeyStore $keyStore,
         protected int $refreshThreshold = 300, // 5 minutes
-    ) {}
+        protected bool $serializeRefresh = true,
+        protected int $refreshLockWait = 10,
+        protected int $refreshLockTtl = 15,
+    ) {
+    }
 
     /**
      * Resolve an actor (handle or DID) to a DID.
@@ -140,12 +146,59 @@ class SessionManager
     }
 
     /**
-     * Refresh session tokens
+     * Refresh session tokens.
+     *
+     * INFO: Refresh tokens are single-use. A per-DID lock serializes concurrent
+     * refreshes (a publish fans out into many authed calls); the loser re-reads
+     * and adopts the winner's rotated token instead of replaying a consumed one.
      *
      * @throws OAuthSessionInvalidException When refresh token is missing or refresh fails due to auth issues
      * @throws AuthenticationException When token refresh fails for other reasons
      */
     protected function refreshSession(Session $session): Session
+    {
+        if (! $this->serializeRefresh) {
+            return $this->performRefresh($session);
+        }
+
+        $lock = Cache::lock('atp-client:refresh:'.$session->did(), $this->refreshLockTtl);
+
+        try {
+            return $lock->block($this->refreshLockWait, function () use ($session) {
+                return $this->adoptRotatedSession($session) ?? $this->performRefresh($session);
+            });
+        } catch (LockTimeoutException) {
+            // FIX: lock contention shouldn't fail the caller — refresh unsynchronized.
+            return $this->performRefresh($session);
+        }
+    }
+
+    /**
+     * Adopt credentials a concurrent request already rotated; null if the stored
+     * token still matches ours (no refresh happened) and we must refresh.
+     */
+    protected function adoptRotatedSession(Session $session): ?Session
+    {
+        $creds = $this->credentials->getCredentials($session->did());
+
+        if (! $creds || $creds->refreshToken === $session->refreshToken()) {
+            return null;
+        }
+
+        $newSession = $session->withCredentials($creds);
+        $this->sessions[$session->did()] = $newSession;
+
+        return $newSession;
+    }
+
+    /**
+     * Refresh against the PDS and persist. Runs inside the per-DID lock from
+     * {@see refreshSession} unless serialization is disabled.
+     *
+     * @throws OAuthSessionInvalidException
+     * @throws AuthenticationException
+     */
+    protected function performRefresh(Session $session): Session
     {
         $did = $session->did();
 
