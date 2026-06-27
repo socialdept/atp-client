@@ -14,16 +14,16 @@ use SocialDept\AtpClient\Auth\OAuthEngine;
 use SocialDept\AtpClient\Auth\ScopeChecker;
 use SocialDept\AtpClient\Auth\ScopeGate;
 use SocialDept\AtpClient\Auth\TokenRefresher;
-use SocialDept\AtpClient\Enums\ScopeEnforcementLevel;
-use SocialDept\AtpClient\Http\Middleware\RequiresScopeMiddleware;
 use SocialDept\AtpClient\Console\GenerateOAuthKeyCommand;
 use SocialDept\AtpClient\Console\MakeAtpClientCommand;
 use SocialDept\AtpClient\Console\MakeAtpRequestCommand;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
+use SocialDept\AtpClient\Enums\ScopeEnforcementLevel;
 use SocialDept\AtpClient\Http\Controllers\ClientMetadataController;
 use SocialDept\AtpClient\Http\Controllers\JwksController;
 use SocialDept\AtpClient\Http\DPoPClient;
+use SocialDept\AtpClient\Http\Middleware\RequiresScopeMiddleware;
 use SocialDept\AtpClient\Session\SessionManager;
 use SocialDept\AtpClient\Storage\EncryptedFileKeyStore;
 
@@ -64,6 +64,9 @@ class AtpClientServiceProvider extends ServiceProvider
                 dpopManager: $app->make(DPoPKeyManager::class),
                 keyStore: $app->make(KeyStore::class),
                 refreshThreshold: config('atp-client.session.refresh_threshold', 300),
+                serializeRefresh: config('atp-client.session.refresh_serialize', true),
+                refreshLockWait: config('atp-client.session.refresh_lock_wait', 10),
+                refreshLockTtl: config('atp-client.session.refresh_lock_ttl', 15),
             );
         });
         $this->app->singleton(OAuthEngine::class);
@@ -83,8 +86,7 @@ class AtpClientServiceProvider extends ServiceProvider
 
         // Register main client facade accessor
         $this->app->bind('atp-client', function ($app) {
-            return new class($app)
-            {
+            return new class ($app) {
                 protected $app;
 
                 protected ?CredentialProvider $defaultProvider = null;

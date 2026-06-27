@@ -66,6 +66,17 @@ return [
 
         // Rotate DPoP keys after this many seconds
         'dpop_key_rotation' => env('ATP_DPOP_KEY_ROTATION', 86400),
+
+        // Serialize per-DID refreshes with an atomic cache lock so concurrent
+        // refreshes of a single-use token don't race. Needs a lock-capable store
+        // (redis, memcached, database, array, file); disable to run unsynchronized.
+        'refresh_serialize' => env('ATP_REFRESH_SERIALIZE', true),
+
+        // Seconds to wait for the lock before falling back to an unsynchronized refresh.
+        'refresh_lock_wait' => env('ATP_REFRESH_LOCK_WAIT', 10),
+
+        // Lock TTL (seconds); auto-released so a crashed worker can't hold it forever.
+        'refresh_lock_ttl' => env('ATP_REFRESH_LOCK_TTL', 15),
     ],
 
     /*
