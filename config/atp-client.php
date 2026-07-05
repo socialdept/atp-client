@@ -67,6 +67,12 @@ return [
         // Rotate DPoP keys after this many seconds
         'dpop_key_rotation' => env('ATP_DPOP_KEY_ROTATION', 86400),
 
+        // When an EXISTING OAuth session's DPoP key is missing, throw (forcing a
+        // reconnect) instead of silently minting a new key — a new key no longer
+        // matches the token binding and guarantees invalid_grant on refresh.
+        // Only enable for consumers that intentionally keep DPoP keys ephemeral.
+        'allow_key_regeneration' => env('ATP_ALLOW_KEY_REGENERATION', false),
+
         // Serialize per-DID refreshes with an atomic cache lock so concurrent
         // refreshes of a single-use token don't race. Needs a lock-capable store
         // (redis, memcached, database, array, file); disable to run unsynchronized.

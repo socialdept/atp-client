@@ -67,6 +67,7 @@ class AtpClientServiceProvider extends ServiceProvider
                 serializeRefresh: config('atp-client.session.refresh_serialize', true),
                 refreshLockWait: config('atp-client.session.refresh_lock_wait', 10),
                 refreshLockTtl: config('atp-client.session.refresh_lock_ttl', 15),
+                allowKeyRegeneration: config('atp-client.session.allow_key_regeneration', false),
             );
         });
         $this->app->singleton(OAuthEngine::class);

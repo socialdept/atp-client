@@ -11,6 +11,7 @@ use SocialDept\AtpClient\Auth\TokenRefresher;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Data\AccessToken;
+use SocialDept\AtpClient\Enums\AuthType;
 use SocialDept\AtpClient\Enums\RefreshFailureReason;
 use SocialDept\AtpClient\Events\SessionAuthenticated;
 use SocialDept\AtpClient\Events\SessionRefreshFailed;
@@ -19,6 +20,7 @@ use SocialDept\AtpClient\Events\SessionUpdated;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\OAuthSessionInvalidException;
 use SocialDept\AtpClient\Exceptions\SessionExpiredException;
+use SocialDept\AtpClient\Exceptions\TransientAuthFailureException;
 use SocialDept\AtpSupport\Exceptions\HandleResolutionException;
 use SocialDept\AtpSupport\Facades\Resolver;
 use SocialDept\AtpSupport\Identity;
@@ -37,6 +39,7 @@ class SessionManager
         protected bool $serializeRefresh = true,
         protected int $refreshLockWait = 10,
         protected int $refreshLockTtl = 15,
+        protected bool $allowKeyRegeneration = false,
     ) {
     }
 
@@ -136,6 +139,15 @@ class SessionManager
         $dpopKey = $this->keyStore->get($sessionId);
 
         if (! $dpopKey) {
+            // An existing OAuth session's refresh token is bound to its DPoP key.
+            // If the key is gone (wiped/unshared store), minting a new one would
+            // guarantee invalid_grant on the next refresh — fail loud for a clean
+            // reconnect instead. Legacy sessions don't use DPoP, so a fresh key is
+            // harmless there; fresh OAuth logins mint the key during the callback.
+            if ($creds->authType === AuthType::OAuth && ! $this->allowKeyRegeneration) {
+                throw OAuthSessionInvalidException::missingDpopKey($creds->did);
+            }
+
             $dpopKey = $this->dpopManager->generateKey($sessionId);
         }
 
@@ -169,9 +181,24 @@ class SessionManager
                 return $this->adoptRotatedSession($session) ?? $this->performRefresh($session);
             });
         } catch (LockTimeoutException) {
-            // FIX: lock contention shouldn't fail the caller — refresh unsynchronized.
-            return $this->performRefresh($session);
+            // Lock contention must NOT replay a consumed single-use token. Adopt the
+            // token the lock winner just rotated; if none is available yet, fail
+            // transient so the caller retries instead of racing into invalid_grant.
+            return $this->adoptRotatedSession($session)
+                ?? throw TransientAuthFailureException::lockContended()
+                    ->withReason(RefreshFailureReason::TemporarilyUnavailable);
         }
+    }
+
+    /**
+     * Force a token refresh for an actor, regardless of the access-token window.
+     * Used for inactivity keep-alive and reactive refresh on a 401.
+     *
+     * @throws AuthenticationException
+     */
+    public function refresh(string $actor): Session
+    {
+        return $this->refreshSession($this->session($actor));
     }
 
     /**
