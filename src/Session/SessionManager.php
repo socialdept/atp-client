@@ -6,10 +6,12 @@ use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
+use SocialDept\AtpClient\Auth\OAuthErrorClassifier;
 use SocialDept\AtpClient\Auth\TokenRefresher;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Data\AccessToken;
+use SocialDept\AtpClient\Enums\RefreshFailureReason;
 use SocialDept\AtpClient\Events\SessionAuthenticated;
 use SocialDept\AtpClient\Events\SessionRefreshFailed;
 use SocialDept\AtpClient\Events\SessionRefreshing;
@@ -17,7 +19,6 @@ use SocialDept\AtpClient\Events\SessionUpdated;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\OAuthSessionInvalidException;
 use SocialDept\AtpClient\Exceptions\SessionExpiredException;
-use SocialDept\AtpClient\Exceptions\TransientAuthFailureException;
 use SocialDept\AtpSupport\Exceptions\HandleResolutionException;
 use SocialDept\AtpSupport\Facades\Resolver;
 use SocialDept\AtpSupport\Identity;
@@ -214,8 +215,8 @@ class SessionManager
                 authType: $session->authType(),
             );
         } catch (Throwable $e) {
-            $reason = $this->categorizeRefreshError($e);
-            event(new SessionRefreshFailed($session, $e, $reason));
+            $reason = $this->resolveFailureReason($e);
+            event(new SessionRefreshFailed($session, $e, $reason->legacyReason(), $reason));
 
             throw $e;
         }
@@ -237,43 +238,15 @@ class SessionManager
     }
 
     /**
-     * Categorize a refresh error into a reason string.
+     * Resolve the structured failure reason for a refresh error — preferring a
+     * reason already attached by the refresher, else classifying the throwable.
      */
-    protected function categorizeRefreshError(Throwable $e): string
+    protected function resolveFailureReason(Throwable $e): RefreshFailureReason
     {
-        if ($e instanceof TransientAuthFailureException) {
-            return 'transient';
+        if ($e instanceof AuthenticationException && $e->reason instanceof RefreshFailureReason) {
+            return $e->reason;
         }
 
-        if ($e instanceof OAuthSessionInvalidException) {
-            if (str_contains($e->getMessage(), 'missing')) {
-                return 'missing';
-            }
-            if (str_contains($e->getMessage(), 'expired')) {
-                return 'expired';
-            }
-
-            return 'invalid';
-        }
-
-        $message = strtolower($e->getMessage());
-
-        if (str_contains($message, 'expired') || str_contains($message, 'ExpiredToken')) {
-            return 'expired';
-        }
-
-        if (str_contains($message, 'revoked') || str_contains($message, 'RevokedToken')) {
-            return 'revoked';
-        }
-
-        if (str_contains($message, 'invalid') || str_contains($message, 'InvalidToken')) {
-            return 'invalid';
-        }
-
-        if ($e instanceof AuthenticationException) {
-            return 'auth_failed';
-        }
-
-        return 'unknown';
+        return (new OAuthErrorClassifier())->classifyThrowable($e);
     }
 }

@@ -4,6 +4,7 @@ namespace SocialDept\AtpClient\Events;
 
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use SocialDept\AtpClient\Enums\RefreshFailureReason;
 use SocialDept\AtpClient\Session\Session;
 use Throwable;
 
@@ -15,5 +16,6 @@ class SessionRefreshFailed
         public readonly Session $session,
         public readonly Throwable $exception,
         public readonly string $reason,
+        public readonly ?RefreshFailureReason $failureReason = null,
     ) {}
 }

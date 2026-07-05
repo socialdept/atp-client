@@ -2,7 +2,6 @@
 
 namespace SocialDept\AtpClient\Auth;
 
-use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\DPoPKey;
@@ -18,11 +17,16 @@ class TokenRefresher
 
     protected int $retryDelayMs = 500;
 
+    protected OAuthErrorClassifier $classifier;
+
     public function __construct(
         protected DPoPClient $dpopClient,
         protected ClientAssertionManager $clientAssertion,
         protected AuthorizationServerDiscovery $discovery,
-    ) {}
+        ?OAuthErrorClassifier $classifier = null,
+    ) {
+        $this->classifier = $classifier ?? new OAuthErrorClassifier();
+    }
 
     /**
      * Refresh access token using refresh token.
@@ -80,8 +84,11 @@ class TokenRefresher
                 return AccessToken::fromResponse($response->json(), $handle, $issuer);
             }
 
-            if (! $this->isTransientFailure($response)) {
-                throw new AuthenticationException('Token refresh failed: '.$response->body());
+            $reason = $this->classifier->classifyResponse($response);
+
+            if ($reason->isTerminal()) {
+                throw (new AuthenticationException('Token refresh failed: '.$response->body()))
+                    ->withReason($reason);
             }
 
             // Last attempt — don't sleep, just throw
@@ -92,7 +99,8 @@ class TokenRefresher
             usleep($this->retryDelayMs * 1000 * ($attempt + 1));
         }
 
-        throw TransientAuthFailureException::fromResponse($response->body(), $response->status());
+        throw TransientAuthFailureException::fromResponse($response->body(), $response->status())
+            ->withReason($this->classifier->classifyResponse($response));
     }
 
     /**
@@ -113,8 +121,11 @@ class TokenRefresher
                 return AccessToken::fromResponse($response->json(), $handle, $pdsEndpoint);
             }
 
-            if (! $this->isTransientFailure($response)) {
-                throw new AuthenticationException('Token refresh failed: '.$response->body());
+            $reason = $this->classifier->classifyResponse($response);
+
+            if ($reason->isTerminal()) {
+                throw (new AuthenticationException('Token refresh failed: '.$response->body()))
+                    ->withReason($reason);
             }
 
             if ($attempt === $this->maxRetries) {
@@ -124,30 +135,7 @@ class TokenRefresher
             usleep($this->retryDelayMs * 1000 * ($attempt + 1));
         }
 
-        throw TransientAuthFailureException::fromResponse($response->body(), $response->status());
-    }
-
-    /**
-     * Determine if a failed response is a transient (retryable) failure.
-     *
-     * Transient: 5xx errors, HTML responses (proxy/CDN errors), 0 status (network failure)
-     * Permanent: 4xx errors with JSON body (invalid_grant, expired_token, etc.)
-     */
-    protected function isTransientFailure(Response $response): bool
-    {
-        $status = $response->status();
-
-        // Network failures or server errors are transient
-        if ($status === 0 || $status >= 500) {
-            return true;
-        }
-
-        // HTML response from a proxy/CDN instead of the actual API is transient
-        $body = $response->body();
-        if (str_contains($body, '<!DOCTYPE') || str_contains($body, '<html')) {
-            return true;
-        }
-
-        return false;
+        throw TransientAuthFailureException::fromResponse($response->body(), $response->status())
+            ->withReason($this->classifier->classifyResponse($response));
     }
 }
