@@ -17,6 +17,8 @@ use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\Credentials;
 use SocialDept\AtpClient\Data\DPoPKey;
 use SocialDept\AtpClient\Enums\AuthType;
+use SocialDept\AtpClient\Enums\RefreshFailureReason;
+use SocialDept\AtpClient\Events\SessionInvalid;
 use SocialDept\AtpClient\Events\SessionRefreshFailed;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\OAuthSessionInvalidException;
@@ -138,10 +140,47 @@ class SessionManagerTest extends TestCase
             keyStore: $keyStore,
         );
 
-        $this->expectException(OAuthSessionInvalidException::class);
-        $this->expectExceptionMessage('DPoP key missing');
+        Event::fake();
 
-        (new ReflectionMethod($manager, 'createSession'))->invoke($manager, 'did:plc:test');
+        try {
+            (new ReflectionMethod($manager, 'createSession'))->invoke($manager, 'did:plc:test');
+            $this->fail('Expected OAuthSessionInvalidException');
+        } catch (OAuthSessionInvalidException $e) {
+            $this->assertStringContainsString('DPoP key missing', $e->getMessage());
+        }
+
+        // Terminal death discovered before a refresh must still notify listeners
+        // (no Session exists to carry SessionRefreshFailed).
+        Event::assertDispatched(SessionInvalid::class, function (SessionInvalid $event) {
+            return $event->did === 'did:plc:test'
+                && $event->reason === RefreshFailureReason::InvalidGrant;
+        });
+    }
+
+    public function test_create_session_fires_session_invalid_when_no_credentials(): void
+    {
+        Event::fake();
+
+        $credentials = new ArrayCredentialProvider(); // empty — no creds for the DID
+
+        $manager = new SessionManager(
+            credentials: $credentials,
+            refresher: Mockery::mock(TokenRefresher::class),
+            dpopManager: Mockery::mock(DPoPKeyManager::class),
+            keyStore: Mockery::mock(KeyStore::class),
+        );
+
+        try {
+            (new ReflectionMethod($manager, 'createSession'))->invoke($manager, 'did:plc:gone');
+            $this->fail('Expected an exception');
+        } catch (\Throwable) {
+            // expected
+        }
+
+        Event::assertDispatched(SessionInvalid::class, function (SessionInvalid $event) {
+            return $event->did === 'did:plc:gone'
+                && $event->reason === RefreshFailureReason::MissingRefreshToken;
+        });
     }
 
     public function test_create_session_mints_key_when_regeneration_allowed(): void
@@ -182,7 +221,7 @@ class SessionManagerTest extends TestCase
         $refresher->shouldReceive('refresh')->never();
 
         $lock = Mockery::mock(Lock::class);
-        $lock->shouldReceive('block')->andThrow(new LockTimeoutException);
+        $lock->shouldReceive('block')->andThrow(new LockTimeoutException());
         Cache::shouldReceive('lock')->once()->andReturn($lock);
 
         $manager = $this->makeManager($credentials, $refresher);
@@ -202,7 +241,7 @@ class SessionManagerTest extends TestCase
         $refresher->shouldReceive('refresh')->never();
 
         $lock = Mockery::mock(Lock::class);
-        $lock->shouldReceive('block')->andThrow(new LockTimeoutException);
+        $lock->shouldReceive('block')->andThrow(new LockTimeoutException());
         Cache::shouldReceive('lock')->once()->andReturn($lock);
 
         $manager = $this->makeManager($credentials, $refresher);

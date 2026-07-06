@@ -2,6 +2,14 @@
 
 All notable changes to `AtpClient` will be documented in this file.
 
+## Version 0.3.2
+
+### Added
+- `SessionInvalid` event — fired when a session is found terminally invalid *before* a refresh can run (no credentials, or an OAuth grant whose DPoP key is gone). At that point no `Session` object exists, so `SessionRefreshFailed` cannot fire; consumers listen for `SessionInvalid` to flag the account for reconnect from these pre-refresh paths (e.g. a scheduled publish that touches a dead session).
+
+### Fixed
+- `Credentials::expiresIn()` cast the Carbon 3 float result to `int` explicitly, silencing the PHP 8.4 implicit float→int precision-loss deprecation raised on every session build/probe.
+
 ## Version 0.3.1
 
 ### Added
