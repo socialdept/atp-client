@@ -24,6 +24,8 @@ class Credentials
 
     public function expiresIn(): int
     {
-        return now()->diffInSeconds($this->expiresAt, false);
+        // Carbon 3 diffInSeconds returns a float; cast explicitly so PHP 8.4
+        // doesn't warn on the lossy implicit float->int narrowing.
+        return (int) now()->diffInSeconds($this->expiresAt, false);
     }
 }

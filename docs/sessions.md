@@ -106,3 +106,6 @@ The refresh token is DPoP-bound to the session's key. If that key is lost (e.g. 
 | `SessionRefreshing` | Before a refresh attempt | `session` |
 | `SessionUpdated` | After a successful refresh | `session`, `token` (new) |
 | `SessionRefreshFailed` | On a refresh failure | `session`, `exception`, `reason` (string), `failureReason` (typed) |
+| `SessionInvalid` | Terminal death found *before* a refresh (no credentials, or missing DPoP key) — no `Session` exists yet | `did`, `reason` (typed), `exception` |
+
+> Flag a dead session from **both** `SessionRefreshFailed` (terminal `failureReason`) and `SessionInvalid`. The former covers failures during a refresh; the latter covers sessions already unusable when first built (e.g. a scheduled job touching a grant whose key is gone), which never reach a refresh.
