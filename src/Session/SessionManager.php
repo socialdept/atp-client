@@ -14,6 +14,7 @@ use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Enums\AuthType;
 use SocialDept\AtpClient\Enums\RefreshFailureReason;
 use SocialDept\AtpClient\Events\SessionAuthenticated;
+use SocialDept\AtpClient\Events\SessionInvalid;
 use SocialDept\AtpClient\Events\SessionRefreshFailed;
 use SocialDept\AtpClient\Events\SessionRefreshing;
 use SocialDept\AtpClient\Events\SessionUpdated;
@@ -131,6 +132,9 @@ class SessionManager
         $creds = $this->credentials->getCredentials($did);
 
         if (! $creds) {
+            // Terminal, and no Session exists yet to carry a SessionRefreshFailed.
+            event(new SessionInvalid($did, RefreshFailureReason::MissingRefreshToken));
+
             throw new SessionExpiredException("No credentials found for {$did}");
         }
 
@@ -145,6 +149,8 @@ class SessionManager
             // reconnect instead. Legacy sessions don't use DPoP, so a fresh key is
             // harmless there; fresh OAuth logins mint the key during the callback.
             if ($creds->authType === AuthType::OAuth && ! $this->allowKeyRegeneration) {
+                event(new SessionInvalid($creds->did, RefreshFailureReason::InvalidGrant));
+
                 throw OAuthSessionInvalidException::missingDpopKey($creds->did);
             }
 
