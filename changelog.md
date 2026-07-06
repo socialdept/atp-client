@@ -2,6 +2,21 @@
 
 All notable changes to `AtpClient` will be documented in this file.
 
+## Version 0.3.1
+
+### Added
+- `RefreshFailureReason` enum + `OAuthErrorClassifier` — structured, parse-the-`error` classification of refresh failures into terminal (`invalid_grant`, `invalid_client`, missing refresh token, account inactive/not-found) vs transient (`use_dpop_nonce`, `temporarily_unavailable`, rate-limit, 5xx, network, unknown), replacing message string-sniffing. Both real terminal shapes are covered: `invalid_grant` and the account-gone `{"error":"InvalidRequest","message":"Could not find user info..."}`.
+- `SessionHealth` DTO + `AtpClient::probe()` — a cheap authenticated liveness probe over `com.atproto.server.getSession` that reports healthy / stale-access / terminal (dead grant or takendown/suspended/deactivated) / transient. Ideal for inactivity keep-alive that flags a session only on a real refusal.
+- `SessionManager::refresh(string $actor)` — force a token refresh regardless of the access-token window (inactivity keep-alive, reactive-401).
+- `SessionRefreshFailed::$failureReason` (typed, nullable) alongside the existing `reason` string; `config('atp-client.session.allow_key_regeneration')` (default `false`).
+- `docs/sessions.md` documenting the session lifecycle and a copy-paste keep-alive command.
+
+### Fixed
+- Do not silently mint a new DPoP key for an EXISTING OAuth session when the key is missing — the refresh token is bound to the old key, so a new one guarantees `invalid_grant`. Throw `OAuthSessionInvalidException::missingDpopKey()` for a clean reconnect instead (opt out via `allow_key_regeneration`).
+- Lock-timeout no longer replays a consumed single-use refresh token: it adopts a concurrently-rotated token or fails transient (`TransientAuthFailureException`), never `invalid_grant`.
+- Reactive refresh on a `401` (non-`use_dpop_nonce`): the access token can be stale before its stored window elapses because `expires_in` is unreliable across PDSes, so a call now force-refreshes once and replays.
+- README: corrected the stale `TokenRefreshed`/`TokenRefreshing` event references to `SessionUpdated`/`SessionRefreshing`.
+
 ## Version 0.3.0
 
 ### Fixed

@@ -2,6 +2,9 @@
 
 namespace SocialDept\AtpClient\Tests\Session;
 
+use Illuminate\Contracts\Cache\Lock;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Mockery;
 use Orchestra\Testbench\TestCase;
@@ -16,10 +19,12 @@ use SocialDept\AtpClient\Data\DPoPKey;
 use SocialDept\AtpClient\Enums\AuthType;
 use SocialDept\AtpClient\Events\SessionRefreshFailed;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
+use SocialDept\AtpClient\Exceptions\OAuthSessionInvalidException;
 use SocialDept\AtpClient\Exceptions\TransientAuthFailureException;
 use SocialDept\AtpClient\Providers\ArrayCredentialProvider;
 use SocialDept\AtpClient\Session\Session;
 use SocialDept\AtpClient\Session\SessionManager;
+use SocialDept\AtpSupport\Facades\Resolver;
 
 class SessionManagerTest extends TestCase
 {
@@ -113,6 +118,99 @@ class SessionManagerTest extends TestCase
 
         // Transient failure must leave the token intact so a later attempt retries.
         $this->assertEquals('still-valid-token', $credentials->getCredentials('did:plc:test')->refreshToken);
+    }
+
+    public function test_create_session_throws_when_oauth_key_missing(): void
+    {
+        $credentials = new ArrayCredentialProvider();
+        $credentials->storeCredentials('did:plc:test', $this->accessToken('token')); // OAuth
+
+        $keyStore = Mockery::mock(KeyStore::class);
+        $keyStore->shouldReceive('get')->andReturn(null);
+
+        $dpop = Mockery::mock(DPoPKeyManager::class);
+        $dpop->shouldReceive('generateKey')->never(); // must NOT silently mint
+
+        $manager = new SessionManager(
+            credentials: $credentials,
+            refresher: Mockery::mock(TokenRefresher::class),
+            dpopManager: $dpop,
+            keyStore: $keyStore,
+        );
+
+        $this->expectException(OAuthSessionInvalidException::class);
+        $this->expectExceptionMessage('DPoP key missing');
+
+        (new ReflectionMethod($manager, 'createSession'))->invoke($manager, 'did:plc:test');
+    }
+
+    public function test_create_session_mints_key_when_regeneration_allowed(): void
+    {
+        $resolver = Mockery::mock();
+        $resolver->shouldReceive('resolvePds')->andReturn('https://pds.example');
+        Resolver::swap($resolver);
+
+        $credentials = new ArrayCredentialProvider();
+        $credentials->storeCredentials('did:plc:test', $this->accessToken('token'));
+
+        $keyStore = Mockery::mock(KeyStore::class);
+        $keyStore->shouldReceive('get')->andReturn(null);
+
+        $dpop = Mockery::mock(DPoPKeyManager::class);
+        $dpop->shouldReceive('generateKey')->once()->andReturn(new DPoPKey('p', 'pub', 'kid'));
+
+        $manager = new SessionManager(
+            credentials: $credentials,
+            refresher: Mockery::mock(TokenRefresher::class),
+            dpopManager: $dpop,
+            keyStore: $keyStore,
+            allowKeyRegeneration: true,
+        );
+
+        $session = (new ReflectionMethod($manager, 'createSession'))->invoke($manager, 'did:plc:test');
+
+        $this->assertInstanceOf(Session::class, $session);
+    }
+
+    public function test_lock_timeout_without_rotation_throws_transient(): void
+    {
+        $credentials = new ArrayCredentialProvider();
+        $credentials->storeCredentials('did:plc:test', $this->accessToken('same-token'));
+
+        // Never replay the consumed single-use token on lock contention.
+        $refresher = Mockery::mock(TokenRefresher::class);
+        $refresher->shouldReceive('refresh')->never();
+
+        $lock = Mockery::mock(Lock::class);
+        $lock->shouldReceive('block')->andThrow(new LockTimeoutException);
+        Cache::shouldReceive('lock')->once()->andReturn($lock);
+
+        $manager = $this->makeManager($credentials, $refresher);
+        $session = $this->makeSession('same-token');
+
+        $this->expectException(TransientAuthFailureException::class);
+        $this->refresh($manager, $session);
+    }
+
+    public function test_lock_timeout_adopts_rotated_token(): void
+    {
+        // The winner already rotated the stored token while we waited on the lock.
+        $credentials = new ArrayCredentialProvider();
+        $credentials->storeCredentials('did:plc:test', $this->accessToken('winner-rotated'));
+
+        $refresher = Mockery::mock(TokenRefresher::class);
+        $refresher->shouldReceive('refresh')->never();
+
+        $lock = Mockery::mock(Lock::class);
+        $lock->shouldReceive('block')->andThrow(new LockTimeoutException);
+        Cache::shouldReceive('lock')->once()->andReturn($lock);
+
+        $manager = $this->makeManager($credentials, $refresher);
+        $session = $this->makeSession('stale-token-we-hold');
+
+        $result = $this->refresh($manager, $session);
+
+        $this->assertEquals('winner-rotated', $result->refreshToken());
     }
 
     private function makeManager(ArrayCredentialProvider $credentials, TokenRefresher $refresher): SessionManager

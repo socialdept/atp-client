@@ -6,10 +6,13 @@ use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
+use SocialDept\AtpClient\Auth\OAuthErrorClassifier;
 use SocialDept\AtpClient\Auth\TokenRefresher;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Data\AccessToken;
+use SocialDept\AtpClient\Enums\AuthType;
+use SocialDept\AtpClient\Enums\RefreshFailureReason;
 use SocialDept\AtpClient\Events\SessionAuthenticated;
 use SocialDept\AtpClient\Events\SessionRefreshFailed;
 use SocialDept\AtpClient\Events\SessionRefreshing;
@@ -36,6 +39,7 @@ class SessionManager
         protected bool $serializeRefresh = true,
         protected int $refreshLockWait = 10,
         protected int $refreshLockTtl = 15,
+        protected bool $allowKeyRegeneration = false,
     ) {
     }
 
@@ -135,6 +139,15 @@ class SessionManager
         $dpopKey = $this->keyStore->get($sessionId);
 
         if (! $dpopKey) {
+            // An existing OAuth session's refresh token is bound to its DPoP key.
+            // If the key is gone (wiped/unshared store), minting a new one would
+            // guarantee invalid_grant on the next refresh — fail loud for a clean
+            // reconnect instead. Legacy sessions don't use DPoP, so a fresh key is
+            // harmless there; fresh OAuth logins mint the key during the callback.
+            if ($creds->authType === AuthType::OAuth && ! $this->allowKeyRegeneration) {
+                throw OAuthSessionInvalidException::missingDpopKey($creds->did);
+            }
+
             $dpopKey = $this->dpopManager->generateKey($sessionId);
         }
 
@@ -168,9 +181,24 @@ class SessionManager
                 return $this->adoptRotatedSession($session) ?? $this->performRefresh($session);
             });
         } catch (LockTimeoutException) {
-            // FIX: lock contention shouldn't fail the caller — refresh unsynchronized.
-            return $this->performRefresh($session);
+            // Lock contention must NOT replay a consumed single-use token. Adopt the
+            // token the lock winner just rotated; if none is available yet, fail
+            // transient so the caller retries instead of racing into invalid_grant.
+            return $this->adoptRotatedSession($session)
+                ?? throw TransientAuthFailureException::lockContended()
+                    ->withReason(RefreshFailureReason::TemporarilyUnavailable);
         }
+    }
+
+    /**
+     * Force a token refresh for an actor, regardless of the access-token window.
+     * Used for inactivity keep-alive and reactive refresh on a 401.
+     *
+     * @throws AuthenticationException
+     */
+    public function refresh(string $actor): Session
+    {
+        return $this->refreshSession($this->session($actor));
     }
 
     /**
@@ -214,8 +242,8 @@ class SessionManager
                 authType: $session->authType(),
             );
         } catch (Throwable $e) {
-            $reason = $this->categorizeRefreshError($e);
-            event(new SessionRefreshFailed($session, $e, $reason));
+            $reason = $this->resolveFailureReason($e);
+            event(new SessionRefreshFailed($session, $e, $reason->legacyReason(), $reason));
 
             throw $e;
         }
@@ -237,43 +265,15 @@ class SessionManager
     }
 
     /**
-     * Categorize a refresh error into a reason string.
+     * Resolve the structured failure reason for a refresh error — preferring a
+     * reason already attached by the refresher, else classifying the throwable.
      */
-    protected function categorizeRefreshError(Throwable $e): string
+    protected function resolveFailureReason(Throwable $e): RefreshFailureReason
     {
-        if ($e instanceof TransientAuthFailureException) {
-            return 'transient';
+        if ($e instanceof AuthenticationException && $e->reason instanceof RefreshFailureReason) {
+            return $e->reason;
         }
 
-        if ($e instanceof OAuthSessionInvalidException) {
-            if (str_contains($e->getMessage(), 'missing')) {
-                return 'missing';
-            }
-            if (str_contains($e->getMessage(), 'expired')) {
-                return 'expired';
-            }
-
-            return 'invalid';
-        }
-
-        $message = strtolower($e->getMessage());
-
-        if (str_contains($message, 'expired') || str_contains($message, 'ExpiredToken')) {
-            return 'expired';
-        }
-
-        if (str_contains($message, 'revoked') || str_contains($message, 'RevokedToken')) {
-            return 'revoked';
-        }
-
-        if (str_contains($message, 'invalid') || str_contains($message, 'InvalidToken')) {
-            return 'invalid';
-        }
-
-        if ($e instanceof AuthenticationException) {
-            return 'auth_failed';
-        }
-
-        return 'unknown';
+        return (new OAuthErrorClassifier())->classifyThrowable($e);
     }
 }

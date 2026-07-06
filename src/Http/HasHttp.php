@@ -34,29 +34,59 @@ trait HasHttp
         ?array $body = null
     ): Response {
         $endpoint = $endpoint instanceof BackedEnum ? $endpoint->value : $endpoint;
-        $session = $this->sessions->ensureValid($this->did);
-        $url = rtrim($session->pdsEndpoint(), '/').'/xrpc/'.$endpoint;
-
         $params = array_filter($params ?? [], fn ($v) => ! is_null($v));
 
-        $request = $this->buildAuthenticatedRequest($session, $url, $method);
+        $reactiveRefreshUsed = false;
 
-        $response = match ($method) {
-            'GET' => $request->get($url, $this->encodeQueryParams($params)),
-            'POST' => $request->post($url, $body ?? $params),
-            'DELETE' => $request->delete($url, $this->encodeQueryParams($params)),
-            default => throw new InvalidArgumentException("Unsupported method: {$method}"),
-        };
+        while (true) {
+            $session = $this->sessions->ensureValid($this->did);
+            $url = rtrim($session->pdsEndpoint(), '/').'/xrpc/'.$endpoint;
 
-        if ($response->failed() || isset($response->json()['error'])) {
-            throw AtpResponseException::fromResponse($response, $endpoint);
+            $request = $this->buildAuthenticatedRequest($session, $url, $method);
+
+            $response = match ($method) {
+                'GET' => $request->get($url, $this->encodeQueryParams($params)),
+                'POST' => $request->post($url, $body ?? $params),
+                'DELETE' => $request->delete($url, $this->encodeQueryParams($params)),
+                default => throw new InvalidArgumentException("Unsupported method: {$method}"),
+            };
+
+            if ($response->failed() || isset($response->json()['error'])) {
+                // The access token can be stale before its stored window elapses
+                // (expires_in is unreliable across PDSes). Force a refresh once and
+                // replay. A dead grant surfaces as a terminal exception from refresh().
+                if (! $reactiveRefreshUsed && $this->sessions !== null && $this->isStaleAccessResponse($response)) {
+                    $reactiveRefreshUsed = true;
+                    $this->sessions->refresh($this->did);
+
+                    continue;
+                }
+
+                throw AtpResponseException::fromResponse($response, $endpoint);
+            }
+
+            if (config('atp-client.schema_validation') && Schema::exists($endpoint)) {
+                $this->validateResponse($endpoint, $response);
+            }
+
+            return new Response($response);
+        }
+    }
+
+    /**
+     * A 401 whose error is not a DPoP-nonce challenge means the access token is
+     * stale — a refresh-and-replay may recover it. `use_dpop_nonce` is handled by
+     * the DPoP client's own retry and must not trigger a token refresh.
+     */
+    protected function isStaleAccessResponse(LaravelResponse $response): bool
+    {
+        if ($response->status() !== 401) {
+            return false;
         }
 
-        if (config('atp-client.schema_validation') && Schema::exists($endpoint)) {
-            $this->validateResponse($endpoint, $response);
-        }
+        $error = strtolower((string) ($response->json()['error'] ?? ''));
 
-        return new Response($response);
+        return $error !== 'use_dpop_nonce';
     }
 
     /**

@@ -163,9 +163,9 @@ $client = Atp::as('user@bsky.social');
 Sessions automatically refresh when tokens are about to expire (default: 5 minutes before expiration). Listen to events if you need to persist refreshed tokens:
 
 ```php
-use SocialDept\AtpClient\Events\TokenRefreshed;
+use SocialDept\AtpClient\Events\SessionUpdated;
 
-Event::listen(TokenRefreshed::class, function ($event) {
+Event::listen(SessionUpdated::class, function ($event) {
     // $event->session - the Session being refreshed
     // $event->token - the new AccessToken
     // Update your credential storage here
@@ -773,10 +773,10 @@ public function storeCredentials(string $did, AccessToken $token): void
 When tokens are automatically refreshed, you can listen for events:
 
 ```php
-use SocialDept\AtpClient\Events\TokenRefreshed;
+use SocialDept\AtpClient\Events\SessionUpdated;
 
 // In EventServiceProvider or via Event::listen()
-Event::listen(TokenRefreshed::class, function (TokenRefreshed $event) {
+Event::listen(SessionUpdated::class, function (SessionUpdated $event) {
     // The CredentialProvider.updateCredentials() is already called,
     // but you can do additional logging or notifications here
     Log::info("Token refreshed for: {$event->session->did()}");
@@ -827,22 +827,22 @@ Event::listen(OAuthUserAuthenticated::class, function (OAuthUserAuthenticated $e
 });
 ```
 
-### TokenRefreshing / TokenRefreshed
+### SessionRefreshing / SessionUpdated
 
-Fired before and after automatic token refresh for both OAuth and legacy sessions. Use `TokenRefreshing` to invalidate your stored refresh token before it's used (refresh tokens are single-use):
+Fired before and after automatic token refresh for both OAuth and legacy sessions. Use `SessionRefreshing` to invalidate your stored refresh token before it's used (refresh tokens are single-use):
 
 ```php
-use SocialDept\AtpClient\Events\TokenRefreshing;
-use SocialDept\AtpClient\Events\TokenRefreshed;
+use SocialDept\AtpClient\Events\SessionRefreshing;
+use SocialDept\AtpClient\Events\SessionUpdated;
 
 // Before token refresh - invalidate old refresh token
-Event::listen(TokenRefreshing::class, function (TokenRefreshing $event) {
+Event::listen(SessionRefreshing::class, function (SessionRefreshing $event) {
     // $event->session gives access to did(), handle(), authType(), isLegacy(), etc.
     Log::info('Refreshing token for: ' . $event->session->did());
 });
 
 // After token refresh - new tokens available
-Event::listen(TokenRefreshed::class, function (TokenRefreshed $event) {
+Event::listen(SessionUpdated::class, function (SessionUpdated $event) {
     // $event->session - the session being refreshed
     // $event->token - the new AccessToken with fresh tokens
     // CredentialProvider.updateCredentials() is already called automatically
@@ -853,6 +853,36 @@ Event::listen(TokenRefreshed::class, function (TokenRefreshed $event) {
         // Legacy (app password) session
     }
 });
+```
+
+### SessionRefreshFailed
+
+Fired when a refresh fails. Carries a legacy `reason` string (backwards compatible) and a typed `failureReason` (`RefreshFailureReason`) so you can flag a session **only** on a terminal failure and leave transient ones (nonce/5xx/network) alone:
+
+```php
+use SocialDept\AtpClient\Events\SessionRefreshFailed;
+
+Event::listen(SessionRefreshFailed::class, function (SessionRefreshFailed $event) {
+    if ($event->failureReason?->isTerminal()) {
+        // Dead grant / account gone — prompt the user to reconnect.
+        markSessionInvalid($event->session->did());
+    }
+    // Transient failures are retried automatically on the next call/keep-alive.
+});
+```
+
+### Liveness probe & keep-alive
+
+Use `probe()` for a cheap authenticated health check and `RefreshFailureReason`/`SessionHealth` to decide terminal-vs-transient. See **[Sessions & Keep-Alive](docs/sessions.md)** for the full lifecycle, the single-use lock requirement, and a copy-paste scheduled keep-alive command.
+
+```php
+$health = Atp::as($did)->probe();
+
+if ($health->isTerminal()) {
+    // account gone / dead grant — reconnect required
+} elseif ($health->needsRefresh()) {
+    Atp::as($did)->ensureValid($did);
+}
 ```
 
 ## Scope Authorization
