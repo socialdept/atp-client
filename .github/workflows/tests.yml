@@ -8,7 +8,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    name: Tests (PHP 8.2 - Laravel 12)
+    name: Tests (PHP 8.4 - Laravel 13)
 
     steps:
       - name: Checkout code
@@ -17,13 +17,13 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.2
+          php-version: 8.4
           extensions: gmp, mbstring, json
           coverage: none
 
       - name: Install dependencies
         run: |
-          composer require "laravel/framework:^12.0" "orchestra/testbench:^10.0" --no-interaction --no-update
+          composer require "laravel/framework:^13.0" "orchestra/testbench:^11.0" --no-interaction --no-update
           composer update --prefer-stable --prefer-dist --no-interaction
 
       - name: Execute tests
