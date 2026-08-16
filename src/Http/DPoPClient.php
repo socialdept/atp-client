@@ -15,7 +15,8 @@ class DPoPClient
     public function __construct(
         protected DPoPKeyManager $dpopManager,
         protected DPoPNonceManager $nonceManager,
-    ) {}
+    ) {
+    }
 
     /**
      * Build a DPoP-authenticated request with automatic nonce retry

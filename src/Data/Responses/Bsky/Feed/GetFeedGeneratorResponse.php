@@ -14,7 +14,8 @@ class GetFeedGeneratorResponse implements Arrayable
         public readonly GeneratorView $view,
         public readonly bool $isOnline,
         public readonly bool $isValid,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

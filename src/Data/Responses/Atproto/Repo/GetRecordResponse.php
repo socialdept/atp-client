@@ -13,7 +13,8 @@ class GetRecordResponse implements Arrayable
         public readonly string $uri,
         public readonly mixed $value,
         public readonly ?string $cid = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

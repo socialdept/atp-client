@@ -19,7 +19,8 @@ class GetListResponse implements Arrayable
         public readonly ListView $list,
         public readonly Collection $items,
         public readonly ?string $cursor = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

@@ -11,7 +11,8 @@ class RecordedRequest
         public readonly ?array $body = null,
         public readonly ?string $did = null,
         public readonly bool $isPublicMode = false,
-    ) {}
+    ) {
+    }
 
     /**
      * Check if request was made to a specific endpoint.

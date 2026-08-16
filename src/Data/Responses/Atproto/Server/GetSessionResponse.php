@@ -18,7 +18,8 @@ class GetSessionResponse implements Arrayable
         public readonly mixed $didDoc = null,
         public readonly ?bool $active = null,
         public readonly ?string $status = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

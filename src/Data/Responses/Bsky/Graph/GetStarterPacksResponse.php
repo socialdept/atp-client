@@ -16,7 +16,8 @@ class GetStarterPacksResponse implements Arrayable
      */
     public function __construct(
         public readonly Collection $starterPacks,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

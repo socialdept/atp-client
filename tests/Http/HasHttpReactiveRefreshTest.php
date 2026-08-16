@@ -12,8 +12,7 @@ class HasHttpReactiveRefreshTest extends TestCase
 {
     private function target(): object
     {
-        return new class
-        {
+        return new class () {
             use HasHttp;
         };
     }

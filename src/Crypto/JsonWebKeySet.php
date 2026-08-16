@@ -21,7 +21,7 @@ class JsonWebKeySet implements Arrayable, Jsonable, Stringable
         $key = \SocialDept\AtpClient\Auth\OAuthKey::load();
         $kid = config('atp-client.oauth.kid', 'key-1');
 
-        return (new static)->addKey($key->toJWK()->withKid($kid)->asPublic());
+        return (new static())->addKey($key->toJWK()->withKid($kid)->asPublic());
     }
 
     /**

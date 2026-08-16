@@ -25,7 +25,7 @@ enum Scope: string
         $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $scope = "repo:{$collection}";
 
-        if (!empty($actions)) {
+        if (! empty($actions)) {
             $scope .= '?' . implode('&', array_map(fn ($action) => "action={$action}", $actions));
         }
 

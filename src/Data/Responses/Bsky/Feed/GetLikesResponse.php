@@ -19,7 +19,8 @@ class GetLikesResponse implements Arrayable
         public readonly Collection $likes,
         public readonly ?string $cid = null,
         public readonly ?string $cursor = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

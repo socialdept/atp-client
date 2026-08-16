@@ -18,7 +18,8 @@ class GetFollowersResponse implements Arrayable
         public readonly ProfileView $subject,
         public readonly Collection $followers,
         public readonly ?string $cursor = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

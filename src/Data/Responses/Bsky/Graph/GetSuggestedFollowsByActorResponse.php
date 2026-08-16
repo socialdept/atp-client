@@ -17,7 +17,8 @@ class GetSuggestedFollowsByActorResponse implements Arrayable
     public function __construct(
         public readonly Collection $suggestions,
         public readonly ?bool $isFallback = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

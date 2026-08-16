@@ -23,7 +23,8 @@ class SessionHealth
         public readonly bool $accountActive,
         public readonly ?string $status = null,
         public readonly ?RefreshFailureReason $reason = null,
-    ) {}
+    ) {
+    }
 
     public static function healthy(): self
     {

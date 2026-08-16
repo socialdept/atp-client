@@ -16,7 +16,8 @@ class AccessToken
         public readonly ?string $issuer = null,
         public readonly array $scope = [],
         public readonly AuthType $authType = AuthType::OAuth,
-    ) {}
+    ) {
+    }
 
     /**
      * Create from API response.

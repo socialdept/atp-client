@@ -16,7 +16,8 @@ class GetPostsResponse implements Arrayable
      */
     public function __construct(
         public readonly Collection $posts,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

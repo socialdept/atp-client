@@ -16,7 +16,8 @@ class SendMessageBatchResponse implements Arrayable
      */
     public function __construct(
         public readonly Collection $items,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

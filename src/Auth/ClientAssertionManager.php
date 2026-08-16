@@ -11,7 +11,8 @@ class ClientAssertionManager
 {
     public function __construct(
         protected ClientMetadataManager $metadata,
-    ) {}
+    ) {
+    }
 
     /**
      * Check if client assertion is required (private key is configured)

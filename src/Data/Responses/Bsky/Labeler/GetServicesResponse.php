@@ -17,7 +17,8 @@ class GetServicesResponse implements Arrayable
      */
     public function __construct(
         public readonly Collection $views,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data, bool $detailed = false): self
     {

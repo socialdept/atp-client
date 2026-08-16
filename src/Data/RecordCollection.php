@@ -19,7 +19,8 @@ class RecordCollection implements Arrayable
     public function __construct(
         public readonly Collection $records,
         public readonly ?string $cursor = null,
-    ) {}
+    ) {
+    }
 
     /**
      * @template U

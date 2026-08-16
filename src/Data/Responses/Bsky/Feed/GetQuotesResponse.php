@@ -19,7 +19,8 @@ class GetQuotesResponse implements Arrayable
         public readonly Collection $posts,
         public readonly ?string $cid = null,
         public readonly ?string $cursor = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

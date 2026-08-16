@@ -18,7 +18,8 @@ class DescribeRepoResponse implements Arrayable
         public readonly mixed $didDoc,
         public readonly array $collections,
         public readonly bool $handleIsCorrect,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

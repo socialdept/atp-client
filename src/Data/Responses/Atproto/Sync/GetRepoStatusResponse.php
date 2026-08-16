@@ -14,7 +14,8 @@ class GetRepoStatusResponse implements Arrayable
         public readonly bool $active,
         public readonly ?string $status = null,
         public readonly ?string $rev = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

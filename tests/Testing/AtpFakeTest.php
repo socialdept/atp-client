@@ -12,7 +12,6 @@ use SocialDept\AtpClient\Exceptions\AtpResponseException;
 use SocialDept\AtpClient\Facades\Atp;
 use SocialDept\AtpClient\Testing\FakeAtpManager;
 use SocialDept\AtpClient\Testing\FakeResponse;
-use SocialDept\AtpClient\Testing\ResponseSequence;
 
 class AtpFakeTest extends TestCase
 {

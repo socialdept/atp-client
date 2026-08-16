@@ -16,7 +16,8 @@ class GetFeedGeneratorsResponse implements Arrayable
      */
     public function __construct(
         public readonly Collection $feeds,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

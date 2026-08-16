@@ -13,7 +13,8 @@ class ScopeChecker
 {
     public function __construct(
         protected ScopeEnforcementLevel $enforcement = ScopeEnforcementLevel::Permissive
-    ) {}
+    ) {
+    }
 
     /**
      * Check if the session has all required scopes.

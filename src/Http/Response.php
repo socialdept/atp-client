@@ -9,7 +9,8 @@ class Response
 {
     public function __construct(
         protected LaravelResponse $response
-    ) {}
+    ) {
+    }
 
     /**
      * Get JSON response data

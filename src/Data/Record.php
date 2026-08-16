@@ -19,7 +19,8 @@ class Record implements Arrayable
         public readonly string $uri,
         public readonly string $cid,
         public readonly mixed $value,
-    ) {}
+    ) {
+    }
 
     /**
      * @template U

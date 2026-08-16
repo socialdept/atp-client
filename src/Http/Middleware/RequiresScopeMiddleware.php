@@ -16,7 +16,8 @@ class RequiresScopeMiddleware
     public function __construct(
         protected SessionManager $sessions,
         protected ScopeChecker $checker,
-    ) {}
+    ) {
+    }
 
     /**
      * Handle an incoming request.

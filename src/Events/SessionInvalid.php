@@ -15,11 +15,13 @@ use Throwable;
  */
 class SessionInvalid
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public readonly string $did,
         public readonly ?RefreshFailureReason $reason = null,
         public readonly ?Throwable $exception = null,
-    ) {}
+    ) {
+    }
 }

@@ -11,7 +11,8 @@ class DPoPKeyManager
 {
     public function __construct(
         protected KeyStore $keyStore
-    ) {}
+    ) {
+    }
 
     /**
      * Generate new ES256 key pair

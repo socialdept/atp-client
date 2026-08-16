@@ -9,8 +9,7 @@ class EncodeQueryParamsTest extends TestCase
 {
     private function harness(): object
     {
-        return new class
-        {
+        return new class () {
             use HasHttp;
 
             /**

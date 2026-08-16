@@ -17,7 +17,8 @@ class QueryStatusesResponse implements Arrayable
     public function __construct(
         public readonly Collection $subjectStatuses,
         public readonly ?string $cursor = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {
