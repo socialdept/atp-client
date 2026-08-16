@@ -13,7 +13,7 @@ class TextBuilder
      */
     public static function make(): self
     {
-        return new self;
+        return new self();
     }
 
     /**
@@ -21,7 +21,7 @@ class TextBuilder
      */
     public static function build(callable $callback): array
     {
-        $builder = new self;
+        $builder = new self();
         $callback($builder);
 
         return $builder->toArray();

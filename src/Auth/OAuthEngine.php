@@ -24,7 +24,8 @@ class OAuthEngine
         protected ClientAssertionManager $clientAssertion,
         protected KeyStore $keyStore,
         protected AuthorizationServerDiscovery $discovery,
-    ) {}
+    ) {
+    }
 
     /**
      * Initiate OAuth flow

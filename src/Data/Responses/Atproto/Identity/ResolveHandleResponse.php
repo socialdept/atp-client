@@ -11,7 +11,8 @@ class ResolveHandleResponse implements Arrayable
 {
     public function __construct(
         public readonly string $did,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

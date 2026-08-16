@@ -12,7 +12,8 @@ class StrongRef implements Arrayable
     public function __construct(
         public readonly string $uri,
         public readonly string $cid,
-    ) {}
+    ) {
+    }
 
     public static function fromResponse(array $data): self
     {

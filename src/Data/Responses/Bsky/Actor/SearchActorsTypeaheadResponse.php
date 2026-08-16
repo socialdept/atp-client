@@ -16,7 +16,8 @@ class SearchActorsTypeaheadResponse implements Arrayable
      */
     public function __construct(
         public readonly Collection $actors,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

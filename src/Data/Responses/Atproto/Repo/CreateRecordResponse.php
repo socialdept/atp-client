@@ -15,7 +15,8 @@ class CreateRecordResponse implements Arrayable
         public readonly string $cid,
         public readonly ?CommitMeta $commit = null,
         public readonly ?string $validationStatus = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

@@ -13,7 +13,8 @@ class Session
         protected Credentials $credentials,
         protected DPoPKey $dpopKey,
         protected string $pdsEndpoint,
-    ) {}
+    ) {
+    }
 
     public function did(): string
     {

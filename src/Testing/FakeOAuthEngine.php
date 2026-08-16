@@ -18,7 +18,9 @@ class FakeOAuthEngine extends OAuthEngine
     /**
      * No-op constructor — we don't need real auth services.
      */
-    public function __construct() {}
+    public function __construct()
+    {
+    }
 
     /**
      * Fake authorize — returns a pre-configured or default request.

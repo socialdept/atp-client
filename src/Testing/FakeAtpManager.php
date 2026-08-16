@@ -4,8 +4,6 @@ namespace SocialDept\AtpClient\Testing;
 
 use BackedEnum;
 use PHPUnit\Framework\Assert;
-use SocialDept\AtpClient\AtpClient;
-use SocialDept\AtpClient\Auth\OAuthEngine;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Http\Response;
 

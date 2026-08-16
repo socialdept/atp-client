@@ -9,10 +9,12 @@ use SocialDept\AtpClient\Session\Session;
 
 class SessionUpdated
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public readonly Session $session,
         public readonly AccessToken $token,
-    ) {}
+    ) {
+    }
 }

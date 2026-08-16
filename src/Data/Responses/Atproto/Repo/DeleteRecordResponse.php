@@ -12,7 +12,8 @@ class DeleteRecordResponse implements Arrayable
 {
     public function __construct(
         public readonly ?CommitMeta $commit = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

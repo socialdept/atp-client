@@ -16,7 +16,8 @@ class GetLogResponse implements Arrayable
     public function __construct(
         public readonly Collection $logs,
         public readonly ?string $cursor = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

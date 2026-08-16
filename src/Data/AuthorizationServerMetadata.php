@@ -14,7 +14,8 @@ class AuthorizationServerMetadata implements Arrayable
         public readonly string $pdsEndpoint,
         public readonly ?string $revocationEndpoint = null,
         public readonly ?string $introspectionEndpoint = null,
-    ) {}
+    ) {
+    }
 
     public function toArray(): array
     {

@@ -12,7 +12,8 @@ class LeaveConvoResponse implements Arrayable
     public function __construct(
         public readonly string $convoId,
         public readonly string $rev,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

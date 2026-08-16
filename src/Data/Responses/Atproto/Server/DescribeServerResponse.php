@@ -19,7 +19,8 @@ class DescribeServerResponse implements Arrayable
         public readonly ?bool $phoneVerificationRequired = null,
         public readonly ?array $links = null,
         public readonly ?array $contact = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

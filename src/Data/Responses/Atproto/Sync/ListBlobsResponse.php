@@ -15,7 +15,8 @@ class ListBlobsResponse implements Arrayable
     public function __construct(
         public readonly array $cids,
         public readonly ?string $cursor = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

@@ -55,6 +55,6 @@ class ActorRequestClient extends Request
             endpoint: ChatActor::DeleteAccount
         );
 
-        return new EmptyResponse;
+        return new EmptyResponse();
     }
 }

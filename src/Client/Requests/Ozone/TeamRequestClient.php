@@ -105,6 +105,6 @@ class TeamRequestClient extends Request
             body: compact('did')
         );
 
-        return new EmptyResponse;
+        return new EmptyResponse();
     }
 }

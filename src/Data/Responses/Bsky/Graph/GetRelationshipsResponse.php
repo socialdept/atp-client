@@ -16,7 +16,8 @@ class GetRelationshipsResponse implements Arrayable
     public function __construct(
         public readonly Collection $relationships,
         public readonly ?string $actor = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

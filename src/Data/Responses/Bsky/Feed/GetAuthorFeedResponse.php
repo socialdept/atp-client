@@ -17,7 +17,8 @@ class GetAuthorFeedResponse implements Arrayable
     public function __construct(
         public readonly Collection $feed,
         public readonly ?string $cursor = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

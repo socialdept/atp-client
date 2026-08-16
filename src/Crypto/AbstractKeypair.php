@@ -9,11 +9,11 @@ use phpseclib3\Crypt\PublicKeyLoader;
 
 abstract class AbstractKeypair
 {
-    const CURVE = '';
+    public const CURVE = '';
 
-    const ALG = '';
+    public const ALG = '';
 
-    const MULTIBASE_PREFIX = '';
+    public const MULTIBASE_PREFIX = '';
 
     protected PrivateKey|PublicKey $key;
 
@@ -22,7 +22,7 @@ abstract class AbstractKeypair
      */
     public static function create(): static
     {
-        $self = new static;
+        $self = new static();
         $self->key = EC::createKey(static::CURVE);
 
         return $self;
@@ -33,7 +33,7 @@ abstract class AbstractKeypair
      */
     public static function load(?string $private = null): static
     {
-        $self = new static;
+        $self = new static();
         $self->key = PublicKeyLoader::load(
             base64_decode(strtr($private, '-_', '+/'), strict: true)
         );

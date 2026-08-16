@@ -18,7 +18,8 @@ class GetConfigResponse implements Arrayable
         public readonly ?ServiceConfig $chat = null,
         public readonly ?ViewerConfig $viewer = null,
         public readonly ?string $verifierDid = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

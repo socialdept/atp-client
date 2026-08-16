@@ -16,7 +16,8 @@ class MemberResponse implements Arrayable
         public readonly ?string $createdAt = null,
         public readonly ?string $updatedAt = null,
         public readonly ?string $lastUpdatedBy = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

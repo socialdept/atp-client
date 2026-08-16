@@ -8,9 +8,11 @@ use SocialDept\AtpClient\Session\Session;
 
 class SessionRefreshing
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public readonly Session $session,
-    ) {}
+    ) {
+    }
 }

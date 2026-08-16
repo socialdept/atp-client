@@ -2,7 +2,6 @@
 
 namespace SocialDept\AtpClient\Auth;
 
-use Illuminate\Contracts\Auth\Authenticatable;
 use SocialDept\AtpClient\Contracts\HasAtpSession;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Enums\ScopeAuthorizationFailure;
@@ -17,7 +16,8 @@ class ScopeGate
     public function __construct(
         protected SessionManager $sessions,
         protected ScopeChecker $checker,
-    ) {}
+    ) {
+    }
 
     /**
      * Set the session context directly.

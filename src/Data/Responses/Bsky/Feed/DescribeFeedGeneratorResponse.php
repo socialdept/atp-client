@@ -16,7 +16,8 @@ class DescribeFeedGeneratorResponse implements Arrayable
         public readonly string $did,
         public readonly array $feeds,
         public readonly ?array $links = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

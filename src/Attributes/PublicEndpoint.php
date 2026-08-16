@@ -39,5 +39,6 @@ class PublicEndpoint
      */
     public function __construct(
         public readonly string $description = '',
-    ) {}
+    ) {
+    }
 }

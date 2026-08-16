@@ -18,7 +18,8 @@ class SearchPostsResponse implements Arrayable
         public readonly Collection $posts,
         public readonly ?string $cursor = null,
         public readonly ?int $hitsTotal = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

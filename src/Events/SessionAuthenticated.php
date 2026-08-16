@@ -9,11 +9,13 @@ use SocialDept\AtpClient\Enums\AuthType;
 
 class SessionAuthenticated
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public readonly AccessToken $token,
-    ) {}
+    ) {
+    }
 
     public function isOAuth(): bool
     {

@@ -43,6 +43,6 @@ class IdentityRequestClient extends Request
             body: compact('handle')
         );
 
-        return new EmptyResponse;
+        return new EmptyResponse();
     }
 }

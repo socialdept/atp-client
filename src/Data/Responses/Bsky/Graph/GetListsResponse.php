@@ -17,7 +17,8 @@ class GetListsResponse implements Arrayable
     public function __construct(
         public readonly Collection $lists,
         public readonly ?string $cursor = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

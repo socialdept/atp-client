@@ -13,7 +13,8 @@ class GetPostThreadResponse implements Arrayable
     public function __construct(
         public readonly ThreadViewPost $thread,
         public readonly mixed $threadgate = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

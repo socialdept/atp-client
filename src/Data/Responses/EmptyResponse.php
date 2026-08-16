@@ -11,11 +11,13 @@ use Illuminate\Contracts\Support\Arrayable;
  */
 class EmptyResponse implements Arrayable
 {
-    public function __construct() {}
+    public function __construct()
+    {
+    }
 
     public static function fromArray(array $data): self
     {
-        return new self;
+        return new self();
     }
 
     public function toArray(): array

@@ -16,7 +16,8 @@ class AuthorizationRequest implements Arrayable
         public readonly ?string $handle = null,
         public readonly ?string $authServerIssuer = null,
         public readonly ?string $tokenEndpoint = null,
-    ) {}
+    ) {
+    }
 
     public function toArray(): array
     {

@@ -11,11 +11,9 @@ use SocialDept\AtpClient\Data\Record;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\CreateRecordResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\DeleteRecordResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\PutRecordResponse;
-use SocialDept\AtpClient\Data\StrongRef;
 use SocialDept\AtpClient\Enums\Nsid\BskyFeed;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\RichText\TextBuilder;
-use SocialDept\AtpSchema\Generated\App\Bsky\Feed\Defs\PostView;
 
 class PostRecordClient extends Request
 {

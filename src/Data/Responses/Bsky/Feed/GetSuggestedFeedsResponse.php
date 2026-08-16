@@ -17,7 +17,8 @@ class GetSuggestedFeedsResponse implements Arrayable
     public function __construct(
         public readonly Collection $feeds,
         public readonly ?string $cursor = null,
-    ) {}
+    ) {
+    }
 
     public static function fromArray(array $data): self
     {

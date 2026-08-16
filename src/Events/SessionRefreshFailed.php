@@ -10,12 +10,14 @@ use Throwable;
 
 class SessionRefreshFailed
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public readonly Session $session,
         public readonly Throwable $exception,
         public readonly string $reason,
         public readonly ?RefreshFailureReason $failureReason = null,
-    ) {}
+    ) {
+    }
 }
