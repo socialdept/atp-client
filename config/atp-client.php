@@ -101,6 +101,23 @@ return [
     | @see https://atproto.com/guides/oauth#clients
     |
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Service Auth
+    |--------------------------------------------------------------------------
+    |
+    | Inbound inter-service auth: the short-lived JWT one atproto service signs
+    | to call another. `audience` is the identifier this application answers to,
+    | and it is checked against the token's `aud` — a DID, optionally with a
+    | service fragment, e.g. did:web:example.com#forum. Leave it unset only if
+    | nothing else distinguishes this service from another the caller can reach.
+    |
+    */
+
+    'service_auth' => [
+        'audience' => env('ATP_SERVICE_AUTH_AUDIENCE'),
+    ],
+
     'oauth' => [
         'disabled' => env('ATP_OAUTH_DISABLED', false),
 

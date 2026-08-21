@@ -13,6 +13,7 @@ use SocialDept\AtpClient\Auth\DPoPNonceManager;
 use SocialDept\AtpClient\Auth\OAuthEngine;
 use SocialDept\AtpClient\Auth\ScopeChecker;
 use SocialDept\AtpClient\Auth\ScopeGate;
+use SocialDept\AtpClient\Auth\ServiceAuth;
 use SocialDept\AtpClient\Auth\TokenRefresher;
 use SocialDept\AtpClient\Console\GenerateOAuthKeyCommand;
 use SocialDept\AtpClient\Console\MakeAtpClientCommand;
@@ -24,8 +25,11 @@ use SocialDept\AtpClient\Http\Controllers\ClientMetadataController;
 use SocialDept\AtpClient\Http\Controllers\JwksController;
 use SocialDept\AtpClient\Http\DPoPClient;
 use SocialDept\AtpClient\Http\Middleware\RequiresScopeMiddleware;
+use SocialDept\AtpClient\Http\Middleware\VerifyServiceAuthMiddleware;
 use SocialDept\AtpClient\Session\SessionManager;
 use SocialDept\AtpClient\Storage\EncryptedFileKeyStore;
+use SocialDept\AtpSupport\Crypto\SignatureVerifier;
+use SocialDept\AtpSupport\Resolver;
 
 class AtpClientServiceProvider extends ServiceProvider
 {
@@ -37,6 +41,13 @@ class AtpClientServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/atp-client.php', 'atp-client');
 
         // Register contracts
+        $this->app->singleton(ServiceAuth::class, function ($app) {
+            return new ServiceAuth(
+                $app->make(Resolver::class),
+                new SignatureVerifier(),
+            );
+        });
+
         $this->app->singleton(CredentialProvider::class, function ($app) {
             $provider = config('atp-client.credential_provider');
 
@@ -165,6 +176,7 @@ class AtpClientServiceProvider extends ServiceProvider
         /** @var Router $router */
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('atp.scope', RequiresScopeMiddleware::class);
+        $router->aliasMiddleware('atp.service-auth', VerifyServiceAuthMiddleware::class);
     }
 
     /**
