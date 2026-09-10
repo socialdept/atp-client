@@ -987,6 +987,34 @@ ATP_SCOPE_FAILURE_ACTION=abort
 ATP_SCOPE_REDIRECT=/login
 ```
 
+## Service Auth
+
+OAuth authenticates a user to your app. **Service auth** authenticates another AT Protocol service to *yours*: a PDS proxying an XRPC call, an authority asking your app whether to admit a user. The caller signs a short-lived JWT with its repo key; AtpClient resolves the caller's DID document and verifies the signature against the key published there. No registration, no shared secret.
+
+Protect an inbound XRPC route with the middleware, naming the method it accepts tokens for:
+
+```php
+Route::get('/xrpc/com.example.doThing', DoThingController::class)
+    ->middleware('atp.service-auth:com.example.doThing');
+```
+
+```env
+ATP_SERVICE_AUTH_AUDIENCE=did:web:example.com#forum
+```
+
+The verified token is attached to the request:
+
+```php
+use SocialDept\AtpClient\Http\Middleware\VerifyServiceAuthMiddleware;
+
+$token = $request->attributes->get(VerifyServiceAuthMiddleware::ATTRIBUTE);
+
+$token->did();     // who is calling
+$token->method;    // the NSID the token is bound to
+```
+
+Always pass the NSID to the middleware. It is what stops a token minted for one endpoint being replayed at another. See **[Service Auth](docs/service-auth.md)** for everything that gets verified, the error responses, key rotation, and minting.
+
 ## Extending the Client
 
 Add custom functionality to AtpClient by registering your own domain clients or request clients. Extensions are lazily instantiated on first access.
@@ -1146,6 +1174,9 @@ composer test
 - [CRYPTO.md](CRYPTO.md) - Cryptographic implementation details
 - [docs/extensions.md](docs/extensions.md) - Client extensions guide
 - [docs/testing.md](docs/testing.md) - Testing guide
+- [docs/service-auth.md](docs/service-auth.md) - Inter-service auth guide
+- [docs/sessions.md](docs/sessions.md) - Sessions & keep-alive guide
+- [docs/scopes.md](docs/scopes.md) - OAuth scopes guide
 
 ## Support & Contributing
 

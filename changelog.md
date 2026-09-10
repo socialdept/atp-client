@@ -2,6 +2,16 @@
 
 All notable changes to `AtpClient` will be documented in this file.
 
+## Version 0.3.3
+
+### Added
+- **Inbound service auth**: `ServiceAuth` verifies the short-lived JWT one atproto service signs to call another: `alg` allowlist (`ES256K`/`ES256`, so `none` never reaches the signature check), 64-byte compact signature, `iss` as a DID, `exp` with 30s clock skew, constant-time `aud` comparison, `lxm` method binding, then the signature against the key the issuer publishes at `#atproto` (or the `kid` fragment). A failure against a cached DID document is retried uncached, so a key rotation does not refuse a valid token.
+- `atp.service-auth:<nsid>` route middleware: refuses in XRPC error shape (`AuthMissing`, `BadJwt`, `JwtExpired`, `BadJwtAudience`, `BadJwtLexiconMethod`, `BadJwtIss`, `BadJwtSignature`) and attaches the verified `ServiceAuthToken` to the request under `VerifyServiceAuthMiddleware::ATTRIBUTE`.
+- `ServiceAuthToken` DTO (`did()`, `authorizes()`, `secondsRemaining()`, `claim()`) and `ServiceAuthException` carrying the XRPC `error` code and HTTP status.
+- `ServiceAuth::mint()` for the calling side, taking a signing callback so the package never holds repo keys.
+- `config('atp-client.service_auth.audience')` (`ATP_SERVICE_AUTH_AUDIENCE`): the service identifier this app answers to. Unset skips the audience check.
+- `docs/service-auth.md` documenting the verification order, error responses, key rotation, minting, and the trust model.
+
 ## Version 0.3.2
 
 ### Added
