@@ -43,6 +43,33 @@ enum Scope: string
     }
 
     /**
+     * Request a permission set, a bundle of permissions published as a lexicon.
+     *
+     * The authorization server resolves the set from its NSID and shows the
+     * user its title and description. When it issues the token it expands the
+     * set into the granular permissions it contains, so the granted scope
+     * lists those, not this include: scope.
+     *
+     * `$aud` fills in the audience of any rpc permission in the set marked
+     * `inheritAud`, in the combined `did#serviceId` form.
+     *
+     * @example Scope::include('com.example.authFull')
+     * @example Scope::include('com.example.authFull', 'did:web:api.example.com#svc_appview')
+     */
+    public static function include(string|BackedEnum $nsid, ?string $aud = null): string
+    {
+        $nsid = $nsid instanceof BackedEnum ? $nsid->value : $nsid;
+
+        if ($aud === null) {
+            return "include:{$nsid}";
+        }
+
+        // Matches the spec's own form, which encodes the fragment's # but
+        // leaves the DID's colons readable.
+        return "include:{$nsid}?aud=".strtr(rawurlencode($aud), ['%3A' => ':']);
+    }
+
+    /**
      * Build a blob scope string for uploads.
      *
      * @param  string|null  $mimeType  The mime type pattern (e.g., 'image/*', '*\/*')

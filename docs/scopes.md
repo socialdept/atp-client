@@ -23,6 +23,7 @@ Scope::rpc('app.bsky.feed.getTimeline')                  // RPC endpoint access
 Scope::blob('image/*')                                    // Blob upload access
 Scope::account('email')                                   // Account attribute access
 Scope::identity('handle')                                 // Identity attribute access
+Scope::include('com.example.authFull')                   // Permission set
 ```
 
 ### ScopedEndpoint Attribute
@@ -74,6 +75,28 @@ The AT Protocol is moving toward granular scopes that provide fine-grained acces
 'account:email'                                // Access email
 'identity:handle'                              // Manage handle
 ```
+
+### Permission Sets
+
+A permission set bundles permissions under one lexicon, so an app asks for `include:com.example.authFull` instead of listing every collection and endpoint. The authorization server resolves the set from its NSID and shows the user its title and description on the consent screen. A set may only cover resources under its own NSID namespace.
+
+```php
+Scope::include('com.example.authFull');
+// include:com.example.authFull
+
+Scope::include('com.example.authFull', 'did:web:api.example.com#svc_appview');
+// include:com.example.authFull?aud=did:web:api.example.com%23svc_appview
+```
+
+`aud` fills in the audience of any rpc permission in the set marked `inheritAud`, written in the combined `did#serviceId` form.
+
+**The granted scope never contains `include:`.** When the authorization server issues a token it expands each set into the granular permissions it contains, and those are what the session's scopes list. A set covering several collections expands into the named form:
+
+```
+repo?collection=com.example.post&collection=com.example.publication&action=create&action=update
+```
+
+The scope checker reads both `repo:<collection>` and `repo?collection=...`, and treats a repo scope with no `action` as granting all three, so checks against an expanded set work without listing its contents yourself.
 
 ## The ScopedEndpoint Attribute
 
@@ -222,6 +245,10 @@ $checker->matchesGranular($session, 'blob:image/*');
 
 // Check if session has any repo access
 $checker->matchesGranular($session, 'repo:*');
+
+// Granted scopes from an expanded permission set are matched too
+$checker->matchesGranular($session, 'repo:com.example.post?action=create');
+// true when granted 'repo?collection=com.example.post&collection=com.example.publication&action=create'
 ```
 
 ## Route Middleware (Planned)
