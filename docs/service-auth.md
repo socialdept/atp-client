@@ -57,19 +57,22 @@ The middleware argument is the lexicon method the token must be bound to, and it
 ->middleware('atp.service-auth')
 ```
 
-> **Note:** the check compares two present values. A token that carries **no** `lxm` at all is unbound and passes, even on a route that names a method. Callers should always request a method-bound token; `com.atproto.server.getServiceAuth` takes an `lxm` parameter for exactly this reason.
+A route that names a method only accepts tokens bound to exactly that method. A token that carries **no** `lxm` is unbound and is refused there, since it could otherwise be replayed against any endpoint. Callers request a method-bound token through the `lxm` parameter of `com.atproto.server.getServiceAuth`, and a PDS proxying a request always binds one.
 
 ## Configuration
 
 ```php
 'service_auth' => [
     'audience' => env('ATP_SERVICE_AUTH_AUDIENCE'),
+    'allow_any_audience' => env('ATP_SERVICE_AUTH_ALLOW_ANY_AUDIENCE', false),
 ],
 ```
 
 `audience` is the identifier this application answers to, compared against the token's `aud`. It is a DID, optionally with a service fragment, for example `did:web:example.com#forum`. The fragment matters when one DID publishes several services and a token for one must not be spendable at another.
 
-Leaving it unset **skips the audience check**, which is only safe when nothing else distinguishes this service from another the caller could reach. Set it.
+When the configured audience is a combined `did#serviceId`, a token addressed to the bare DID is accepted too. A PDS proxying a request currently signs for the bare DID, while `getServiceAuth` tokens carry the combined form, so both arrive in practice. The reverse is refused: with only a bare DID configured, a combined token could have been meant for another of that DID's services.
+
+The audience is **required**. With it unset, the middleware refuses every request with a 500 `InternalServerError` rather than accepting tokens addressed to any service. `allow_any_audience` turns the check off explicitly, which is only safe when nothing else distinguishes this service from another the caller could reach.
 
 ## What gets verified
 
@@ -82,8 +85,8 @@ In order, cheapest first, so a malformed token never reaches the crypto:
 | 3 | Signature decodes to exactly 64 bytes | `BadJwt` |
 | 4 | `iss` is a DID, fragment stripped | `BadJwtIss` |
 | 5 | `exp` present and in the future, tolerating 30s of clock skew | `JwtExpired` |
-| 6 | `aud` present, and equal to the configured audience (constant-time) | `BadJwtAudience` |
-| 7 | `lxm` matches the expected method, when both are present | `BadJwtLexiconMethod` |
+| 6 | `aud` present, and equal to the configured audience, or its bare DID when the configured audience is combined (constant-time) | `BadJwtAudience` |
+| 7 | `lxm` present and equal to the expected method, whenever a method is expected | `BadJwtLexiconMethod` |
 | 8 | Signature verifies against a key the issuer publishes | `BadJwtSignature` |
 
 For step 8 the `kid` header names which verification method signed, defaulting to `#atproto`, the repo signing key. The issuer's DID document is resolved, `getSigningKey()` returns the published `did:key`, and `SignatureVerifier` (from `atp-support`) checks the signature.
@@ -114,6 +117,7 @@ The middleware refuses in the shape an XRPC client expects:
 | `ServiceAuthException::method()` | `BadJwtLexiconMethod` | 401 |
 | `ServiceAuthException::issuer()` | `BadJwtIss` | 401 |
 | `ServiceAuthException::signature()` | `BadJwtSignature` | 401 |
+| `ServiceAuthException::unconfigured()` | `InternalServerError` | 500 |
 
 The header must be `Authorization: Bearer <jwt>`. Anything else is treated as missing.
 
@@ -138,7 +142,7 @@ try {
 }
 ```
 
-Both `audience` and `method` are optional, and passing `null` skips that check.
+Both `audience` and `method` are optional, and passing `null` skips that check. Unlike the middleware, `verify()` does not insist on an audience, so code calling it directly should always pass one.
 
 ## ServiceAuthToken
 
@@ -151,7 +155,7 @@ What a successful verification hands back:
 | `audience` | The service identifier it was addressed to |
 | `method` | The NSID it authorizes, or `null` when unbound |
 | `expiresAt` | Unix timestamp from `exp` |
-| `authorizes(string $nsid)` | Whether it covers a method (`true` for an unbound token) |
+| `authorizes(string $nsid)` | Whether it is bound to exactly that method (`false` for an unbound token) |
 | `secondsRemaining()` | Time left before expiry |
 | `claim(string $name)` | Any other claim from the payload |
 

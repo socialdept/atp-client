@@ -37,10 +37,13 @@ class ServiceAuthToken
 
     /**
      * Whether the token authorizes a given method.
+     *
+     * Only a token bound to exactly that method does. An unbound token
+     * authorizes no specific method, matching what verify() enforces.
      */
     public function authorizes(string $nsid): bool
     {
-        return $this->method === null || $this->method === $nsid;
+        return $this->method !== null && $this->method === $nsid;
     }
 
     public function secondsRemaining(?int $now = null): int
