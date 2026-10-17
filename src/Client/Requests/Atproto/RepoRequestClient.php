@@ -9,6 +9,7 @@ use SocialDept\AtpClient\Attributes\PublicEndpoint;
 use SocialDept\AtpClient\Attributes\ScopedEndpoint;
 use SocialDept\AtpClient\Auth\ScopeChecker;
 use SocialDept\AtpClient\Client\Requests\Request;
+use SocialDept\AtpClient\Data\Responses\Atproto\Repo\ApplyWritesResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\CreateRecordResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\DeleteRecordResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\DescribeRepoResponse;
@@ -18,6 +19,10 @@ use SocialDept\AtpClient\Data\Responses\Atproto\Repo\PutRecordResponse;
 use SocialDept\AtpClient\Enums\Nsid\AtprotoRepo;
 use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpSchema\Data\BlobReference;
+use SocialDept\AtpSchema\Data\Data;
+use SocialDept\AtpSchema\Generated\Com\Atproto\Repo\ApplyWrites\Create;
+use SocialDept\AtpSchema\Generated\Com\Atproto\Repo\ApplyWrites\Delete;
+use SocialDept\AtpSchema\Generated\Com\Atproto\Repo\ApplyWrites\Update;
 use SplFileInfo;
 use Throwable;
 
@@ -51,6 +56,63 @@ class RepoRequestClient extends Request
         );
 
         return CreateRecordResponse::fromArray($response->json());
+    }
+
+    /**
+     * Apply several creates, updates and deletes to the repo in one commit
+     *
+     * Either every write lands or none does, and they share a single commit.
+     *
+     *     $client->atproto->repo->applyWrites([
+     *         new Create(collection: 'app.bsky.feed.post', value: $post),
+     *         new Update(collection: 'app.bsky.actor.profile', rkey: 'self', value: $profile),
+     *         new Delete(collection: 'app.bsky.feed.like', rkey: $rkey),
+     *     ]);
+     *
+     * Each write is checked against the session's scopes for its collection and
+     * action, the same as createRecord(), putRecord() and deleteRecord().
+     *
+     * `$validate` defaults to null, which leaves the field out so the PDS
+     * validates only lexicons it knows. Pass true to require validation, which
+     * fails for a lexicon the PDS cannot resolve, or false to skip it.
+     *
+     * @requires transition:generic OR repo:[collection]?action=[create|update|delete] for every write
+     *
+     * @param  array<int, Create|Update|Delete>  $writes
+     *
+     * @see https://docs.bsky.app/docs/api/com-atproto-repo-apply-writes
+     */
+    #[ScopedEndpoint(Scope::TransitionGeneric, description: 'Create, update and delete records in one commit')]
+    public function applyWrites(array $writes, ?bool $validate = null, ?string $swapCommit = null): ApplyWritesResponse
+    {
+        if ($writes === []) {
+            throw new InvalidArgumentException('applyWrites needs at least one write.');
+        }
+
+        $repo = $this->atp->client->session()->did();
+
+        $writes = array_map(function (mixed $write) {
+            $action = match (true) {
+                $write instanceof Create => 'create',
+                $write instanceof Update => 'update',
+                $write instanceof Delete => 'delete',
+                default => throw new InvalidArgumentException('Each write must be an applyWrites Create, Update or Delete.'),
+            };
+
+            $this->checkCollectionScope($write->collection, $action);
+
+            return $this->serializeWrite($write);
+        }, array_values($writes));
+
+        $response = $this->atp->client->post(
+            endpoint: AtprotoRepo::ApplyWrites,
+            body: array_filter(
+                compact('repo', 'validate', 'writes', 'swapCommit'),
+                fn ($v) => ! is_null($v)
+            )
+        );
+
+        return ApplyWritesResponse::fromArray($response->json());
     }
 
     /**
@@ -228,5 +290,24 @@ class RepoRequestClient extends Request
 
         // Otherwise, check for specific repo scope
         $checker->checkRepoScopeOrFail($session, $collection, $action);
+    }
+
+    /**
+     * Serialize one write with the `$type` its union member needs.
+     *
+     * A record given as a Data object is serialized too, with its own `$type`
+     * added when it does not carry one.
+     *
+     * @return array<string, mixed>
+     */
+    protected function serializeWrite(Create|Update|Delete $write): array
+    {
+        $serialized = ['$type' => $write::getLexicon()] + $write->toArray();
+
+        if (! $write instanceof Delete && $write->value instanceof Data) {
+            $serialized['value'] = ['$type' => $write->value::getLexicon()] + $write->value->toArray();
+        }
+
+        return $serialized;
     }
 }

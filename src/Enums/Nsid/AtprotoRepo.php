@@ -14,4 +14,5 @@ enum AtprotoRepo: string
     case ListRecords = 'com.atproto.repo.listRecords';
     case UploadBlob = 'com.atproto.repo.uploadBlob';
     case DescribeRepo = 'com.atproto.repo.describeRepo';
+    case ApplyWrites = 'com.atproto.repo.applyWrites';
 }
