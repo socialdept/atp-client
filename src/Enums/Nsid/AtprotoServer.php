@@ -11,4 +11,5 @@ enum AtprotoServer: string
     case RefreshSession = 'com.atproto.server.refreshSession';
     case GetSession = 'com.atproto.server.getSession';
     case DescribeServer = 'com.atproto.server.describeServer';
+    case GetServiceAuth = 'com.atproto.server.getServiceAuth';
 }
