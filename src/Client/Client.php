@@ -5,7 +5,10 @@ namespace SocialDept\AtpClient\Client;
 use BackedEnum;
 use Illuminate\Support\Facades\Http;
 use SocialDept\AtpClient\AtpClient;
+use SocialDept\AtpClient\Auth\ScopeChecker;
+use SocialDept\AtpClient\Enums\Scope;
 use SocialDept\AtpClient\Exceptions\AtpResponseException;
+use SocialDept\AtpClient\Exceptions\MissingScopeException;
 use SocialDept\AtpClient\Http\DPoPClient;
 use SocialDept\AtpClient\Http\HasHttp;
 use SocialDept\AtpClient\Http\Response;
@@ -59,6 +62,32 @@ class Client
     public function session(): Session
     {
         return $this->sessions->session($this->did);
+    }
+
+    /**
+     * The DID of the repo this client writes to: the session's account.
+     */
+    public function repoDid(): string
+    {
+        return $this->session()->did();
+    }
+
+    /**
+     * Refuse a write to this collection the session's scopes do not grant.
+     * transition:generic grants every collection.
+     *
+     * @throws MissingScopeException
+     */
+    public function authorizeRepoWrite(string $collection, string $action): void
+    {
+        $session = $this->session();
+        $checker = app(ScopeChecker::class);
+
+        if ($checker->hasScope($session, Scope::TransitionGeneric)) {
+            return;
+        }
+
+        $checker->checkRepoScopeOrFail($session, $collection, $action);
     }
 
     /**

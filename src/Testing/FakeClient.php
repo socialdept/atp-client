@@ -41,6 +41,21 @@ class FakeClient extends Client
     }
 
     /**
+     * The fake DID stands in for the session's account.
+     */
+    public function repoDid(): string
+    {
+        return $this->fakeDid ?? throw new \LogicException('A repo write needs an account: use Atp::as($did) on the fake.');
+    }
+
+    /**
+     * The fake has no session, so no scopes to refuse a write.
+     */
+    public function authorizeRepoWrite(string $collection, string $action): void
+    {
+    }
+
+    /**
      * Set whether unstubbed endpoints should throw.
      */
     public function preventStrayRequests(bool $prevent = true): static

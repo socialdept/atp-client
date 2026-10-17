@@ -7,7 +7,6 @@ use Illuminate\Http\UploadedFile;
 use InvalidArgumentException;
 use SocialDept\AtpClient\Attributes\PublicEndpoint;
 use SocialDept\AtpClient\Attributes\ScopedEndpoint;
-use SocialDept\AtpClient\Auth\ScopeChecker;
 use SocialDept\AtpClient\Client\Requests\Request;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\ApplyWritesResponse;
 use SocialDept\AtpClient\Data\Responses\Atproto\Repo\CreateRecordResponse;
@@ -43,7 +42,7 @@ class RepoRequestClient extends Request
         bool $validate = true,
         ?string $swapCommit = null
     ): CreateRecordResponse {
-        $repo = $this->atp->client->session()->did();
+        $repo = $this->atp->client->repoDid();
         $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $this->checkCollectionScope($collection, 'create');
 
@@ -89,7 +88,7 @@ class RepoRequestClient extends Request
             throw new InvalidArgumentException('applyWrites needs at least one write.');
         }
 
-        $repo = $this->atp->client->session()->did();
+        $repo = $this->atp->client->repoDid();
 
         $writes = array_map(function (mixed $write) {
             $action = match (true) {
@@ -129,7 +128,7 @@ class RepoRequestClient extends Request
         ?string $swapRecord = null,
         ?string $swapCommit = null
     ): DeleteRecordResponse {
-        $repo = $this->atp->client->session()->did();
+        $repo = $this->atp->client->repoDid();
         $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $this->checkCollectionScope($collection, 'delete');
 
@@ -160,7 +159,7 @@ class RepoRequestClient extends Request
         ?string $swapRecord = null,
         ?string $swapCommit = null
     ): PutRecordResponse {
-        $repo = $this->atp->client->session()->did();
+        $repo = $this->atp->client->repoDid();
         $collection = $collection instanceof BackedEnum ? $collection->value : $collection;
         $this->checkCollectionScope($collection, 'update');
 
@@ -280,16 +279,7 @@ class RepoRequestClient extends Request
      */
     protected function checkCollectionScope(string $collection, string $action): void
     {
-        $session = $this->atp->client->session();
-        $checker = app(ScopeChecker::class);
-
-        // If user has transition:generic, they have broad access
-        if ($checker->hasScope($session, Scope::TransitionGeneric)) {
-            return;
-        }
-
-        // Otherwise, check for specific repo scope
-        $checker->checkRepoScopeOrFail($session, $collection, $action);
+        $this->atp->client->authorizeRepoWrite($collection, $action);
     }
 
     /**

@@ -159,6 +159,17 @@ FakeResponse::getPosts(5);
 
 #### Repo Responses
 
+Repo writes, and the record helpers built on them such as `bsky->post->create()`, write to the account the fake acts as, so call them through `Atp::as($did)`. The fake has no session, so it checks no OAuth scopes.
+
+```php
+$fake = Atp::fake();
+$fake->stub(AtprotoRepo::CreateRecord, FakeResponse::createRecord(['did' => 'did:plc:alice']));
+
+Atp::as('did:plc:alice')->atproto->repo->createRecord('com.example.thing', ['text' => 'hello']);
+
+$fake->assertCalledWith(AtprotoRepo::CreateRecord, fn ($request) => $request->body['repo'] === 'did:plc:alice');
+```
+
 ```php
 // Create record (com.atproto.repo.createRecord)
 FakeResponse::createRecord(['did' => 'did:plc:custom']);

@@ -125,7 +125,7 @@ class PostRecordClient extends Request
     public function get(string $rkey, ?string $cid = null): Record
     {
         $response = $this->atp->atproto->repo->getRecord(
-            repo: $this->atp->client->session()->did(),
+            repo: $this->atp->client->repoDid(),
             collection: BskyFeed::Post,
             rkey: $rkey,
             cid: $cid
