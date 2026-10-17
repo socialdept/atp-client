@@ -2,6 +2,11 @@
 
 All notable changes to `AtpClient` will be documented in this file.
 
+## Version 0.3.9
+
+### Fixed
+- **Service auth lookups are throttled.** A token whose signature failed against the cached DID document caused an uncached refetch every time, and a DID that failed to resolve was looked up again on every request. Anyone can send a token naming any DID, so each forged token cost a fetch from the DID's host and up to the resolver timeout of request time. The refetch now happens at most once a minute per DID, and a failed resolution is remembered for a minute, through the cache the service provider passes to `ServiceAuth`. Key rotation still works: the first token after a rotation refetches.
+
 ## Version 0.3.3
 
 ### Added

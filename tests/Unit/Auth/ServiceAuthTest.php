@@ -2,10 +2,13 @@
 
 namespace SocialDept\AtpClient\Tests\Unit\Auth;
 
+use Illuminate\Cache\ArrayStore;
+use Illuminate\Cache\Repository;
 use phpseclib3\Crypt\EC;
 use phpseclib3\Crypt\EC\PrivateKey;
 use phpseclib3\Math\BigInteger;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use SocialDept\AtpClient\Auth\ServiceAuth;
 use SocialDept\AtpClient\Exceptions\ServiceAuthException;
 use SocialDept\AtpSupport\Crypto\Base58;
@@ -100,6 +103,70 @@ class ServiceAuthTest extends TestCase
         $this->expectExceptionMessage('signature is invalid');
 
         $auth->verify($jwt, self::AUDIENCE, self::METHOD);
+    }
+
+    public function test_a_flood_of_forged_tokens_refetches_the_issuer_once(): void
+    {
+        $fresh = 0;
+        $resolver = $this->createStub(Resolver::class);
+        $resolver->method('resolveDid')->willReturnCallback(function (string $did, bool $useCache) use (&$fresh) {
+            $fresh += $useCache ? 0 : 1;
+
+            return $this->documentFor($this->didKeyFor($this->key));
+        });
+        $auth = new ServiceAuth($resolver, new SignatureVerifier(), new Repository(new ArrayStore()));
+        $forged = $auth->mint(self::CALLER, self::AUDIENCE, self::METHOD, $this->signerFor(EC::createKey('secp256k1')));
+
+        foreach (range(1, 5) as $i) {
+            try {
+                $auth->verify($forged, self::AUDIENCE, self::METHOD);
+                $this->fail('A forged token verified.');
+            } catch (ServiceAuthException $e) {
+                $this->assertStringContainsString('signature is invalid', $e->getMessage());
+            }
+        }
+
+        $this->assertSame(1, $fresh, 'The uncached refetch is throttled per issuer.');
+    }
+
+    public function test_a_rotated_key_still_verifies_through_the_refetch(): void
+    {
+        $old = EC::createKey('secp256k1');
+        $resolver = $this->createStub(Resolver::class);
+        $resolver->method('resolveDid')->willReturnCallback(fn (string $did, bool $useCache) => $this->documentFor(
+            $this->didKeyFor($useCache ? $old : $this->key),
+        ));
+        $auth = new ServiceAuth($resolver, new SignatureVerifier(), new Repository(new ArrayStore()));
+
+        $this->assertSame(self::CALLER, $auth->verify($this->mint($auth), self::AUDIENCE, self::METHOD)->did());
+    }
+
+    public function test_a_did_that_fails_to_resolve_is_not_tried_again_for_a_while(): void
+    {
+        $lookups = 0;
+        $resolver = $this->createStub(Resolver::class);
+        $resolver->method('resolveDid')->willReturnCallback(function () use (&$lookups) {
+            $lookups++;
+
+            throw new RuntimeException('DID not found');
+        });
+        $auth = new ServiceAuth($resolver, new SignatureVerifier(), new Repository(new ArrayStore()));
+        $token = $this->mint($auth);
+
+        $messages = [];
+
+        foreach (range(1, 3) as $i) {
+            try {
+                $auth->verify($token, self::AUDIENCE, self::METHOD);
+                $this->fail('An unresolvable issuer verified.');
+            } catch (ServiceAuthException $e) {
+                $messages[] = $e->getMessage();
+            }
+        }
+
+        $this->assertSame(1, $lookups);
+        $this->assertStringContainsString('DID not found', $messages[0]);
+        $this->assertStringContainsString('did not resolve recently', $messages[2]);
     }
 
     public function test_it_rejects_a_tampered_payload(): void
@@ -222,15 +289,20 @@ class ServiceAuthTest extends TestCase
         );
     }
 
-    protected function resolverFor(string $didKey): Resolver
+    protected function documentFor(string $didKey): DidDocument
     {
-        $document = DidDocument::fromArray([
+        return DidDocument::fromArray([
             'id' => self::CALLER,
             'verificationMethod' => [[
                 'id' => self::CALLER.'#atproto',
                 'publicKeyMultibase' => substr($didKey, strlen('did:key:')),
             ]],
         ]);
+    }
+
+    protected function resolverFor(string $didKey): Resolver
+    {
+        $document = $this->documentFor($didKey);
 
         $resolver = $this->createStub(Resolver::class);
         $resolver->method('resolveDid')->willReturn($document);

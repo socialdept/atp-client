@@ -2,6 +2,7 @@
 
 namespace SocialDept\AtpClient\Auth;
 
+use Illuminate\Contracts\Cache\Repository as Cache;
 use SocialDept\AtpClient\Data\ServiceAuthToken;
 use SocialDept\AtpClient\Exceptions\ServiceAuthException;
 use SocialDept\AtpSupport\Crypto\SignatureVerifier;
@@ -33,9 +34,24 @@ class ServiceAuth
      */
     public const LIFETIME = 60;
 
+    /**
+     * Seconds between uncached refetches of one issuer's DID document.
+     */
+    public const REFETCH_INTERVAL = 60;
+
+    /**
+     * Seconds a DID that failed to resolve is not tried again.
+     */
+    public const FAILURE_TTL = 60;
+
+    /**
+     * @param  Cache|null  $cache  Throttles network lookups that a token can
+     *                             trigger. Without one, nothing is throttled.
+     */
     public function __construct(
         protected Resolver $resolver,
         protected SignatureVerifier $verifier,
+        protected ?Cache $cache = null,
     ) {
     }
 
@@ -146,6 +162,13 @@ class ServiceAuth
      * signing key. Key rotation is handled by retrying uncached: the cached
      * document may predate the rotation.
      *
+     * Anyone can send a token naming any DID, and nothing about it is trusted
+     * until its signature verifies, so the network lookups it can cause are
+     * throttled with the cache: the uncached refetch happens at most once per
+     * REFETCH_INTERVAL for each DID, and a DID that failed to resolve is not
+     * tried again for FAILURE_TTL. Without that, every forged token cost a
+     * fetch from the DID's host.
+     *
      * @param  array<string, mixed>  $header
      */
     protected function verifySignature(string $issuer, array $header, string $signingInput, string $signature): void
@@ -153,10 +176,20 @@ class ServiceAuth
         $did = $this->stripFragment($issuer);
         $fragment = is_string($header['kid'] ?? null) ? $header['kid'] : '#atproto';
 
+        if ($this->cache?->has($this->failureKey($did))) {
+            throw ServiceAuthException::issuer("{$did} did not resolve recently");
+        }
+
         foreach ([true, false] as $useCache) {
+            if (! $useCache && $this->cache !== null && ! $this->cache->add($this->refetchKey($did), true, self::REFETCH_INTERVAL)) {
+                break;
+            }
+
             try {
                 $document = $this->resolver->resolveDid($did, $useCache);
             } catch (Throwable $e) {
+                $this->cache?->put($this->failureKey($did), true, self::FAILURE_TTL);
+
                 throw ServiceAuthException::issuer($e->getMessage());
             }
 
@@ -177,6 +210,16 @@ class ServiceAuth
         }
 
         throw ServiceAuthException::signature();
+    }
+
+    protected function refetchKey(string $did): string
+    {
+        return 'atp-client:service-auth:refetched:'.$did;
+    }
+
+    protected function failureKey(string $did): string
+    {
+        return 'atp-client:service-auth:unresolvable:'.$did;
     }
 
     /**
