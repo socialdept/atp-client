@@ -46,6 +46,7 @@ class AtpClientServiceProvider extends ServiceProvider
             return new ServiceAuth(
                 $app->make(Resolver::class),
                 new SignatureVerifier(),
+                $app->make('cache.store'),
             );
         });
 

@@ -97,6 +97,15 @@ That verifier enforces two atproto rules a general-purpose ECDSA check would not
 
 If verification fails against the cached DID document, resolution is retried uncached and the signature is checked again. A cached document can predate a rotation; a freshly fetched one cannot. Only after both fail is the token refused.
 
+### Throttled lookups
+
+Nothing in a token is trusted until its signature verifies, yet anyone can send one naming any DID. So the network lookups a token can cause are throttled through the application cache:
+
+- The uncached refetch above happens at most once a minute for each DID (`ServiceAuth::REFETCH_INTERVAL`). The first token after a real rotation still refetches. A flood of forged tokens costs one lookup per DID per minute, not one per request.
+- A DID that fails to resolve is not tried again for a minute (`ServiceAuth::FAILURE_TTL`). Its tokens are refused with `BadJwtIss` meanwhile.
+
+The service provider passes the default cache store. A `ServiceAuth` constructed by hand without one throttles nothing.
+
 ## Error responses
 
 The middleware refuses in the shape an XRPC client expects:
