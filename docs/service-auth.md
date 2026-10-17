@@ -176,7 +176,34 @@ $jwt = app(ServiceAuth::class)->mint(
 
 Every token gets a random `jti`, and `iat`/`exp` are stamped from server time. Claims that are `null` are omitted rather than sent empty.
 
-Again: most applications should not do this. If you hold an authenticated session, ask the PDS for a token with `com.atproto.server.getServiceAuth` and let it sign with the user's repo key.
+Again: most applications should not do this. If you hold an authenticated session, ask the PDS for a token and let it sign with the user's repo key, as below.
+
+## Requesting a token from the user's PDS
+
+With an authenticated session, `getServiceAuth()` asks the user's PDS to mint a token signed with their repo key. Use it to call a service directly rather than proxying through the PDS, for example a video upload service or an AppView on another host:
+
+```php
+use SocialDept\AtpClient\Enums\Nsid\AtprotoRepo;
+
+$response = Atp::as($did)->atproto->server->getServiceAuth(
+    aud: 'did:web:video.example#atproto_video',
+    lxm: AtprotoRepo::UploadBlob,   // always bind a method
+    exp: time() + 300,              // optional, at most an hour ahead
+);
+
+$response->token;        // send as Authorization: Bearer <token>
+$response->expiresAt();  // cache it until shortly before this
+```
+
+`expiresAt()`, `audience()` and `method()` read the token's claims without verifying it. That is enough to cache a token received from your own PDS, and the receiving service does the verification.
+
+Under OAuth the PDS authorizes the request with the same check it applies to proxied calls, so the session needs `rpc:{lxm}?aud={aud}` for the pair requested. OAuth scopes write the audience in the combined `did#serviceId` form, so request it in that form too. `transition:generic` covers any non-chat method. The PDS also enforces a few limits of its own:
+
+- `exp` may be at most an hour ahead, and defaults to 60 seconds.
+- A token without `lxm` needs an `rpc:*` scope and lives at most 60 seconds. It is also refused by any route that names a method, so always pass one.
+- Account management methods such as `com.atproto.identity.updateHandle` can never be minted.
+
+Accepting a combined `did#serviceId` audience requires `@atproto/pds` 0.5.1 or later. Older PDS versions only accept a bare DID there, which granular OAuth scopes cannot match.
 
 ## Trust model
 
