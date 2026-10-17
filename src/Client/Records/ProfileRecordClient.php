@@ -41,7 +41,7 @@ class ProfileRecordClient extends Request
     public function get(): Record
     {
         $response = $this->atp->atproto->repo->getRecord(
-            repo: $this->atp->client->session()->did(),
+            repo: $this->atp->client->repoDid(),
             collection: BskyActor::Profile,
             rkey: 'self'
         );

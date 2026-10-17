@@ -2,6 +2,14 @@
 
 All notable changes to `AtpClient` will be documented in this file.
 
+## Version 0.3.11
+
+### Fixed
+- **`Atp::fake()` can fake repo writes.** `createRecord`, `putRecord`, `deleteRecord`, `applyWrites` and the record helpers built on them (`bsky->post`, `like`, `follow`, `profile`) read the repo from the session, which the fake does not have, so they crashed under the fake although the testing docs show stubbing `createRecord`. They now ask the client for the repo through `Client::repoDid()`, which the fake answers with the account it acts as, and the fake skips the scope check, having no scopes.
+
+### Added
+- `Client::repoDid()` and `Client::authorizeRepoWrite($collection, $action)`.
+
 ## Version 0.3.10
 
 ### Fixed
