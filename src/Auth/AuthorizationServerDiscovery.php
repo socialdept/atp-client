@@ -34,6 +34,17 @@ class AuthorizationServerDiscovery
     /**
      * Check if the PDS is hosted by Bluesky (mushroom PDSes).
      */
+    /**
+     * Metadata for an authorization server named directly, such as a
+     * provider's entryway, rather than found through a PDS.
+     */
+    public function forAuthorizationServer(string $authServerUrl): AuthorizationServerMetadata
+    {
+        $authServerUrl = rtrim($authServerUrl, '/');
+
+        return $this->getAuthorizationServerMetadata($authServerUrl, $authServerUrl);
+    }
+
     protected function isBlueskyHostedPds(string $pdsEndpoint): bool
     {
         $host = parse_url($pdsEndpoint, PHP_URL_HOST);

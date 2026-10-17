@@ -28,16 +28,19 @@ class OAuthEngine
     }
 
     /**
-     * Initiate OAuth flow
+     * Start OAuth for an account, at its own PDS's authorization server.
+     *
+     * The identifier is sent as login_hint, so the server opens on that
+     * account.
+     *
+     * @param  string|null  $prompt  For example "create" to open on account creation, where the server supports it
      */
     public function authorize(
         string $identifier,
         ?array $scopes = null,
-        ?string $pdsEndpoint = null
+        ?string $pdsEndpoint = null,
+        ?string $prompt = null,
     ): AuthorizationRequest {
-        // Use configured scopes if none provided
-        $scopes = $scopes ?? $this->metadata->getScopes();
-
         // Resolve PDS endpoint
         if (! $pdsEndpoint) {
             $pdsEndpoint = Resolver::resolvePds($identifier);
@@ -45,6 +48,34 @@ class OAuthEngine
 
         // Discover authorization server (handles mushroom PDSes and self-hosted)
         $authServer = $this->discovery->discover($pdsEndpoint);
+
+        return $this->start($authServer, $scopes, $pdsEndpoint, $identifier, $prompt);
+    }
+
+    /**
+     * Start OAuth at an authorization server, without naming an account. The
+     * server asks who is signing in, so this suits a "Log in with" button for
+     * a host. The callback checks the account it returns belongs there.
+     *
+     * @param  string  $server  An authorization server, such as https://bsky.social
+     * @param  string|null  $prompt  For example "create" to open on account creation, where the server supports it
+     */
+    public function authorizeAt(string $server, ?array $scopes = null, ?string $prompt = null): AuthorizationRequest
+    {
+        $authServer = $this->discovery->forAuthorizationServer(rtrim($server, '/'));
+
+        return $this->start($authServer, $scopes, $authServer->issuer, null, $prompt);
+    }
+
+    protected function start(
+        AuthorizationServerMetadata $authServer,
+        ?array $scopes,
+        string $pdsEndpoint,
+        ?string $identifier,
+        ?string $prompt,
+    ): AuthorizationRequest {
+        // Use configured scopes if none provided
+        $scopes = $scopes ?? $this->metadata->getScopes();
 
         // Generate PKCE challenge
         $codeVerifier = Str::random(128);
@@ -62,7 +93,9 @@ class OAuthEngine
             $scopes,
             $codeChallenge,
             $state,
-            $dpopKey
+            $dpopKey,
+            $identifier !== '' ? $identifier : null,
+            $prompt,
         );
 
         // Build authorization URL using discovered endpoint
@@ -78,7 +111,7 @@ class OAuthEngine
             dpopKey: $dpopKey,
             requestUri: $parResponse['request_uri'],
             pdsEndpoint: $pdsEndpoint,
-            handle: $identifier,
+            handle: $identifier !== '' ? $identifier : null,
             authServerIssuer: $authServer->issuer,
             tokenEndpoint: $authServer->tokenEndpoint,
         );
@@ -90,10 +123,17 @@ class OAuthEngine
     public function callback(
         string $code,
         string $state,
-        AuthorizationRequest $request
+        AuthorizationRequest $request,
+        ?string $issuer = null,
     ): AccessToken {
         if ($state !== $request->state) {
             throw new AuthenticationException('State mismatch');
+        }
+
+        // The server names itself in the redirect (RFC 9207). A different
+        // issuer than the one this flow started at is a mix-up attack.
+        if ($issuer !== null && $request->authServerIssuer !== null && rtrim($issuer, '/') !== rtrim($request->authServerIssuer, '/')) {
+            throw new AuthenticationException('Issuer mismatch');
         }
 
         // Use the stored token endpoint from discovery (handles mushroom PDSes)
@@ -118,8 +158,14 @@ class OAuthEngine
             throw new AuthenticationException('Token exchange failed: '.$response->body());
         }
 
+        $data = $response->json();
+
+        // Before anything is stored: the account must belong to the server
+        // that issued its tokens, and to the handle the flow started with.
+        $handle = $this->verifyAccount((string) ($data['sub'] ?? ''), $authServerIssuer, $request->handle);
+
         // Store auth server issuer for token refresh operations
-        $token = AccessToken::fromResponse($response->json(), $request->handle, $authServerIssuer);
+        $token = AccessToken::fromResponse($data, $handle ?? $request->handle, $authServerIssuer);
 
         // Store the DPoP key with the session ID so future requests can use it
         // The token is bound to this key's thumbprint (cnf.jkt claim)
@@ -129,6 +175,54 @@ class OAuthEngine
         event(new SessionAuthenticated($token));
 
         return $token;
+    }
+
+    /**
+     * Check that an authorization server may sign in this account.
+     *
+     * The token response names the account (`sub`), but any authorization
+     * server could name any DID. The DID's own PDS must use the issuing
+     * server, and a flow that started from a handle must land on that
+     * handle's DID. callback() runs this. Callers exchanging the code
+     * themselves, after callbackWithoutExchange(), must run it too.
+     *
+     * @return string|null The account's handle, from its DID document
+     *
+     * @throws AuthenticationException
+     */
+    public function verifyAccount(string $did, string $issuer, ?string $handle = null): ?string
+    {
+        if ($did === '') {
+            throw new AuthenticationException('The token response named no account');
+        }
+
+        try {
+            $document = Resolver::resolveDid($did, false);
+        } catch (\Throwable $e) {
+            throw new AuthenticationException("Could not resolve {$did}: {$e->getMessage()}");
+        }
+
+        $pds = $document->getPdsEndpoint() ?? throw new AuthenticationException("{$did} names no PDS");
+
+        if (rtrim($this->discovery->discover($pds)->issuer, '/') !== rtrim($issuer, '/')) {
+            throw new AuthenticationException("{$issuer} may not sign in {$did}: its PDS uses another authorization server");
+        }
+
+        if ($handle !== null && $handle !== '' && ! str_starts_with($handle, 'did:')) {
+            try {
+                $handleDid = Resolver::handleToDid($handle);
+            } catch (\Throwable $e) {
+                throw new AuthenticationException("Could not resolve {$handle}: {$e->getMessage()}");
+            }
+
+            if ($handleDid !== $did) {
+                throw new AuthenticationException("Signed in as {$did}, not {$handle}");
+            }
+        } elseif ($handle !== null && str_starts_with($handle, 'did:') && $handle !== $did) {
+            throw new AuthenticationException("Signed in as {$did}, not {$handle}");
+        }
+
+        return $document->getHandle();
     }
 
     /**
@@ -273,7 +367,9 @@ class OAuthEngine
         array $scopes,
         string $codeChallenge,
         string $state,
-        DPoPKey $dpopKey
+        DPoPKey $dpopKey,
+        ?string $loginHint = null,
+        ?string $prompt = null,
     ): array {
         $parUrl = $authServer->parEndpoint;
 
@@ -289,7 +385,10 @@ class OAuthEngine
                     'code_challenge' => $codeChallenge,
                     'code_challenge_method' => 'S256',
                     'state' => $state,
-                ]
+                ] + array_filter([
+                    'login_hint' => $loginHint,
+                    'prompt' => $prompt,
+                ], fn ($value) => $value !== null)
             ));
 
         if ($response->failed()) {
