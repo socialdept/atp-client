@@ -92,10 +92,13 @@ class ScopeChecker
             return true;
         }
 
-        // Handle repo: scopes with action semantics
+        // Handle repo scopes with action semantics. A granted repo scope comes
+        // in two shapes: repo:<collection> for one collection, and
+        // repo?collection=a&collection=b for several, which is how a permission
+        // set expands when the authorization server issues the token.
         if (str_starts_with($pattern, 'repo:')) {
             foreach ($granted as $scope) {
-                if (str_starts_with($scope, 'repo:') && $this->matchesRepoScope($pattern, $scope)) {
+                if ($this->isRepoScope($scope) && $this->matchesRepoScope($pattern, $scope)) {
                     return true;
                 }
             }
@@ -134,8 +137,19 @@ class ScopeChecker
         $requiredParsed = $this->parseRepoScope($required);
         $grantedParsed = $this->parseRepoScope($granted);
 
-        // Check collection match (with wildcard support)
-        if (! $this->collectionsMatch($requiredParsed['collection'], $grantedParsed['collection'])) {
+        // The required scope names one collection; the granted one may list
+        // several, any of which can match.
+        $collectionMatches = false;
+
+        foreach ($grantedParsed['collections'] as $grantedCollection) {
+            foreach ($requiredParsed['collections'] as $requiredCollection) {
+                if ($this->collectionsMatch($requiredCollection, $grantedCollection)) {
+                    $collectionMatches = true;
+                }
+            }
+        }
+
+        if (! $collectionMatches) {
             return false;
         }
 
@@ -168,20 +182,37 @@ class ScopeChecker
      */
     protected function parseRepoScope(string $scope): array
     {
-        $parts = explode('?', $scope, 2);
-        $collection = substr($parts[0], 5); // Remove 'repo:'
+        [$head, $query] = array_pad(explode('?', $scope, 2), 2, '');
 
+        // repo:<collection> carries one collection positionally; bare `repo`
+        // lists them as collection= parameters instead.
+        $collections = str_starts_with($head, 'repo:') ? [urldecode(substr($head, 5))] : [];
         $actions = [];
-        if (isset($parts[1])) {
-            // Parse action=create&action=update&action=delete format
-            // PHP's parse_str doesn't handle repeated params well
-            preg_match_all('/action=([^&]+)/', $parts[1], $matches);
-            if (! empty($matches[1])) {
-                $actions = array_map('urldecode', $matches[1]);
+
+        // Repeated parameters, which parse_str would collapse into one value.
+        foreach (explode('&', $query) as $pair) {
+            [$key, $value] = array_pad(explode('=', $pair, 2), 2, null);
+
+            if ($value === null || $value === '') {
+                continue;
             }
+
+            match ($key) {
+                'collection' => $collections[] = urldecode($value),
+                'action' => $actions[] = urldecode($value),
+                default => null,
+            };
         }
 
-        return ['collection' => $collection, 'actions' => $actions];
+        return ['collections' => $collections, 'actions' => $actions];
+    }
+
+    /**
+     * Whether a granted scope is a repo permission, in either shape.
+     */
+    protected function isRepoScope(string $scope): bool
+    {
+        return str_starts_with($scope, 'repo:') || $scope === 'repo' || str_starts_with($scope, 'repo?');
     }
 
     /**

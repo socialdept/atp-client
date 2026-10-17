@@ -23,6 +23,7 @@ Scope::rpc('app.bsky.feed.getTimeline')                  // RPC endpoint access
 Scope::blob('image/*')                                    // Blob upload access
 Scope::account('email')                                   // Account attribute access
 Scope::identity('handle')                                 // Identity attribute access
+Scope::include('com.example.authFull')                   // Permission set
 ```
 
 ### ScopedEndpoint Attribute
@@ -74,6 +75,28 @@ The AT Protocol is moving toward granular scopes that provide fine-grained acces
 'account:email'                                // Access email
 'identity:handle'                              // Manage handle
 ```
+
+### Permission Sets
+
+A permission set bundles permissions under one lexicon, so an app asks for `include:com.example.authFull` instead of listing every collection and endpoint. The authorization server resolves the set from its NSID and shows the user its title and description on the consent screen. A set may only cover resources under its own NSID namespace.
+
+```php
+Scope::include('com.example.authFull');
+// include:com.example.authFull
+
+Scope::include('com.example.authFull', 'did:web:api.example.com#svc_appview');
+// include:com.example.authFull?aud=did:web:api.example.com%23svc_appview
+```
+
+`aud` fills in the audience of any rpc permission in the set marked `inheritAud`, written in the combined `did#serviceId` form.
+
+**The granted scope never contains `include:`.** When the authorization server issues a token it expands each set into the granular permissions it contains, and those are what the session's scopes list. A set covering several collections expands into the named form:
+
+```
+repo?collection=com.example.post&collection=com.example.publication&action=create&action=update
+```
+
+The scope checker reads both `repo:<collection>` and `repo?collection=...`, and treats a repo scope with no `action` as granting all three, so checks against an expanded set work without listing its contents yourself.
 
 ## The ScopedEndpoint Attribute
 
@@ -156,28 +179,28 @@ public function getProfile(string $actor): ProfileViewDetailed
 }
 ```
 
-## Scope Enforcement (Planned)
+## Scope Enforcement
 
-> **Coming Soon:** Runtime scope enforcement is not yet implemented. The following documentation describes planned functionality for a future release.
+### What is checked
+
+The client checks scopes itself before a **repo write**: `createRecord()`, `putRecord()`, `deleteRecord()` and `applyWrites()` each check the session for the collection and action involved. `transition:generic` always passes. Everything else is left to the PDS, which enforces the session's scopes on every request regardless, and `#[ScopedEndpoint]` remains documentation.
 
 ### Configuration
 
-Configure scope enforcement in `config/client.php` or via environment variables:
+Set the enforcement level in `config/atp-client.php` or through the environment:
 
 ```php
 'scope_enforcement' => ScopeEnforcementLevel::Permissive,
 ```
 
-| Level | Behavior |
-|-------|----------|
-| `Strict` | Throws `MissingScopeException` if required scopes are missing |
-| `Permissive` | Logs a warning but attempts the request anyway |
-
-Set via environment variable:
-
 ```env
 ATP_SCOPE_ENFORCEMENT=strict
 ```
+
+| Level | Behavior |
+|-------|----------|
+| `Strict` | Throws `MissingScopeException` before the request is sent |
+| `Permissive` | Logs a warning and sends the request anyway, so the PDS decides |
 
 ### Programmatic Scope Checking
 
@@ -209,6 +232,8 @@ if ($checker->checkRepoScope($session, 'app.bsky.feed.post', 'create')) {
 }
 ```
 
+The `AtpScope` facade wraps the same checks for the current user or a given session: `can()`, `canAny()`, `canAll()`, `cannot()`, `authorize()` and `granted()`, with `forSession()` and `forUser()` to choose whose scopes to read.
+
 ### Granular Pattern Matching
 
 The scope checker supports wildcard patterns:
@@ -222,13 +247,15 @@ $checker->matchesGranular($session, 'blob:image/*');
 
 // Check if session has any repo access
 $checker->matchesGranular($session, 'repo:*');
+
+// Granted scopes from an expanded permission set are matched too
+$checker->matchesGranular($session, 'repo:com.example.post?action=create');
+// true when granted 'repo?collection=com.example.post&collection=com.example.publication&action=create'
 ```
 
-## Route Middleware (Planned)
+## Route Middleware
 
-> **Coming Soon:** Route middleware is not yet implemented. The following documentation describes planned functionality for a future release.
-
-Protect Laravel routes based on ATP session scopes:
+Protect Laravel routes based on ATP session scopes with `atp.scope`. It uses the same checker, so scopes from an expanded permission set count:
 
 ```php
 use Illuminate\Support\Facades\Route;
@@ -242,9 +269,11 @@ Route::get('/email-settings', EmailSettingsController::class)
     ->middleware('atp.scope:transition:generic,transition:email');
 ```
 
+The middleware refuses a request with no authenticated user, a user model that does not implement `HasAtpSession`, a user with no ATP session, or a session missing any listed scope.
+
 ### Middleware Configuration
 
-Configure middleware behavior in `config/client.php`:
+Configure what a refusal does in `config/atp-client.php`:
 
 ```php
 'scope_authorization' => [
@@ -306,42 +335,28 @@ $client->bsky->feed->getTimeline();  // Requires transition:generic scope
 
 Methods with `#[PublicEndpoint]` work in both modes, while methods with `#[ScopedEndpoint]` require authentication.
 
-## Exception Handling (Planned)
-
-> **Coming Soon:** These exceptions will be thrown when scope enforcement is implemented in a future release.
+## Exception Handling
 
 ### MissingScopeException
 
-Will be thrown when required scopes are missing and enforcement is strict:
+Thrown by a repo write when the session lacks the scope for it and enforcement is strict. Nothing is sent to the PDS:
 
 ```php
 use SocialDept\AtpClient\Exceptions\MissingScopeException;
 
 try {
-    $timeline = $client->bsky->feed->getTimeline();
+    $client->atproto->repo->createRecord('app.bsky.feed.post', $record);
 } catch (MissingScopeException $e) {
-    $missing = $e->getMissingScopes();   // Scopes that are missing
-    $granted = $e->getGrantedScopes();   // Scopes the session has
+    $e->required;   // Scopes the call needed
+    $e->granted;    // Scopes the session has
 
-    // Handle missing scope
+    // Ask the user to re-authorize with the missing scope
 }
 ```
 
 ### ScopeAuthorizationException
 
-Will be thrown by middleware when route access is denied:
-
-```php
-use SocialDept\AtpClient\Exceptions\ScopeAuthorizationException;
-
-try {
-    // Route protected by atp.scope middleware
-} catch (ScopeAuthorizationException $e) {
-    $required = $e->getRequiredScopes();
-    $granted = $e->getGrantedScopes();
-    $message = $e->getMessage();
-}
-```
+Raised by the `atp.scope` middleware when it refuses a request. It extends `MissingScopeException`, so `required` and `granted` are available, and it renders according to `failure_action`: a 403, a redirect, or the exception itself.
 
 ## Best Practices
 
@@ -372,12 +387,13 @@ Prefer the `Scope` enum over string literals for type safety:
 
 ### 3. Request Minimal Scopes
 
-When implementing OAuth, request only the scopes your application needs:
+Request only the scopes your application needs. Authorization requests use `atp-client.client.scopes`, and a permission set is often the tidiest way to ask for several:
 
 ```php
-$authUrl = Atp::oauth()->getAuthorizationUrl([
-    'scope' => 'atproto transition:generic',
-]);
+// config/atp-client.php
+'client' => [
+    'scopes' => ['atproto', Scope::include('com.example.authFull')],
+],
 ```
 
 ### 4. Handle Missing Scopes Gracefully
