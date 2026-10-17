@@ -15,6 +15,7 @@ use SocialDept\AtpClient\Auth\ScopeChecker;
 use SocialDept\AtpClient\Auth\ScopeGate;
 use SocialDept\AtpClient\Auth\ServiceAuth;
 use SocialDept\AtpClient\Auth\TokenRefresher;
+use SocialDept\AtpClient\Console\DevClientCommand;
 use SocialDept\AtpClient\Console\GenerateOAuthKeyCommand;
 use SocialDept\AtpClient\Console\MakeAtpClientCommand;
 use SocialDept\AtpClient\Console\MakeAtpRequestCommand;
@@ -158,6 +159,7 @@ class AtpClientServiceProvider extends ServiceProvider
             ], 'atp-client-config');
 
             $this->commands([
+                DevClientCommand::class,
                 GenerateOAuthKeyCommand::class,
                 MakeAtpClientCommand::class,
                 MakeAtpRequestCommand::class,
