@@ -28,9 +28,10 @@ class FakeOAuthEngine extends OAuthEngine
     public function authorize(
         string $identifier,
         ?array $scopes = null,
-        ?string $pdsEndpoint = null
+        ?string $pdsEndpoint = null,
+        ?string $prompt = null,
     ): AuthorizationRequest {
-        $this->recordedCalls[] = ['authorize', compact('identifier', 'scopes', 'pdsEndpoint')];
+        $this->recordedCalls[] = ['authorize', compact('identifier', 'scopes', 'pdsEndpoint', 'prompt')];
 
         if ($this->nextAuthorizationRequest) {
             return $this->nextAuthorizationRequest;
@@ -50,14 +51,35 @@ class FakeOAuthEngine extends OAuthEngine
     }
 
     /**
+     * Fake authorizeAt, starting at a server without naming an account.
+     */
+    public function authorizeAt(string $server, ?array $scopes = null, ?string $prompt = null): AuthorizationRequest
+    {
+        $this->recordedCalls[] = ['authorizeAt', compact('server', 'scopes', 'prompt')];
+
+        return $this->nextAuthorizationRequest ?? new AuthorizationRequest(
+            url: rtrim($server, '/').'/oauth/authorize?request_uri=fake',
+            state: 'fake-state',
+            codeVerifier: 'fake-code-verifier',
+            dpopKey: self::fakeDPoPKey(),
+            requestUri: 'urn:ietf:params:oauth:request_uri:fake',
+            pdsEndpoint: rtrim($server, '/'),
+            handle: null,
+            authServerIssuer: rtrim($server, '/'),
+            tokenEndpoint: rtrim($server, '/').'/oauth/token',
+        );
+    }
+
+    /**
      * Fake callback — returns a pre-configured or default token.
      */
     public function callback(
         string $code,
         string $state,
-        AuthorizationRequest $request
+        AuthorizationRequest $request,
+        ?string $issuer = null,
     ): AccessToken {
-        $this->recordedCalls[] = ['callback', compact('code', 'state')];
+        $this->recordedCalls[] = ['callback', compact('code', 'state', 'issuer')];
 
         if ($this->nextAccessToken) {
             return $this->nextAccessToken;

@@ -2,6 +2,22 @@
 
 All notable changes to `AtpClient` will be documented in this file.
 
+## Version 0.3.10
+
+### Fixed
+- **The OAuth callback checks the account.** `callback()` trusted whichever DID the token response named. Any authorization server could name any DID, so it now checks, before storing the DPoP key or firing `SessionAuthenticated`, that the DID's PDS uses the issuing server, and that a flow started from a handle landed on that handle's DID. A failure throws `AuthenticationException`.
+- **The redirect's issuer is checked.** `callback()` takes the `iss` parameter from the redirect and refuses one that differs from the server the flow started at (RFC 9207), before exchanging the code.
+
+### Added
+- `OAuthEngine::authorizeAt($server, $scopes, $prompt)`: start at an authorization server without naming an account, for a "Log in with" button.
+- `OAuthEngine::verifyAccount($did, $issuer, $handle)`, for callers exchanging the code themselves after `callbackWithoutExchange()`.
+- `authorize()` sends the identifier as `login_hint`, and takes a `prompt`, such as `create` to open on account creation.
+- `AuthorizationServerDiscovery::forAuthorizationServer($url)`.
+- `FakeOAuthEngine::authorizeAt()`.
+
+### Changed
+- `authorize()` gains a fourth optional parameter, `$prompt`, and `callback()` a fourth, `$issuer`. Calls are unaffected, but a subclass overriding either method must add the parameter to its signature.
+
 ## Version 0.3.9
 
 ### Fixed

@@ -144,13 +144,31 @@ public function callback(Request $request)
     $token = Atp::oauth()->callback(
         code: $request->get('code'),
         state: $request->get('state'),
-        request: $auth
+        request: $auth,
+        issuer: $request->get('iss'),
     );
 
     // Store credentials using your CredentialProvider
     // $token contains: accessJwt, refreshJwt, did, handle, expiresAt
 }
 ```
+
+Pass `iss` from the redirect: a server naming a different issuer than the flow started at is refused before the code is exchanged (RFC 9207).
+
+`callback()` also checks the account before storing anything. The token response names the account, but any authorization server could name any DID, so the DID's own PDS must use the issuing server, and a flow started from a handle must land on that handle. A failure throws `AuthenticationException`. If you exchange the code yourself after `callbackWithoutExchange()`, call `Atp::oauth()->verifyAccount($did, $issuer, $handle)` before trusting the account.
+
+**Starting at a host instead of a handle**
+
+For a "Log in with" button, start at the host's authorization server without naming an account. The server asks who is signing in, and the callback checks the account it returns belongs there.
+
+```php
+$auth = Atp::oauth()->authorizeAt('https://bsky.social');
+
+// Open on account creation, where the server supports it
+$auth = Atp::oauth()->authorizeAt('https://bsky.social', prompt: 'create');
+```
+
+`authorize($handle)` sends the handle as `login_hint`, so the account's server opens with it selected, and takes `prompt` too.
 
 **Step 3: Use stored credentials**
 ```php
