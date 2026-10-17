@@ -492,6 +492,22 @@ The `ATP_OAUTH_KID` is the Key ID used in your JWKS endpoint. Some developers ma
 
 When using an external OAuth broker, set `ATP_CLIENT_ID` and `ATP_CLIENT_JWKS_URI` to override the auto-generated URLs.
 
+### Local Development
+
+Authorization servers fetch client metadata from a public HTTPS URL and refuse redirects to local domains such as `.test`, so a local app cannot host its own client. A stateless client metadata broker such as [proto.broker](https://proto.broker) hosts it for you:
+
+```bash
+php artisan atp-client:dev-client
+```
+
+This builds a confidential client whose public key, callback and scopes are encoded in the client id itself, then writes `ATP_CLIENT_ID`, `ATP_CLIENT_REDIRECT_URI`, `ATP_OAUTH_SCOPE`, `ATP_OAUTH_PRIVATE_KEY` and `ATP_OAUTH_KID` to `.env`. Nothing is registered anywhere, and the private key never leaves your machine.
+
+- The callback defaults to the `oauth.callback` route, or `APP_URL/oauth/callback`. Override it with `--callback`.
+- Re-running reuses the key in `.env`, so the client id stays the same. Pass `--fresh` for a new key.
+- `--public` creates a public client with no signing key.
+- `--broker` points at a self-hosted broker. `--dry-run` prints the values instead of writing them.
+- The command refuses to run in production unless you pass `--force`.
+
 ## Credential Storage
 
 The package uses a `CredentialProvider` interface for token storage. The default `ArrayCredentialProvider` stores credentials in memory (lost on request end). For production applications, you need to implement persistent storage.
