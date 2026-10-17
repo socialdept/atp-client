@@ -1057,7 +1057,7 @@ Always pass the NSID to the middleware. It is what stops a token minted for one 
 `forward()` relays an XRPC call to the user's PDS with the session your application holds, so a browser holding only your session cookie can make ordinary XRPC requests, `atproto-proxy` included:
 
 ```php
-$response = Atp::as($did)->client->forward('GET', 'app.bsky.feed.getTimeline', $request->getQueryString(), null, $request->headers->all());
+$response = Atp::as($did)->client->forward('GET', 'app.bsky.feed.getTimeline', $request->server->get('QUERY_STRING'), null, $request->headers->all());
 
 return ForwardedResponse::toSymfony($response);
 ```

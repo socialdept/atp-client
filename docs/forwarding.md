@@ -15,7 +15,7 @@ Route::match(['get', 'post'], '/xrpc/{nsid}', function (Request $request, string
     $response = Atp::as($request->user()->did)->client->forward(
         method: $request->method(),
         endpoint: $nsid,
-        query: $request->getQueryString(),
+        query: $request->server->get('QUERY_STRING'),
         body: $request->getContent(asResource: true),
         headers: $request->headers->all(),
     );
@@ -31,7 +31,7 @@ Put the route behind your session and CSRF protection, and decide which methods 
 | | |
 |---|---|
 | Methods | `GET` and `POST`, the only two XRPC uses. Anything else throws `InvalidArgumentException` |
-| Query string | Passed through verbatim, so repeated parameters such as `uris=a&uris=b` keep XRPC's encoding |
+| Query string | Passed through verbatim, so repeated parameters such as `uris=a&uris=b` keep XRPC's encoding. Pass the raw `QUERY_STRING`: Symfony's `getQueryString()` keeps only the last value of a repeated parameter |
 | Request headers | Only `accept`, `accept-language`, `atproto-accept-labelers`, `atproto-proxy` and `content-type`. Cookies, the caller's own `Authorization` and everything else are dropped |
 | Authentication | The stored session's token, with a DPoP proof for OAuth sessions or a Bearer token for app password sessions |
 
