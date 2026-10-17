@@ -115,7 +115,15 @@ return [
     */
 
     'service_auth' => [
+        // The identifier this service answers to, as published in its DID
+        // document: a DID, or a combined did#serviceId. Required: without it
+        // the middleware refuses every request.
         'audience' => env('ATP_SERVICE_AUTH_AUDIENCE'),
+
+        // Accept tokens addressed to any service when no audience is set. Only
+        // safe when nothing distinguishes this service from another the caller
+        // could reach.
+        'allow_any_audience' => env('ATP_SERVICE_AUTH_ALLOW_ANY_AUDIENCE', false),
     ],
 
     'oauth' => [

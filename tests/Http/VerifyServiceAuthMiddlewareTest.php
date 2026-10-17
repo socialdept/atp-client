@@ -138,6 +138,60 @@ class VerifyServiceAuthMiddlewareTest extends TestCase
         );
     }
 
+    public function test_a_token_without_a_method_is_refused_when_the_route_names_one(): void
+    {
+        $this->bearing($this->mint(method: null))
+            ->getJson('/xrpc/'.self::METHOD)
+            ->assertStatus(401)
+            ->assertJson(['error' => 'BadJwtLexiconMethod']);
+    }
+
+    public function test_a_bare_did_audience_matches_a_combined_configured_audience(): void
+    {
+        // A PDS proxying a request signs for the bare DID.
+        $this->bearing($this->mint(audience: 'did:web:example.com'))
+            ->getJson('/xrpc/'.self::METHOD)
+            ->assertOk();
+    }
+
+    public function test_a_combined_audience_for_another_service_on_the_same_did_is_refused(): void
+    {
+        $this->bearing($this->mint(audience: 'did:web:example.com#other'))
+            ->getJson('/xrpc/'.self::METHOD)
+            ->assertStatus(401)
+            ->assertJson(['error' => 'BadJwtAudience']);
+    }
+
+    public function test_a_combined_audience_is_refused_when_only_the_bare_did_is_configured(): void
+    {
+        config()->set('atp-client.service_auth.audience', 'did:web:example.com');
+
+        $this->bearing($this->mint(audience: 'did:web:example.com#forum'))
+            ->getJson('/xrpc/'.self::METHOD)
+            ->assertStatus(401)
+            ->assertJson(['error' => 'BadJwtAudience']);
+    }
+
+    public function test_every_request_is_refused_when_no_audience_is_configured(): void
+    {
+        config()->set('atp-client.service_auth.audience', null);
+
+        $this->bearing($this->mint())
+            ->getJson('/xrpc/'.self::METHOD)
+            ->assertStatus(500)
+            ->assertJson(['error' => 'InternalServerError']);
+    }
+
+    public function test_any_audience_is_accepted_only_when_explicitly_allowed(): void
+    {
+        config()->set('atp-client.service_auth.audience', null);
+        config()->set('atp-client.service_auth.allow_any_audience', true);
+
+        $this->bearing($this->mint(audience: 'did:web:elsewhere.example'))
+            ->getJson('/xrpc/'.self::METHOD)
+            ->assertOk();
+    }
+
     protected function bearing(string $jwt): static
     {
         return $this->withHeader('Authorization', 'Bearer '.$jwt);

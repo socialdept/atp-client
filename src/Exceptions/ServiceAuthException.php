@@ -43,6 +43,15 @@ class ServiceAuthException extends RuntimeException
         return new self("Service auth token was not issued for \"{$expected}\".", 'BadJwtLexiconMethod');
     }
 
+    public static function unconfigured(): self
+    {
+        return new self(
+            'Service auth is not configured: set ATP_SERVICE_AUTH_AUDIENCE to the identifier this service answers to.',
+            'InternalServerError',
+            500,
+        );
+    }
+
     public static function issuer(string $detail): self
     {
         return new self("Could not establish the service auth issuer: {$detail}.", 'BadJwtIss');

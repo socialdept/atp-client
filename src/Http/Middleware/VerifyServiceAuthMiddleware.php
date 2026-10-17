@@ -46,8 +46,14 @@ class VerifyServiceAuthMiddleware
             return $this->refuse(ServiceAuthException::missing());
         }
 
+        $audience = $this->audience();
+
+        if ($audience === null && ! config('atp-client.service_auth.allow_any_audience', false)) {
+            return $this->refuse(ServiceAuthException::unconfigured());
+        }
+
         try {
-            $verified = $this->serviceAuth->verify($token, $this->audience(), $method);
+            $verified = $this->serviceAuth->verify($token, $audience, $method);
         } catch (ServiceAuthException $e) {
             return $this->refuse($e);
         }
@@ -60,7 +66,9 @@ class VerifyServiceAuthMiddleware
     /**
      * The service identifier this application answers to.
      *
-     * Null skips the audience check, which is only safe when nothing else
+     * Without one the middleware refuses every request, rather than accepting
+     * tokens addressed to any service. Skipping the check takes an explicit
+     * ATP_SERVICE_AUTH_ALLOW_ANY_AUDIENCE, which is only safe when nothing else
      * distinguishes this service from another the caller could reach.
      */
     protected function audience(): ?string

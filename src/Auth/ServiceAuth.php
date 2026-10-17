@@ -18,8 +18,8 @@ use Throwable;
  * DID document and checks the signature against the key published there.
  *
  * The `lxm` claim binds a token to one method. Without it, a token minted for a
- * harmless endpoint could be replayed against a sensitive one, so it is checked
- * whenever the caller names an expected method.
+ * harmless endpoint could be replayed against a sensitive one, so whenever the
+ * caller names an expected method the token must carry that exact method.
  */
 class ServiceAuth
 {
@@ -74,13 +74,13 @@ class ServiceAuth
             throw ServiceAuthException::malformed('missing "aud"');
         }
 
-        if ($audience !== null && ! hash_equals($audience, $tokenAudience)) {
+        if ($audience !== null && ! $this->audienceMatches($audience, $tokenAudience)) {
             throw ServiceAuthException::audience($audience);
         }
 
         $tokenMethod = is_string($payload['lxm'] ?? null) ? $payload['lxm'] : null;
 
-        if ($method !== null && $tokenMethod !== null && ! hash_equals($method, $tokenMethod)) {
+        if ($method !== null && ($tokenMethod === null || ! hash_equals($method, $tokenMethod))) {
             throw ServiceAuthException::method($method);
         }
 
@@ -214,6 +214,24 @@ class ServiceAuth
         }
 
         return [$header, $payload, $parts[0].'.'.$parts[1], $signature];
+    }
+
+    /**
+     * Whether a token's audience is this service.
+     *
+     * An exact match always counts. When this service answers to a combined
+     * `did#serviceId`, the bare DID counts too: a PDS proxying a request signs
+     * for the bare DID, while getServiceAuth tokens carry the combined form.
+     * The reverse is not accepted, since a bare configured DID cannot say which
+     * of the DID's services a combined token was meant for.
+     */
+    protected function audienceMatches(string $expected, string $actual): bool
+    {
+        if (hash_equals($expected, $actual)) {
+            return true;
+        }
+
+        return str_contains($expected, '#') && hash_equals($this->stripFragment($expected), $actual);
     }
 
     /**

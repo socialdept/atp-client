@@ -170,16 +170,26 @@ class ServiceAuthTest extends TestCase
     }
 
     /**
-     * A token with no `lxm` is not method-bound, so a route asking for one
-     * still accepts it — the binding is the issuer's choice to narrow.
+     * A token with no `lxm` could be replayed against any method, so a caller
+     * that names one refuses it.
      */
-    public function test_an_unbound_token_authorizes_any_method(): void
+    public function test_an_unbound_token_is_refused_when_a_method_is_required(): void
     {
         $auth = $this->serviceAuth();
-        $token = $auth->verify($this->mint($auth, method: null), self::AUDIENCE, self::METHOD);
+
+        $this->expectException(ServiceAuthException::class);
+        $this->expectExceptionMessage(self::METHOD);
+
+        $auth->verify($this->mint($auth, method: null), self::AUDIENCE, self::METHOD);
+    }
+
+    public function test_an_unbound_token_passes_when_no_method_is_required_but_authorizes_none(): void
+    {
+        $auth = $this->serviceAuth();
+        $token = $auth->verify($this->mint($auth, method: null), self::AUDIENCE);
 
         $this->assertNull($token->method);
-        $this->assertTrue($token->authorizes('com.example.anything'));
+        $this->assertFalse($token->authorizes('com.example.anything'));
     }
 
     public function test_it_reads_a_bearer_header(): void
