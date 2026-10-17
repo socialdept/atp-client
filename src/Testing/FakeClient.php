@@ -3,6 +3,7 @@
 namespace SocialDept\AtpClient\Testing;
 
 use BackedEnum;
+use Illuminate\Http\Client\Response as LaravelResponse;
 use SocialDept\AtpClient\AtpClient;
 use SocialDept\AtpClient\Client\Client;
 use SocialDept\AtpClient\Exceptions\AtpResponseException;
@@ -121,6 +122,66 @@ class FakeClient extends Client
         );
 
         return $this->resolveStub($endpoint, 'POST_BLOB', null, null);
+    }
+
+    /**
+     * Override forward to intercept passthrough calls.
+     *
+     * Records the call with its query string and filtered headers, and returns
+     * the stub as a raw response. Like the real forward(), an error status is
+     * returned rather than thrown.
+     */
+    public function forward(
+        string $method,
+        string|BackedEnum $endpoint,
+        ?string $query = null,
+        mixed $body = null,
+        array $headers = [],
+    ): LaravelResponse {
+        $endpoint = $endpoint instanceof BackedEnum ? $endpoint->value : $endpoint;
+        parse_str((string) $query, $params);
+
+        $this->recorded[] = new RecordedRequest(
+            endpoint: $endpoint,
+            method: 'FORWARD_'.strtoupper($method),
+            params: $params + ['_query' => (string) $query, '_headers' => $this->forwardableHeaders($headers)],
+            did: $this->fakeDid,
+            isPublicMode: $this->isPublicMode(),
+        );
+
+        return $this->resolveForwardStub($endpoint, $method, $params)->getResponse();
+    }
+
+    /**
+     * Resolve a forwarded call's stub without throwing on error statuses.
+     */
+    protected function resolveForwardStub(string $endpoint, string $method, array $params): Response
+    {
+        $stub = $this->stubs[$endpoint] ?? null;
+
+        if ($stub instanceof ResponseSequence) {
+            return $stub->next($endpoint);
+        }
+
+        if ($stub instanceof \Closure) {
+            $result = $stub($endpoint, $params, null, $method);
+
+            return $result instanceof Response ? $result : FakeResponse::ok(is_array($result) ? $result : []);
+        }
+
+        if ($stub instanceof Response) {
+            return $stub;
+        }
+
+        if (is_array($stub)) {
+            return FakeResponse::ok($stub);
+        }
+
+        if ($this->preventStrayRequests) {
+            throw new \RuntimeException("Unexpected ATP request to [{$endpoint}].");
+        }
+
+        return FakeResponse::ok();
     }
 
     /**
