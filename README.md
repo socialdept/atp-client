@@ -1031,6 +1031,18 @@ $token->method;    // the NSID the token is bound to
 
 Always pass the NSID to the middleware. It is what stops a token minted for one endpoint being replayed at another. See **[Service Auth](docs/service-auth.md)** for everything that gets verified, the error responses, key rotation, and minting.
 
+## Forwarding XRPC Calls
+
+`forward()` relays an XRPC call to the user's PDS with the session your application holds, so a browser holding only your session cookie can make ordinary XRPC requests, `atproto-proxy` included:
+
+```php
+$response = Atp::as($did)->client->forward('GET', 'app.bsky.feed.getTimeline', $request->getQueryString(), null, $request->headers->all());
+
+return ForwardedResponse::toSymfony($response);
+```
+
+Only an allowlist of headers is forwarded, errors from the PDS are returned rather than thrown, and bodies stream in both directions. See **[Forwarding](docs/forwarding.md)**.
+
 ## Extending the Client
 
 Add custom functionality to AtpClient by registering your own domain clients or request clients. Extensions are lazily instantiated on first access.
@@ -1191,6 +1203,7 @@ composer test
 - [docs/extensions.md](docs/extensions.md) - Client extensions guide
 - [docs/testing.md](docs/testing.md) - Testing guide
 - [docs/service-auth.md](docs/service-auth.md) - Inter-service auth guide
+- [docs/forwarding.md](docs/forwarding.md) - Forwarding XRPC calls to the user's PDS
 - [docs/sessions.md](docs/sessions.md) - Sessions & keep-alive guide
 - [docs/scopes.md](docs/scopes.md) - OAuth scopes guide
 
