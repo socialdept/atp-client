@@ -2,6 +2,14 @@
 
 All notable changes to `AtpClient` will be documented in this file.
 
+## Version 0.3.12
+
+### Added
+- **Lexicon publishing commands.** `lexicon:publish` writes local lexicons to your repo as `com.atproto.lexicon.schema` records, `lexicon:unpublish` removes them, and `lexicon:status` compares local files with what the network publishes. Publishing refuses a lexicon with lint errors, requires the `_lexicon` DNS record to name the publishing account, skips identical schemas, needs `--update` to replace one, and refuses breaking changes unless `--allow-breaking`. Sign in with `--as` and an app password, or a session the app holds.
+
+### Changed
+- Requires `socialdept/atp-schema` `^0.4.9`, for its lexicon authoring tools.
+
 ## Version 0.3.11
 
 ### Fixed
