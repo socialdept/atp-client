@@ -17,6 +17,9 @@ use SocialDept\AtpClient\Auth\ServiceAuth;
 use SocialDept\AtpClient\Auth\TokenRefresher;
 use SocialDept\AtpClient\Console\DevClientCommand;
 use SocialDept\AtpClient\Console\GenerateOAuthKeyCommand;
+use SocialDept\AtpClient\Console\LexiconPublishCommand;
+use SocialDept\AtpClient\Console\LexiconStatusCommand;
+use SocialDept\AtpClient\Console\LexiconUnpublishCommand;
 use SocialDept\AtpClient\Console\MakeAtpClientCommand;
 use SocialDept\AtpClient\Console\MakeAtpRequestCommand;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
@@ -162,6 +165,9 @@ class AtpClientServiceProvider extends ServiceProvider
             $this->commands([
                 DevClientCommand::class,
                 GenerateOAuthKeyCommand::class,
+                LexiconPublishCommand::class,
+                LexiconStatusCommand::class,
+                LexiconUnpublishCommand::class,
                 MakeAtpClientCommand::class,
                 MakeAtpRequestCommand::class,
             ]);
