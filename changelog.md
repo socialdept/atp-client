@@ -2,6 +2,11 @@
 
 All notable changes to `AtpClient` will be documented in this file.
 
+## Version 0.3.13
+
+### Changed
+- Allows Guzzle 8 alongside Guzzle 7 (`guzzlehttp/guzzle` `^7.0|^8.0`), so the package installs in a fresh Laravel app without downgrading Guzzle. With atp-support 0.3.5 and atp-schema 0.4.12 or later, the whole tree resolves to Guzzle 8.
+
 ## Version 0.3.12
 
 ### Added
