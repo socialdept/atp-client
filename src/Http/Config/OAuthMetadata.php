@@ -3,6 +3,7 @@
 namespace SocialDept\AtpClient\Http\Config;
 
 use Closure;
+use SocialDept\AtpClient\Auth\ClientMetadataManager;
 use SocialDept\AtpClient\Crypto\JsonWebKeySet;
 
 class OAuthMetadata
@@ -40,7 +41,7 @@ class OAuthMetadata
             'client_id' => $clientId,
             'jwks_uri' => $jwksUri,
             'redirect_uris' => config('atp-client.client.redirect_uris', []),
-            'scope' => config('atp-client.oauth.scope', 'atproto transition:generic'),
+            'scope' => implode(' ', app(ClientMetadataManager::class)->getScopes()),
             'grant_types' => ['authorization_code', 'refresh_token'],
             'response_types' => ['code'],
             'token_endpoint_auth_method' => 'private_key_jwt',

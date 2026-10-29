@@ -2,6 +2,14 @@
 
 All notable changes to `AtpClient` will be documented in this file.
 
+## Version 0.3.14
+
+### Fixed
+- **Sign-in honors `ATP_OAUTH_SCOPE`.** Authorization requests read the fixed `client.scopes` list while the client metadata document advertised `ATP_OAUTH_SCOPE`, so adding scopes to the env changed nothing at sign-in, and the two could disagree. `ClientMetadataManager::getScopes()` is now the one source for the authorization request, the metadata document, the localhost client id and `atp-client:dev-client`.
+
+### Changed
+- `client.scopes` reads `ATP_OAUTH_SCOPE` (space-separated, default `atproto transition:generic`), and the separate `oauth.scope` key is gone from the shipped config. Published configs that still have it keep working: an `oauth.scope` other than the default, meaning the env is set, wins over a fixed `client.scopes` list. `client.scopes` may also be a space-separated string.
+
 ## Version 0.3.13
 
 ### Changed

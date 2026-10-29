@@ -4,6 +4,7 @@ namespace SocialDept\AtpClient\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Route;
+use SocialDept\AtpClient\Auth\ClientMetadataManager;
 use SocialDept\AtpClient\Auth\OAuthKey;
 
 /**
@@ -40,7 +41,7 @@ class DevClientCommand extends Command
         }
 
         $callback = $this->callbackUrl();
-        $scope = implode(' ', config('atp-client.client.scopes', ['atproto', 'transition:generic']));
+        $scope = implode(' ', $this->laravel->make(ClientMetadataManager::class)->getScopes());
 
         if (! in_array('atproto', explode(' ', $scope), true)) {
             $this->components->error('The configured scopes must include "atproto".');

@@ -494,7 +494,7 @@ return [
         'redirect_uris' => [
             env('ATP_CLIENT_REDIRECT_URI', config('app.url').'/auth/atp/callback'),
         ],
-        'scopes' => ['atproto', 'transition:generic'],
+        'scopes' => explode(' ', env('ATP_OAUTH_SCOPE', 'atproto transition:generic')),
     ],
 
     // Credential storage provider
@@ -534,6 +534,7 @@ ATP_CLIENT_URL="https://myapp.com"
 ATP_CLIENT_REDIRECT_URI="https://myapp.com/auth/atp/callback"
 ATP_OAUTH_PRIVATE_KEY="base64-encoded-private-key"
 ATP_OAUTH_KID="atp-client-key"
+ATP_OAUTH_SCOPE="atproto transition:generic"
 ATP_REFRESH_THRESHOLD=300
 ATP_HTTP_TIMEOUT=30
 
@@ -545,6 +546,8 @@ ATP_CLIENT_JWKS_URI="https://broker.example.com/clients/your-client-id/jwks"
 ATP_OAUTH_CLIENT_METADATA_PATH="/oauth-client-metadata.json"
 ATP_OAUTH_JWKS_PATH="/oauth-jwks.json"
 ```
+
+`ATP_OAUTH_SCOPE` is a space-separated list of the scopes your app asks for. It sets both the scopes requested at sign-in and the `scope` your client metadata document advertises, so the two always match. Configs published before 0.3.14 keep a fixed `client.scopes` list and read the env into `oauth.scope` instead. They still work: a set `ATP_OAUTH_SCOPE` wins, otherwise the published list is used.
 
 The `ATP_OAUTH_KID` is the Key ID used in your JWKS endpoint. Some developers may require this to match a specific value. The default is `atp-client-key`.
 
@@ -563,6 +566,7 @@ This builds a confidential client whose public key, callback and scopes are enco
 - The callback defaults to the `oauth.callback` route, or `APP_URL/oauth/callback`. Override it with `--callback`.
 - Re-running reuses the key in `.env`, so the client id stays the same. Pass `--fresh` for a new key.
 - `--public` creates a public client with no signing key.
+- The scopes come from `ATP_OAUTH_SCOPE` and are encoded in the client id, so re-run the command after changing them.
 - `--broker` points at a self-hosted broker. `--dry-run` prints the values instead of writing them.
 - The command refuses to run in production unless you pass `--force`.
 

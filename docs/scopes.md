@@ -387,7 +387,7 @@ Prefer the `Scope` enum over string literals for type safety:
 
 ### 3. Request Minimal Scopes
 
-Request only the scopes your application needs. Authorization requests use `atp-client.client.scopes`, and a permission set is often the tidiest way to ask for several:
+Request only the scopes your application needs. Authorization requests and the client metadata both use `atp-client.client.scopes`, which reads the space-separated `ATP_OAUTH_SCOPE` env variable by default. A permission set is often the tidiest way to ask for several:
 
 ```php
 // config/atp-client.php

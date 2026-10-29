@@ -34,7 +34,10 @@ return [
             env('ATP_CLIENT_REDIRECT_URI'),
         ]),
 
-        'scopes' => ['atproto', 'transition:generic'],
+        // Scopes to request at sign-in and advertise in the client metadata.
+        // Set ATP_OAUTH_SCOPE as a space-separated list, for example
+        // "atproto repo:app.bsky.feed.post?action=create".
+        'scopes' => explode(' ', env('ATP_OAUTH_SCOPE', 'atproto transition:generic')),
     ],
 
     /*
@@ -142,7 +145,6 @@ return [
 
         'private_key' => env('ATP_OAUTH_PRIVATE_KEY'),
         'kid' => env('ATP_OAUTH_KID', 'atp-client-key'),
-        'scope' => env('ATP_OAUTH_SCOPE', 'atproto transition:generic'),
 
         'client_metadata' => [
             'client_name' => env('ATP_CLIENT_NAME', config('app.name')),

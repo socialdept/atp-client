@@ -71,13 +71,53 @@ class ClientMetadataManager
     }
 
     /**
+     * Scopes requested when nothing is configured.
+     */
+    public const DEFAULT_SCOPES = ['atproto', 'transition:generic'];
+
+    /**
      * Get the OAuth scopes.
+     *
+     * The single source for the authorization request, the client metadata
+     * document and the localhost client id, so they always agree.
      *
      * @return array<string>
      */
     public function getScopes(): array
     {
-        return config('atp-client.client.scopes', ['atproto', 'transition:generic']);
+        // Configs published before 0.3.14 read ATP_OAUTH_SCOPE into oauth.scope
+        // and keep a fixed list in client.scopes. A changed oauth.scope means
+        // the env is set, so it wins over that list.
+        $legacy = $this->normalizeScopes(config('atp-client.oauth.scope'));
+
+        if ($legacy !== [] && $legacy !== self::DEFAULT_SCOPES) {
+            return $legacy;
+        }
+
+        $scopes = $this->normalizeScopes(config('atp-client.client.scopes'));
+
+        return $scopes !== [] ? $scopes : self::DEFAULT_SCOPES;
+    }
+
+    /**
+     * Turn a scope list or space-separated string into a clean list.
+     *
+     * @return array<string>
+     */
+    protected function normalizeScopes(mixed $scopes): array
+    {
+        if (is_string($scopes)) {
+            $scopes = preg_split('/\s+/', $scopes);
+        }
+
+        if (! is_array($scopes)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(
+            array_map(fn ($scope) => trim((string) $scope), $scopes),
+            fn (string $scope) => $scope !== '',
+        )));
     }
 
     /**
@@ -153,8 +193,7 @@ class ClientMetadataManager
         }
 
         // Add scopes
-        $scopes = config('atp-client.client.scopes', ['atproto']);
-        $params['scope'] = implode(' ', $scopes);
+        $params['scope'] = implode(' ', $this->getScopes());
 
         return 'http://localhost?'.http_build_query($params);
     }
