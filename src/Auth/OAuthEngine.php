@@ -9,10 +9,12 @@ use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\AuthorizationRequest;
 use SocialDept\AtpClient\Data\AuthorizationServerMetadata;
 use SocialDept\AtpClient\Data\DPoPKey;
+use SocialDept\AtpClient\Data\RevocationResult;
 use SocialDept\AtpClient\Events\SessionAuthenticated;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\OAuthSessionInvalidException;
 use SocialDept\AtpClient\Http\DPoPClient;
+use SocialDept\AtpClient\Session\SessionManager;
 use SocialDept\AtpSupport\Facades\Resolver;
 
 class OAuthEngine
@@ -297,6 +299,19 @@ class OAuthEngine
             'pdsEndpoint' => $request->pdsEndpoint,
             'handle' => $request->handle,
         ];
+    }
+
+    /**
+     * Sign an account out: revoke its stored session at the authorization
+     * server (RFC 7009), then forget its credentials and DPoP key.
+     *
+     * The session is forgotten even when revocation fails, so this never
+     * throws for a network error, a refusal or a server without a
+     * revocation endpoint. Check the result, or call throw() on it.
+     */
+    public function revoke(string $did): RevocationResult
+    {
+        return app(SessionManager::class)->revoke($did);
     }
 
     /**

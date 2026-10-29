@@ -98,6 +98,37 @@ Schedule::call(function () {
 
 The refresh token is DPoP-bound to the session's key. If that key is lost (e.g. a non-shared or wiped key store), refresh cannot succeed. AtpClient will **not** silently mint a new key for an existing OAuth session — it throws `OAuthSessionInvalidException::missingDpopKey()` so the user reconnects cleanly. Persist the DPoP key store durably (and share it across hosts). Opt out only if you intentionally keep keys ephemeral: `session.allow_key_regeneration = true`.
 
+## Signing out
+
+`Atp::oauth()->revoke($did)` revokes a stored session at the server, then forgets its credentials, its DPoP key and the cached session.
+
+- **OAuth**: posts the refresh token to the authorization server's `revocation_endpoint` (RFC 7009), with a DPoP proof and the client assertion, exactly as a refresh authenticates. Revoking the refresh token ends the grant and every access token issued from it. Only if the server refuses the refresh token is the access token sent too, while it is unexpired. The server is the one that issued the tokens (the stored `issuer`), found through the PDS when none is stored.
+- **App password**: calls `com.atproto.server.deleteSession` on the PDS with the refresh token.
+
+Forgetting never depends on the server. Revocation failures come back on the `RevocationResult` instead of being thrown:
+
+| `failure` | Meaning |
+|---|---|
+| `null` | Revoked, `revoked` is `true` |
+| `NoSession` | Nothing was stored for the DID |
+| `NoEndpoint` | The authorization server advertises no `revocation_endpoint` |
+| `MissingDpopKey` | The key the tokens are bound to is gone, so no proof can be made |
+| `Refused` | The server answered with a 4xx, see `status` and `error` |
+| `Unreachable` | Network failure, failed discovery, a 5xx or a 429 |
+
+```php
+$result = Atp::oauth()->revoke($did);
+
+if (! $result->revoked) {
+    logger()->info('Signed out locally only', ['reason' => $result->failure->value]);
+}
+
+// Or insist on a confirmed revocation
+Atp::oauth()->revoke($did)->throw(); // AuthenticationException when not revoked
+```
+
+A session the server did not revoke stays valid there until it expires or the user revokes it from their account settings, but this app no longer holds its tokens.
+
 ## Events
 
 | Event | When | Key fields |

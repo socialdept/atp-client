@@ -15,6 +15,7 @@ use SocialDept\AtpClient\Auth\ScopeChecker;
 use SocialDept\AtpClient\Auth\ScopeGate;
 use SocialDept\AtpClient\Auth\ServiceAuth;
 use SocialDept\AtpClient\Auth\TokenRefresher;
+use SocialDept\AtpClient\Auth\TokenRevoker;
 use SocialDept\AtpClient\Console\DevClientCommand;
 use SocialDept\AtpClient\Console\GenerateOAuthKeyCommand;
 use SocialDept\AtpClient\Console\LexiconPublishCommand;
@@ -73,6 +74,7 @@ class AtpClientServiceProvider extends ServiceProvider
         $this->app->singleton(DPoPClient::class);
         $this->app->singleton(AuthorizationServerDiscovery::class);
         $this->app->singleton(TokenRefresher::class);
+        $this->app->singleton(TokenRevoker::class);
         $this->app->singleton(SessionManager::class, function ($app) {
             return new SessionManager(
                 credentials: $app->make(CredentialProvider::class),
@@ -84,6 +86,7 @@ class AtpClientServiceProvider extends ServiceProvider
                 refreshLockWait: config('atp-client.session.refresh_lock_wait', 10),
                 refreshLockTtl: config('atp-client.session.refresh_lock_ttl', 15),
                 allowKeyRegeneration: config('atp-client.session.allow_key_regeneration', false),
+                revoker: $app->make(TokenRevoker::class),
             );
         });
         $this->app->singleton(OAuthEngine::class);
