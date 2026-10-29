@@ -8,11 +8,14 @@ use Illuminate\Support\Facades\Http;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\OAuthErrorClassifier;
 use SocialDept\AtpClient\Auth\TokenRefresher;
+use SocialDept\AtpClient\Auth\TokenRevoker;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
 use SocialDept\AtpClient\Data\AccessToken;
+use SocialDept\AtpClient\Data\RevocationResult;
 use SocialDept\AtpClient\Enums\AuthType;
 use SocialDept\AtpClient\Enums\RefreshFailureReason;
+use SocialDept\AtpClient\Enums\RevocationFailure;
 use SocialDept\AtpClient\Events\SessionAuthenticated;
 use SocialDept\AtpClient\Events\SessionInvalid;
 use SocialDept\AtpClient\Events\SessionRefreshFailed;
@@ -41,6 +44,7 @@ class SessionManager
         protected int $refreshLockWait = 10,
         protected int $refreshLockTtl = 15,
         protected bool $allowKeyRegeneration = false,
+        protected ?TokenRevoker $revoker = null,
     ) {
     }
 
@@ -205,6 +209,27 @@ class SessionManager
     public function refresh(string $actor): Session
     {
         return $this->refreshSession($this->session($actor));
+    }
+
+    /**
+     * Revoke a stored session at the server, then forget it: credentials,
+     * DPoP key and the cached session. It is forgotten even when revocation
+     * fails, and the result says what happened instead of throwing.
+     */
+    public function revoke(string $did): RevocationResult
+    {
+        $sessionId = 'session_'.hash('sha256', $did);
+        $credentials = $this->credentials->getCredentials($did);
+
+        $result = $credentials
+            ? ($this->revoker ?? app(TokenRevoker::class))->revoke($credentials, $this->keyStore->get($sessionId))
+            : RevocationResult::failed($did, RevocationFailure::NoSession);
+
+        $this->credentials->removeCredentials($did);
+        $this->keyStore->delete($sessionId);
+        unset($this->sessions[$did]);
+
+        return $result;
     }
 
     /**

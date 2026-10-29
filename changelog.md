@@ -2,6 +2,14 @@
 
 All notable changes to `AtpClient` will be documented in this file.
 
+## Version 0.3.15
+
+### Added
+- **Signing out.** `Atp::oauth()->revoke($did)` revokes a stored session at the server and forgets it. OAuth sessions post the refresh token to the authorization server's `revocation_endpoint` (RFC 7009) with the DPoP proof and client assertion a refresh uses, falling back to the access token if the refresh token is refused. App password sessions call `com.atproto.server.deleteSession`. The credentials, DPoP key and cached session are forgotten whatever the server answers.
+- `RevocationResult` reports the outcome: `revoked`, and a `RevocationFailure` (`NoSession`, `NoEndpoint`, `MissingDpopKey`, `Refused`, `Unreachable`) with the HTTP status and error when it was not. Revocation failures never throw unless you call `throw()` on the result.
+- `SessionManager::revoke($did)` and `TokenRevoker`, which `revoke()` is built on.
+- `FakeOAuthEngine::revoke()`, recorded like the other calls.
+
 ## Version 0.3.14
 
 ### Fixed

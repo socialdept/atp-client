@@ -195,6 +195,19 @@ Event::listen(SessionUpdated::class, function ($event) {
 });
 ```
 
+### Signing Out
+
+`revoke()` ends a stored session at the server and forgets it locally. OAuth sessions are revoked at the authorization server's `revocation_endpoint` (RFC 7009), authenticated the same way a refresh is. App password sessions are deleted with `com.atproto.server.deleteSession`.
+
+```php
+$result = Atp::oauth()->revoke($did);
+
+$result->revoked; // the server confirmed it
+$result->failure; // otherwise why not, a RevocationFailure
+```
+
+The credentials and DPoP key are forgotten whatever the server says, so a network error, a refusal or a server without a revocation endpoint never leaves the user signed in, and never throws. Call `$result->throw()` when you need the grant confirmed dead. See [docs/sessions.md](docs/sessions.md#signing-out).
+
 ## Working with Posts
 
 ### Create a Simple Post

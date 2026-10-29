@@ -6,6 +6,7 @@ use SocialDept\AtpClient\Auth\OAuthEngine;
 use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\AuthorizationRequest;
 use SocialDept\AtpClient\Data\DPoPKey;
+use SocialDept\AtpClient\Data\RevocationResult;
 
 class FakeOAuthEngine extends OAuthEngine
 {
@@ -94,6 +95,16 @@ class FakeOAuthEngine extends OAuthEngine
             issuer: $request->authServerIssuer,
             scope: ['atproto', 'transition:generic'],
         );
+    }
+
+    /**
+     * Fake revoke, reporting the session as revoked at the server.
+     */
+    public function revoke(string $did): RevocationResult
+    {
+        $this->recordedCalls[] = ['revoke', compact('did')];
+
+        return RevocationResult::revoked($did);
     }
 
     /**
