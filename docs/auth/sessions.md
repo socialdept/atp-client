@@ -1,5 +1,7 @@
 # Sessions & Keep-Alive
 
+Part of the [atp-client docs](../introduction.md#documentation). This page covers how sessions are refreshed, classified and kept alive.
+
 How AtpClient manages OAuth sessions, why refresh is fragile, and how to keep sessions alive reliably.
 
 ## Two tokens, two lifetimes
@@ -77,12 +79,13 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::call(function () {
     foreach (idleSessions(days: 7) as $session) {           // your storage: last_refreshed_at < now-7d
         try {
-            Atp::as($session->did)->refresh($session->did);  // forces a rotation under the lock
+            app(\SocialDept\AtpClient\Session\SessionManager::class)->refresh($session->did);  // forces a rotation under the lock
             $session->touchLastRefreshedAt();
         } catch (\SocialDept\AtpClient\Exceptions\TransientAuthFailureException) {
             // transient — try again next run
+        } catch (\SocialDept\AtpClient\Exceptions\AuthenticationException) {
+            // Terminal. It also dispatches SessionRefreshFailed or SessionInvalid, so flag in those listeners.
         }
-        // Terminal failures dispatch SessionRefreshFailed; flag in that listener.
     }
 })->dailyAt('04:00')->withoutOverlapping()->onOneServer();
 ```

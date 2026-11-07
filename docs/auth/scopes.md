@@ -1,8 +1,11 @@
 # OAuth Scopes
 
+Part of the [atp-client docs](../introduction.md#documentation). This page covers OAuth scopes, how they are checked and how to protect routes with them.
+
 The AT Protocol uses OAuth scopes to control what actions an application can perform on behalf of a user. AtpClient provides attributes for documenting scope requirements on endpoints.
 
-> **Note:** The `#[ScopedEndpoint]` and `#[PublicEndpoint]` attributes currently serve as documentation only. Runtime scope validation and enforcement will be implemented in a future release. Using these attributes correctly now ensures forward compatibility.
+> [!NOTE]
+> The `#[ScopedEndpoint]` and `#[PublicEndpoint]` attributes are documentation only. The client checks scopes itself before repo writes (see [Scope Enforcement](#scope-enforcement)) and leaves everything else to the PDS.
 
 ## Quick Reference
 
@@ -12,7 +15,7 @@ The AT Protocol uses OAuth scopes to control what actions an application can per
 use SocialDept\AtpClient\Enums\Scope;
 
 // Transition scopes (current AT Protocol scopes)
-Scope::Atproto              // 'atproto' - Full access
+Scope::Atproto              // 'atproto' - Base scope
 Scope::TransitionGeneric    // 'transition:generic' - General API access
 Scope::TransitionEmail      // 'transition:email' - Email access
 Scope::TransitionChat       // 'transition:chat.bsky' - Chat access
@@ -47,7 +50,7 @@ The AT Protocol is currently in a transition period where broad "transition scop
 
 | Scope | Description |
 |-------|-------------|
-| `atproto` | Full access to the AT Protocol |
+| `atproto` | Base scope for AT Protocol OAuth. The client's repo write checks do not treat it as granting writes |
 | `transition:generic` | General API access for most operations |
 | `transition:email` | Access to email-related operations |
 | `transition:chat.bsky` | Access to Bluesky chat features |
@@ -234,6 +237,17 @@ if ($checker->checkRepoScope($session, 'app.bsky.feed.post', 'create')) {
 
 The `AtpScope` facade wraps the same checks for the current user or a given session: `can()`, `canAny()`, `canAll()`, `cannot()`, `authorize()` and `granted()`, with `forSession()` and `forUser()` to choose whose scopes to read.
 
+A `Session` answers the same questions directly, but it compares exact scope strings only and does not match granular patterns or expanded permission sets:
+
+```php
+$session = Atp::as($did)->client->session();
+
+$session->can('transition:generic');
+$session->canAny(['transition:generic', 'transition:chat.bsky']);
+$session->canAll(['atproto', 'transition:generic']);
+$session->cannot('transition:chat.bsky');
+```
+
 ### Granular Pattern Matching
 
 The scope checker supports wildcard patterns:
@@ -347,7 +361,7 @@ use SocialDept\AtpClient\Exceptions\MissingScopeException;
 try {
     $client->atproto->repo->createRecord('app.bsky.feed.post', $record);
 } catch (MissingScopeException $e) {
-    $e->required;   // Scopes the call needed
+    $e->required;   // Scopes the call needed that the session lacks
     $e->granted;    // Scopes the session has
 
     // Ask the user to re-authorize with the missing scope
@@ -356,7 +370,7 @@ try {
 
 ### ScopeAuthorizationException
 
-Raised by the `atp.scope` middleware when it refuses a request. It extends `MissingScopeException`, so `required` and `granted` are available, and it renders according to `failure_action`: a 403, a redirect, or the exception itself.
+Raised by the `atp.scope` middleware when it refuses a request, and by `AtpScope::authorize()`. It extends `MissingScopeException`, so `required` and `granted` are available, and it renders according to `failure_action`: a 403, a redirect, or the exception itself.
 
 ## Best Practices
 
@@ -405,7 +419,7 @@ $checker = app(ScopeChecker::class);
 $session = $client->client->session();
 
 if ($checker->hasScope($session, Scope::TransitionChat)) {
-    $conversations = $client->chat->getConversations();
+    $conversations = $client->chat->convo->listConvos();
 } else {
     // Inform user they need to re-authorize with chat scope
 }

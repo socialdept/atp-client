@@ -19,10 +19,10 @@ When requesting or submitting new features, first consider whether it might be u
 ### Before Filing an Issue
 
 - Search existing issues to avoid duplicates
-- Check the [documentation](README.md) to ensure it's not a usage question
+- Check the [documentation](docs/introduction.md) to ensure it's not a usage question
 - Provide a clear title and description
 - Include steps to reproduce the issue
-- Specify your environment (PHP version, Laravel version, Schema version)
+- Specify your environment (PHP version, Laravel version, atp-client version)
 - Include relevant code samples and full error messages
 
 ### Before Submitting a Pull Request
@@ -45,6 +45,15 @@ When requesting or submitting new features, first consider whether it might be u
 - **One pull request per feature** - If you want to do more than one thing, send multiple pull requests.
 - **Send coherent history** - Make sure each individual commit in your pull request is meaningful. If you had to make multiple intermediate commits while developing, please [squash them](https://www.git-scm.com/book/en/v2/Git-Tools-Rewriting-History#Changing-Multiple-Commit-Messages) before submitting.
 
+## Required Checks
+
+Pull requests into `main` merge by squash, and only after two status checks pass on a branch that is up to date with `main`:
+
+- `Tests (PHP 8.4 - Laravel 13)` runs `vendor/bin/phpunit`
+- `php-cs-fixer` runs `php-cs-fixer fix --dry-run --diff`
+
+Every review thread must also be resolved.
+
 ## Running Tests
 
 ```bash
@@ -53,7 +62,7 @@ vendor/bin/phpunit
 
 ## Code Style
 
-Schema follows PSR-12 coding standard. Run PHP CS Fixer before submitting:
+atp-client follows the PSR-12 coding standard. Run PHP CS Fixer before submitting:
 
 ```bash
 vendor/bin/php-cs-fixer fix

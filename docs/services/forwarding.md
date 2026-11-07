@@ -1,5 +1,7 @@
 # Forwarding XRPC Calls
 
+Part of the [atp-client docs](../introduction.md#documentation). This page covers relaying XRPC calls to the user's PDS.
+
 `forward()` sends an XRPC call to the user's PDS exactly as it arrived, authenticated with the session your application holds, and hands back the PDS's response untouched.
 
 It is the plumbing for a same-origin passthrough. A browser that holds only your application's session cookie sends ordinary XRPC requests to your server, and your server forwards them with its DPoP-bound token. The browser never sees an access or refresh token, and headers such as `atproto-proxy` survive, so service proxying works the same as it would from a client holding the token itself.
@@ -74,4 +76,4 @@ $fake->assertCalledWith('app.bsky.feed.getPosts', fn ($request) => $request->met
 ## See also
 
 - [Service Auth](service-auth.md) for calling a service directly with a token from the PDS instead of forwarding
-- [Sessions](sessions.md) for how the stored session is kept valid
+- [Sessions](../auth/sessions.md) for how the stored session is kept valid

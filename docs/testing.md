@@ -1,5 +1,7 @@
 # Testing
 
+Part of the [atp-client docs](introduction.md#documentation). This page covers faking the client in your tests.
+
 AtpClient ships with `Atp::fake()` — a first-party testing fake that replaces all HTTP calls with in-memory stubs. No network requests, no tokens, no PDS needed.
 
 The API is designed to feel like Laravel's `Http::fake()`:
@@ -69,7 +71,7 @@ Stubs accept several types:
 
 ## NSID Enums
 
-The package includes 13 enum classes with 103 NSID constants. Use them everywhere — `stub()`, `sequence()`, and all assertion methods accept `string|BackedEnum`:
+The package includes 13 enum classes with 88 NSID constants. Use them everywhere. `stub()`, `sequence()` and all assertion methods accept `string|BackedEnum`:
 
 ```php
 use SocialDept\AtpClient\Enums\Nsid\BskyActor;
