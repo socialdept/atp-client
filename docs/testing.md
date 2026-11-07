@@ -2,7 +2,7 @@
 
 Part of the [atp-client docs](introduction.md#documentation). This page covers faking the client in your tests.
 
-AtpClient ships with `Atp::fake()` — a first-party testing fake that replaces all HTTP calls with in-memory stubs. No network requests, no tokens, no PDS needed.
+AtpClient ships with `Atp::fake()`, a first-party testing fake that replaces all HTTP calls with in-memory stubs. No network requests, no tokens, no PDS needed.
 
 The API is designed to feel like Laravel's `Http::fake()`:
 
@@ -65,7 +65,7 @@ Stubs accept several types:
 | Type | Behavior |
 |------|----------|
 | `array` | Returned as a 200 JSON response |
-| `Response` | Returned as-is (use for errors) |
+| `Response` | Returned as-is, or thrown as `AtpResponseException` when it is an error |
 | `Closure` | Called with `($endpoint, $params, $body, $method)` |
 | `ResponseSequence` | Returns next response in queue |
 
@@ -571,7 +571,7 @@ $request->state; // 'fake-state'
 $request->url;   // Fake authorization URL
 
 // Verify OAuth calls
-$oauth->recordedCalls(); // Array of recorded authorize/callback calls
+$oauth->recordedCalls(); // Array of recorded authorize, authorizeAt, callback and revoke calls
 ```
 
 ## Preventing Stray Requests

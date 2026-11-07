@@ -18,3 +18,5 @@ php artisan lexicon:unpublish com.example.old --as=you.example.com
 - An identical published schema is left alone.
 - Replacing a published schema needs `--update`, and is refused when atp-schema's breaking-change check finds a breaking change, unless you pass `--allow-breaking`. The write swaps on the published version, so a concurrent change is not overwritten.
 - `--dry-run` reports without writing.
+
+`lexicon:unpublish` asks for confirmation first, since anyone resolving the lexicons will no longer find them. Pass `--force` to skip it.

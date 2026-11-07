@@ -93,11 +93,11 @@ In order, cheapest first, so a malformed token never reaches the crypto:
 
 For step 8 the `kid` header names which verification method signed, defaulting to `#atproto`, the repo signing key. The issuer's DID document is resolved, `getSigningKey()` returns the published `did:key`, and `SignatureVerifier` (from `atp-support`) checks the signature.
 
-That verifier enforces two atproto rules a general-purpose ECDSA check would not: **compact signatures only** (64 raw bytes of `r || s`; DER is rejected rather than parsed) and **low-S only**. Together they make a signature's bytes canonical, so the same signature cannot be re-encoded into a different byte string.
+That verifier enforces two atproto rules a general-purpose ECDSA check would not: **compact signatures only** (64 raw bytes of `r || s`, with DER rejected rather than parsed) and **low-S only**. Together they make a signature's bytes canonical, so the same signature cannot be re-encoded into a different byte string.
 
 ### Key rotation
 
-If verification fails against the cached DID document, resolution is retried uncached and the signature is checked again. A cached document can predate a rotation; a freshly fetched one cannot. Only after both fail is the token refused.
+If verification fails against the cached DID document, resolution is retried uncached and the signature is checked again. A cached document can predate a rotation, but a freshly fetched one cannot. Only after both fail is the token refused.
 
 ### Throttled lookups
 
@@ -143,8 +143,11 @@ use SocialDept\AtpClient\Exceptions\ServiceAuthException;
 $serviceAuth = app(ServiceAuth::class);
 
 try {
+    $jwt = $serviceAuth->fromHeader($request->header('Authorization'))
+        ?? throw ServiceAuthException::missing();
+
     $token = $serviceAuth->verify(
-        $serviceAuth->fromHeader($request->header('Authorization')),
+        $jwt,
         audience: 'did:web:example.com#forum',
         method: 'com.example.doThing',
     );
