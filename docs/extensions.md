@@ -1,5 +1,7 @@
 # Client Extensions
 
+Part of the [atp-client docs](introduction.md#documentation). This page covers adding your own domain and request clients.
+
 AtpClient provides an extension system that allows you to add custom functionality. You can register domain clients (like `$client->myDomain`) or request clients on existing domains (like `$client->bsky->myFeature`).
 
 ## Quick Reference
@@ -33,7 +35,7 @@ php artisan make:atp-client AnalyticsClient
 php artisan make:atp-request MetricsClient --domain=bsky
 ```
 
-The generated files are placed in configurable directories. You can customize these paths in `config/client.php`:
+The generated files are placed in configurable directories. You can customize these paths in `config/atp-client.php`:
 
 ```php
 'generators' => [
@@ -154,17 +156,13 @@ class BskyMetricsClient extends Request
     public function getPostEngagement(string $uri): array
     {
         $thread = $this->atp->bsky->feed->getPostThread($uri);
-        $post = $thread->thread['post'] ?? null;
-
-        if (! $post) {
-            return [];
-        }
+        $post = $thread->thread->post;
 
         return [
-            'likes' => $post['likeCount'] ?? 0,
-            'reposts' => $post['repostCount'] ?? 0,
-            'replies' => $post['replyCount'] ?? 0,
-            'quotes' => $post['quoteCount'] ?? 0,
+            'likes' => $post->likeCount ?? 0,
+            'reposts' => $post->repostCount ?? 0,
+            'replies' => $post->replyCount ?? 0,
+            'quotes' => $post->quoteCount ?? 0,
         ];
     }
 
@@ -177,8 +175,8 @@ class BskyMetricsClient extends Request
         $totalReposts = 0;
 
         foreach ($posts as $item) {
-            $totalLikes += $item['post']['likeCount'] ?? 0;
-            $totalReposts += $item['post']['repostCount'] ?? 0;
+            $totalLikes += $item->post->likeCount ?? 0;
+            $totalReposts += $item->post->repostCount ?? 0;
         }
 
         return [
@@ -353,9 +351,7 @@ class CustomApiClient
 Return typed response objects for better IDE support:
 
 ```php
-use SocialDept\AtpClient\Data\Responses\Response;
-
-class MetricsResponse extends Response
+class MetricsResponse
 {
     public function __construct(
         public readonly int $likes,
@@ -378,12 +374,12 @@ class BskyMetricsClient extends Request
     public function getPostMetrics(string $uri): MetricsResponse
     {
         $thread = $this->atp->bsky->feed->getPostThread($uri);
-        $post = $thread->thread['post'] ?? [];
+        $post = $thread->thread->post;
 
         return MetricsResponse::fromArray([
-            'likes' => $post['likeCount'] ?? 0,
-            'reposts' => $post['repostCount'] ?? 0,
-            'replies' => $post['replyCount'] ?? 0,
+            'likes' => $post->likeCount ?? 0,
+            'reposts' => $post->repostCount ?? 0,
+            'replies' => $post->replyCount ?? 0,
         ]);
     }
 }
@@ -451,9 +447,9 @@ class BskyMetricsClient extends Request
 }
 ```
 
-> **Note:** These attributes currently serve as documentation only. Runtime scope enforcement will be implemented in a future release. Using them correctly now ensures forward compatibility.
+> **Note:** These attributes serve as documentation only. Nothing reads them at runtime. The client checks scopes itself before repo writes and leaves everything else to the PDS.
 
-Methods with `#[ScopedEndpoint]` indicate they require authentication, while methods with `#[PublicEndpoint]` work without authentication. See [scopes.md](scopes.md) for full documentation on scope handling.
+Methods with `#[ScopedEndpoint]` indicate they require authentication, while methods with `#[PublicEndpoint]` work without authentication. See [OAuth Scopes](auth/scopes.md) for full documentation on scope handling.
 
 ## Available Domains
 

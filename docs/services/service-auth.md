@@ -1,5 +1,7 @@
 # Service Auth
 
+Part of the [atp-client docs](../introduction.md#documentation). This page covers verifying and minting inter-service tokens.
+
 Inter-service auth: how one AT Protocol service proves who it is to another, and how to verify that on the way in.
 
 ## What this is, and what it is not
@@ -84,8 +86,8 @@ In order, cheapest first, so a malformed token never reaches the crypto:
 | 2 | `alg` is on the `ES256K` / `ES256` allowlist, so `none` never reaches the signature check | `BadJwt` |
 | 3 | Signature decodes to exactly 64 bytes | `BadJwt` |
 | 4 | `iss` is a DID, fragment stripped | `BadJwtIss` |
-| 5 | `exp` present and in the future, tolerating 30s of clock skew | `JwtExpired` |
-| 6 | `aud` present, and equal to the configured audience, or its bare DID when the configured audience is combined (constant-time) | `BadJwtAudience` |
+| 5 | `exp` present and in the future, tolerating 30s of clock skew | `BadJwt` when missing, `JwtExpired` when past |
+| 6 | `aud` present, and equal to the configured audience, or its bare DID when the configured audience is combined (constant-time) | `BadJwt` when missing, `BadJwtAudience` when it does not match |
 | 7 | `lxm` present and equal to the expected method, whenever a method is expected | `BadJwtLexiconMethod` |
 | 8 | Signature verifies against a key the issuer publishes | `BadJwtSignature` |
 
@@ -224,6 +226,6 @@ It is a **bearer** credential inside its window. Anyone who intercepts it can re
 
 ## See also
 
-- [OAuth Scopes](scopes.md): user-facing authorization
-- [Sessions & Keep-Alive](sessions.md): the outbound side
+- [OAuth Scopes](../auth/scopes.md): user-facing authorization
+- [Sessions & Keep-Alive](../auth/sessions.md): the outbound side
 - [AT Protocol: cross-service auth](https://atproto.com/specs/xrpc#inter-service-authentication-temporary-specification)
