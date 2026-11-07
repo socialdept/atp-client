@@ -64,7 +64,7 @@ Find yourself stuck using the package? Found a bug? Do you have general question
 ## Testing
 
 ```bash
-composer test
+vendor/bin/phpunit
 ```
 
 ## Changelog

@@ -156,7 +156,7 @@ This builds a confidential client whose public key, callback and scopes are enco
 
 - The callback defaults to the `oauth.callback` route, or `APP_URL/oauth/callback`. Override it with `--callback`.
 - Re-running reuses the key in `.env`, so the client id stays the same. Pass `--fresh` for a new key.
-- `--public` creates a public client with no signing key.
+- `--public` creates a public client with no signing key, and removes `ATP_OAUTH_PRIVATE_KEY` and `ATP_OAUTH_KID` from `.env`.
 - The scopes come from `ATP_OAUTH_SCOPE` and are encoded in the client id, so re-run the command after changing them.
 - `--broker` points at a self-hosted broker. `--dry-run` prints the values instead of writing them.
 - The command refuses to run in production unless you pass `--force`.

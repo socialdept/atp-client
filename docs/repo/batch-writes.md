@@ -15,7 +15,7 @@ $response = $client->atproto->repo->applyWrites([
     new Delete(collection: 'app.bsky.feed.like', rkey: $likeRkey),
 ]);
 
-$response->commit->rev;   // the single commit all three share
+$response->commit?->rev;  // the single commit all three share
 $response->results;       // one CreateResult, UpdateResult or DeleteResult per write, in order
 ```
 
