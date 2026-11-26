@@ -77,4 +77,4 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## License
 
-The MIT License (MIT). Please see [the license file](license.md) for more information.
+The MIT License (MIT). Please see [LICENSE](LICENSE) for more information.
