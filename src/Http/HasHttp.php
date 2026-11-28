@@ -66,7 +66,9 @@ trait HasHttp
 
             $response = match ($method) {
                 'GET' => $request->get($url, $this->encodeQueryParams($params)),
-                'POST' => $request->post($url, $body ?? $params),
+                // A procedure without input must get no body at all: the PDS
+                // refuses even an empty JSON one.
+                'POST' => $body === null && $params === [] ? $request->send('POST', $url) : $request->post($url, $body ?? $params),
                 'DELETE' => $request->delete($url, $this->encodeQueryParams($params)),
                 default => throw new InvalidArgumentException("Unsupported method: {$method}"),
             };
@@ -178,9 +180,9 @@ trait HasHttp
     }
 
     /**
-     * Make POST request
+     * Make POST request. Pass a null body for a procedure that takes no input.
      */
-    public function post(string|BackedEnum $endpoint, array $body = []): Response
+    public function post(string|BackedEnum $endpoint, ?array $body = []): Response
     {
         return $this->call($endpoint, 'POST', null, $body);
     }

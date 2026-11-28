@@ -6,14 +6,18 @@ use BackedEnum;
 use Illuminate\Support\Facades\Facade;
 use SocialDept\AtpClient\AtpClient;
 use SocialDept\AtpClient\Auth\OAuthEngine;
+use SocialDept\AtpClient\Auth\PasswordAuth;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
+use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Http\Response;
 use SocialDept\AtpClient\Testing\FakeAtpManager;
 use SocialDept\AtpClient\Testing\ResponseSequence;
 
 /**
  * @method static AtpClient as(string $actor)
- * @method static AtpClient login(string $actor, string $password)
+ * @method static AtpClient login(string $actor, string $password, ?string $authFactorToken = null)
+ * @method static PasswordAuth password()
+ * @method static AtpClient withToken(AccessToken $token)
  * @method static OAuthEngine oauth()
  * @method static AtpClient public(?string $service = null)
  * @method static void setDefaultProvider(CredentialProvider $provider)

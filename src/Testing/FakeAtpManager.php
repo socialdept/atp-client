@@ -4,7 +4,9 @@ namespace SocialDept\AtpClient\Testing;
 
 use BackedEnum;
 use PHPUnit\Framework\Assert;
+use SocialDept\AtpClient\Auth\PasswordAuth;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
+use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Http\Response;
 
 class FakeAtpManager
@@ -69,9 +71,25 @@ class FakeAtpManager
     /**
      * Create a client via app password login (no real login happens).
      */
-    public function login(string $actor, string $password): FakeAtpClient
+    public function login(string $actor, string $password, ?string $authFactorToken = null): FakeAtpClient
     {
         return $this->as($actor);
+    }
+
+    /**
+     * A client for a session's DID, answered by the stubs like as().
+     */
+    public function withToken(AccessToken $token): FakeAtpClient
+    {
+        return $this->as($token->did);
+    }
+
+    /**
+     * The real password calls, which talk HTTP directly: fake them with Http::fake().
+     */
+    public function password(): PasswordAuth
+    {
+        return app(PasswordAuth::class);
     }
 
     /**

@@ -52,7 +52,8 @@ class ActorRequestClient extends Request
     public function deleteAccount(): EmptyResponse
     {
         $this->atp->client->post(
-            endpoint: ChatActor::DeleteAccount
+            endpoint: ChatActor::DeleteAccount,
+            body: null,
         );
 
         return new EmptyResponse();
