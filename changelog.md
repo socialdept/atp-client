@@ -2,6 +2,18 @@
 
 All notable changes to `AtpClient` will be documented in this file.
 
+## Version 0.3.16
+
+### Added
+- **Password sessions without storage.** `Atp::password()` signs in with a password (`createSession`), refreshes (`refreshSession`) and signs out (`deleteSession`), handing back an `AccessToken` and storing nothing. `Atp::withToken($token)` is a client for a token you hold, with nothing written to the credential provider or the key store.
+- **Second factor.** `Atp::login($actor, $password, $authFactorToken)` and `createSession()` send the code the PDS emails to accounts with an email second factor.
+- **`PasswordAuthException`**, a subclass of `AuthenticationException`, carries the PDS's error name and status, with `needsAuthFactor()`, `invalidCredentials()`, `takenDown()`, `rateLimited()` and `sessionEnded()`.
+- **Account management calls** on `atproto->server`: `createAppPassword`, `listAppPasswords`, `revokeAppPassword`, `requestEmailConfirmation`, `confirmEmail`, `requestEmailUpdate`, `updateEmail` (with `emailAuthFactor`), `requestAccountDelete`, `deleteAccount`, `requestPasswordReset` and `resetPassword`, with their NSIDs on `AtprotoServer`.
+
+### Fixed
+- A procedure that takes no input is sent with no body. An empty JSON body was sent before, which the reference PDS refuses with `A request body was provided when none was expected`. This also fixes `chat->actor->deleteAccount()`. Pass `body: null` to `post()` for such a procedure.
+- Password sessions no longer write a DPoP key to the key store. They never use one.
+
 ## Version 0.3.15
 
 ### Added

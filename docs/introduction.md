@@ -44,7 +44,7 @@ $timeline = Atp::as($did)->bsky->feed->getTimeline(limit: 50);
 Start with [Installation](getting-started/installation.md), then [sign in](auth/signing-in.md) and set up [credential storage](auth/credentials.md) so sessions survive between requests. The docs are grouped by area, and each group has an index of its own:
 
 - **[Getting started](getting-started/README.md)**: [Installation](getting-started/installation.md)
-- **[Authentication](auth/README.md)**: [Signing in](auth/signing-in.md), [Credential storage](auth/credentials.md), [Sessions & Keep-Alive](auth/sessions.md), [Events](auth/events.md), [OAuth Scopes](auth/scopes.md)
+- **[Authentication](auth/README.md)**: [Signing in](auth/signing-in.md), [Account management](auth/accounts.md), [Credential storage](auth/credentials.md), [Sessions & Keep-Alive](auth/sessions.md), [Events](auth/events.md), [OAuth Scopes](auth/scopes.md)
 - **[Bluesky](bluesky/README.md)**: [Posts](bluesky/posts.md), [Profiles](bluesky/profiles.md), [Social graph](bluesky/graph.md), [Feeds](bluesky/feeds.md)
 - **[Repositories](repo/README.md)**: [Batch writes](repo/batch-writes.md), [Publishing lexicons](repo/lexicons.md)
 - **[Between services](services/README.md)**: [Service Auth](services/service-auth.md), [Forwarding XRPC Calls](services/forwarding.md)

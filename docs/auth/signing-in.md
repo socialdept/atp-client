@@ -15,6 +15,43 @@ $client = Atp::login('yourhandle.bsky.social', 'your-app-password');
 $profile = $client->bsky->actor->getProfile('yourhandle.bsky.social');
 ```
 
+An account's own password works the same way. When the account has an email second factor, the first attempt is refused and the PDS emails a code. Send it with the next attempt:
+
+```php
+use SocialDept\AtpClient\Exceptions\PasswordAuthException;
+
+try {
+    $client = Atp::login($handle, $password, $code);
+} catch (PasswordAuthException $e) {
+    $e->needsAuthFactor();    // ask for the emailed code, then try again
+    $e->invalidCredentials(); // the handle or the password is wrong
+    $e->takenDown();
+    $e->rateLimited();
+}
+```
+
+`PasswordAuthException` extends `AuthenticationException`, and `$e->error` holds the XRPC error name the PDS answered with.
+
+### Password sessions you store yourself
+
+`Atp::login()` keeps the session in the credential provider. `Atp::password()` makes and ends sessions without storing anything, for code that decides where a session lives, or needs one for a single request:
+
+```php
+$token = Atp::password()->createSession($handle, $password, $code); // an AccessToken
+$token = Atp::password()->refreshSession($token->refreshJwt, $token->issuer);
+Atp::password()->deleteSession($token);
+```
+
+The PDS is resolved from the identifier unless you pass one as `pds:`, which signing in with an email needs. `issuer` holds the PDS a token came from. A refresh rotates the refresh token, and the old one keeps working for a short grace period on the reference PDS. `$e->sessionEnded()` says a refresh failed because the session is over.
+
+`Atp::withToken($token)` is a client for a token you hold, with nothing written to the credential provider or the key store:
+
+```php
+$password = Atp::withToken($token)->atproto->server->createAppPassword('Laptop');
+```
+
+A refresh it makes stays inside that client, so keep using the same client, or refresh yourself.
+
 ## OAuth 2.0 Flow
 
 For user-facing applications where users authenticate with their own accounts.

@@ -4,14 +4,13 @@ namespace SocialDept\AtpClient\Session;
 
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\OAuthErrorClassifier;
+use SocialDept\AtpClient\Auth\PasswordAuth;
 use SocialDept\AtpClient\Auth\TokenRefresher;
 use SocialDept\AtpClient\Auth\TokenRevoker;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
-use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Data\RevocationResult;
 use SocialDept\AtpClient\Enums\AuthType;
 use SocialDept\AtpClient\Enums\RefreshFailureReason;
@@ -23,6 +22,7 @@ use SocialDept\AtpClient\Events\SessionRefreshing;
 use SocialDept\AtpClient\Events\SessionUpdated;
 use SocialDept\AtpClient\Exceptions\AuthenticationException;
 use SocialDept\AtpClient\Exceptions\OAuthSessionInvalidException;
+use SocialDept\AtpClient\Exceptions\PasswordAuthException;
 use SocialDept\AtpClient\Exceptions\SessionExpiredException;
 use SocialDept\AtpClient\Exceptions\TransientAuthFailureException;
 use SocialDept\AtpSupport\Exceptions\HandleResolutionException;
@@ -100,25 +100,21 @@ class SessionManager
     }
 
     /**
-     * Create session from app password.
+     * Sign in with a password, the account's own or an app password, and keep
+     * the session in the credential provider.
+     *
+     * @param  string|null  $authFactorToken  The code the PDS emailed, for an account with an email second factor
+     *
+     * @throws PasswordAuthException
      */
     public function fromAppPassword(
         string $actor,
-        string $password
+        string $password,
+        ?string $authFactorToken = null,
     ): Session {
         $did = $this->resolveToDid($actor);
-        $pdsEndpoint = Resolver::resolvePds($did);
 
-        $response = Http::post($pdsEndpoint.'/xrpc/com.atproto.server.createSession', [
-            'identifier' => $actor,
-            'password' => $password,
-        ]);
-
-        if ($response->failed()) {
-            throw new AuthenticationException('Login failed');
-        }
-
-        $token = AccessToken::fromResponse($response->json(), $actor, $pdsEndpoint);
+        $token = app(PasswordAuth::class)->createSession($actor, $password, $authFactorToken, Resolver::resolvePds($did));
 
         // Store credentials using DID as key
         $this->credentials->storeCredentials($did, $token);
@@ -145,6 +141,12 @@ class SessionManager
         // Get or create DPoP key
         $sessionId = 'session_'.hash('sha256', $creds->did);
         $dpopKey = $this->keyStore->get($sessionId);
+
+        if (! $dpopKey && $creds->authType === AuthType::Legacy) {
+            // Password sessions use no DPoP. The session still carries a key,
+            // but there is nothing to keep, so none is stored.
+            $dpopKey = $this->dpopManager->ephemeralKey();
+        }
 
         if (! $dpopKey) {
             // An existing OAuth session's refresh token is bound to its DPoP key.

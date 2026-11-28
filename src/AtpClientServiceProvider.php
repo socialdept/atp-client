@@ -11,6 +11,7 @@ use SocialDept\AtpClient\Auth\ClientMetadataManager;
 use SocialDept\AtpClient\Auth\DPoPKeyManager;
 use SocialDept\AtpClient\Auth\DPoPNonceManager;
 use SocialDept\AtpClient\Auth\OAuthEngine;
+use SocialDept\AtpClient\Auth\PasswordAuth;
 use SocialDept\AtpClient\Auth\ScopeChecker;
 use SocialDept\AtpClient\Auth\ScopeGate;
 use SocialDept\AtpClient\Auth\ServiceAuth;
@@ -25,12 +26,14 @@ use SocialDept\AtpClient\Console\MakeAtpClientCommand;
 use SocialDept\AtpClient\Console\MakeAtpRequestCommand;
 use SocialDept\AtpClient\Contracts\CredentialProvider;
 use SocialDept\AtpClient\Contracts\KeyStore;
+use SocialDept\AtpClient\Data\AccessToken;
 use SocialDept\AtpClient\Enums\ScopeEnforcementLevel;
 use SocialDept\AtpClient\Http\Controllers\ClientMetadataController;
 use SocialDept\AtpClient\Http\Controllers\JwksController;
 use SocialDept\AtpClient\Http\DPoPClient;
 use SocialDept\AtpClient\Http\Middleware\RequiresScopeMiddleware;
 use SocialDept\AtpClient\Http\Middleware\VerifyServiceAuthMiddleware;
+use SocialDept\AtpClient\Providers\ArrayCredentialProvider;
 use SocialDept\AtpClient\Session\SessionManager;
 use SocialDept\AtpClient\Storage\EncryptedFileKeyStore;
 use SocialDept\AtpSupport\Crypto\SignatureVerifier;
@@ -75,6 +78,7 @@ class AtpClientServiceProvider extends ServiceProvider
         $this->app->singleton(AuthorizationServerDiscovery::class);
         $this->app->singleton(TokenRefresher::class);
         $this->app->singleton(TokenRevoker::class);
+        $this->app->singleton(PasswordAuth::class);
         $this->app->singleton(SessionManager::class, function ($app) {
             return new SessionManager(
                 credentials: $app->make(CredentialProvider::class),
@@ -124,12 +128,34 @@ class AtpClientServiceProvider extends ServiceProvider
                     );
                 }
 
-                public function login(string $actor, string $password): AtpClient
+                public function login(string $actor, string $password, ?string $authFactorToken = null): AtpClient
                 {
                     $this->app->make(SessionManager::class)
-                        ->fromAppPassword($actor, $password);
+                        ->fromAppPassword($actor, $password, $authFactorToken);
 
                     return $this->as($actor);
+                }
+
+                public function password(): PasswordAuth
+                {
+                    return $this->app->make(PasswordAuth::class);
+                }
+
+                public function withToken(AccessToken $token): AtpClient
+                {
+                    $credentials = new ArrayCredentialProvider();
+                    $credentials->storeCredentials($token->did, $token);
+
+                    $sessions = new SessionManager(
+                        credentials: $credentials,
+                        refresher: $this->app->make(TokenRefresher::class),
+                        dpopManager: $this->app->make(DPoPKeyManager::class),
+                        keyStore: $this->app->make(KeyStore::class),
+                        refreshThreshold: config('atp-client.session.refresh_threshold', 300),
+                        serializeRefresh: false,
+                    );
+
+                    return new AtpClient($sessions, $token->did);
                 }
 
                 public function oauth(): OAuthEngine

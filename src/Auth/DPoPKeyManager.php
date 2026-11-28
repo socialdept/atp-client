@@ -19,17 +19,24 @@ class DPoPKeyManager
      */
     public function generateKey(string $sessionId): DPoPKey
     {
-        // Generate P-256 elliptic curve key pair
-        $privateKey = EC::createKey('secp256r1');
-        $publicKey = $privateKey->getPublicKey();
-        $keyId = $this->generateKeyId($publicKey);
-
-        $dpopKey = new DPoPKey($privateKey, $publicKey, $keyId);
+        $dpopKey = $this->ephemeralKey();
 
         // Store the key
         $this->keyStore->store($sessionId, $dpopKey);
 
         return $dpopKey;
+    }
+
+    /**
+     * A P-256 key that is not stored, for sessions that never prove
+     * possession, such as password sessions.
+     */
+    public function ephemeralKey(): DPoPKey
+    {
+        $privateKey = EC::createKey('secp256r1');
+        $publicKey = $privateKey->getPublicKey();
+
+        return new DPoPKey($privateKey, $publicKey, $this->generateKeyId($publicKey));
     }
 
     /**
